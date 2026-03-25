@@ -1,0 +1,129 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-03-25T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_blps",
+      "_type": "workspace",
+      "name": "BLPS MTS",
+      "description": "REST API for tariff and services management"
+    },
+    {
+      "_id": "env_blps",
+      "_type": "environment",
+      "parentId": "wrk_blps",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "subscriber_id": 1,
+        "tariff_id": 2,
+        "service_id": 1,
+        "category_id": 1
+      }
+    },
+    {
+      "_id": "fld_tariff",
+      "_type": "request_group",
+      "parentId": "wrk_blps",
+      "name": "Tariff flow"
+    },
+    {
+      "_id": "fld_service",
+      "_type": "request_group",
+      "parentId": "wrk_blps",
+      "name": "Services flow"
+    },
+    {
+      "_id": "req_get_tariff_info",
+      "_type": "request",
+      "parentId": "fld_tariff",
+      "name": "Get subscriber tariff info",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff"
+    },
+    {
+      "_id": "req_get_tariff_categories",
+      "_type": "request",
+      "parentId": "fld_tariff",
+      "name": "Get tariff categories",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/tariffs/categories"
+    },
+    {
+      "_id": "req_search_tariffs",
+      "_type": "request",
+      "parentId": "fld_tariff",
+      "name": "Search tariffs",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/tariffs?categoryId={{ _.category_id }}&query=мой"
+    },
+    {
+      "_id": "req_tariff_details",
+      "_type": "request",
+      "parentId": "fld_tariff",
+      "name": "Get tariff details",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/tariffs/{{ _.tariff_id }}"
+    },
+    {
+      "_id": "req_change_tariff",
+      "_type": "request",
+      "parentId": "fld_tariff",
+      "name": "Change tariff",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"targetTariffId\": {{ _.tariff_id }},\n  \"options\": {\n    \"minutes\": \"+200\",\n    \"internet\": \"+20GB\"\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_get_services",
+      "_type": "request",
+      "parentId": "fld_service",
+      "name": "Get subscriber services",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services"
+    },
+    {
+      "_id": "req_get_service_categories",
+      "_type": "request",
+      "parentId": "fld_service",
+      "name": "Get service categories",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/services/categories"
+    },
+    {
+      "_id": "req_search_services",
+      "_type": "request",
+      "parentId": "fld_service",
+      "name": "Search services",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services?categoryId={{ _.category_id }}&query=music"
+    },
+    {
+      "_id": "req_service_details",
+      "_type": "request",
+      "parentId": "fld_service",
+      "name": "Get service details",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/services/{{ _.service_id }}"
+    },
+    {
+      "_id": "req_disable_service",
+      "_type": "request",
+      "parentId": "fld_service",
+      "name": "Disable service",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services/{{ _.service_id }}/disable"
+    }
+  ]
+}

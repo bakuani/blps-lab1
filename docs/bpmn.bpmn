@@ -1,0 +1,1113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.13.1">
+  <collaboration id="Collaboration_1">
+    <participant id="Participant_MTS" name="Управление тарифом и подключенными услугами в личном кабинете абонента («Мой МТС»)" processRef="Process_LK" />
+    <participant id="Participant_Billing" name="Биллинговая система" />
+    <messageFlow id="MF_SwitchFee" name="Списание платы за смену тарифа" sourceRef="Task_BillingChargeSwitchFee" targetRef="Participant_Billing" />
+    <messageFlow id="MF_MonthlyFee" name="Списание абонентской платы нового тарифа" sourceRef="Task_BillingChargeMonthly" targetRef="Participant_Billing" />
+    <messageFlow id="MF_DisableService" sourceRef="Task_CallBillingDisable" targetRef="Participant_Billing" />
+    <textAnnotation id="TextAnnotation_0pg5juc">
+      <text>subscriber_service</text>
+    </textAnnotation>
+    <association id="Association_00pumgi" associationDirection="None" sourceRef="DS_SubscriberServices" targetRef="TextAnnotation_0pg5juc" />
+  </collaboration>
+  <process id="Process_LK" name="Управление тарифом и услугами" isExecutable="true">
+    <laneSet id="LaneSet_1">
+      <lane id="Lane_System" name="Система «Мой МТС»">
+        <flowNodeRef>Task_LoadServices</flowNodeRef>
+        <flowNodeRef>Task_LoadTariffInfo</flowNodeRef>
+        <flowNodeRef>Task_LoadCategories</flowNodeRef>
+        <flowNodeRef>Task_LoadTariffPage</flowNodeRef>
+        <flowNodeRef>Gateway_IsCustomizable</flowNodeRef>
+        <flowNodeRef>Gateway_SwitchMerge</flowNodeRef>
+        <flowNodeRef>Gateway_HasSwitchFee</flowNodeRef>
+        <flowNodeRef>Task_BillingChargeSwitchFee</flowNodeRef>
+        <flowNodeRef>Gateway_FeeMerge</flowNodeRef>
+        <flowNodeRef>Task_BillingChargeMonthly</flowNodeRef>
+        <flowNodeRef>Task_UpdateSubscriberTariff</flowNodeRef>
+        <flowNodeRef>Task_LoadTariffsByCategory</flowNodeRef>
+        <flowNodeRef>Task_LoadServiceDetails</flowNodeRef>
+        <flowNodeRef>EndEvent_ServiceDetails</flowNodeRef>
+        <flowNodeRef>Task_SearchTariffsDB</flowNodeRef>
+        <flowNodeRef>Gateway_ChangeResult</flowNodeRef>
+        <flowNodeRef>EndEvent_TariffError</flowNodeRef>
+        <flowNodeRef>EndEvent_TariffChanged</flowNodeRef>
+        <flowNodeRef>Task_NotifyError</flowNodeRef>
+        <flowNodeRef>Task_NotifySuccess</flowNodeRef>
+        <flowNodeRef>Task_UpdateLK_Tariff</flowNodeRef>
+        <flowNodeRef>Task_CallBillingDisable</flowNodeRef>
+        <flowNodeRef>Task_DeleteSubscriberService</flowNodeRef>
+        <flowNodeRef>EndEvent_ServiceDisabled</flowNodeRef>
+        <flowNodeRef>Task_UpdateLK_Service</flowNodeRef>
+        <flowNodeRef>Task_NotifyDisableOK</flowNodeRef>
+        <flowNodeRef>EndEvent_ServiceError</flowNodeRef>
+        <flowNodeRef>Task_NotifyDisableErr</flowNodeRef>
+        <flowNodeRef>Gateway_DisableResult</flowNodeRef>
+        <flowNodeRef>Task_SearchServicesDB</flowNodeRef>
+      </lane>
+      <lane id="Lane_User" name="Абонент">
+        <flowNodeRef>StartEvent_Main</flowNodeRef>
+        <flowNodeRef>Gateway_Section</flowNodeRef>
+        <flowNodeRef>Task_ViewTariffInfo</flowNodeRef>
+        <flowNodeRef>Gateway_TariffAction</flowNodeRef>
+        <flowNodeRef>Task_OpenPDF</flowNodeRef>
+        <flowNodeRef>EndEvent_PDF</flowNodeRef>
+        <flowNodeRef>Task_ClickChangeTariff</flowNodeRef>
+        <flowNodeRef>Gateway_TariffSearch</flowNodeRef>
+        <flowNodeRef>Task_SelectTariffFromCategory</flowNodeRef>
+        <flowNodeRef>Gateway_TariffMerge</flowNodeRef>
+        <flowNodeRef>Gateway_TariffDetailAction</flowNodeRef>
+        <flowNodeRef>Task_ClickTariffName</flowNodeRef>
+        <flowNodeRef>Task_ViewServices</flowNodeRef>
+        <flowNodeRef>Task_SelectServiceFromCategory</flowNodeRef>
+        <flowNodeRef>Gateway_ServiceMerge</flowNodeRef>
+        <flowNodeRef>Gateway_ServiceAction</flowNodeRef>
+        <flowNodeRef>Gateway_ServiceSearch</flowNodeRef>
+        <flowNodeRef>Task_SelectServiceCategory</flowNodeRef>
+        <flowNodeRef>Task_SearchTariff</flowNodeRef>
+        <flowNodeRef>Task_ViewServiceDetails</flowNodeRef>
+        <flowNodeRef>Task_SelectCategory</flowNodeRef>
+        <flowNodeRef>Activity_08wagg3</flowNodeRef>
+        <flowNodeRef>Task_ClickDisable</flowNodeRef>
+        <flowNodeRef>Task_SearchService</flowNodeRef>
+        <flowNodeRef>Task_CustomizeTariff</flowNodeRef>
+      </lane>
+    </laneSet>
+    <dataStoreReference id="DS_Tariffs" name="tariff" />
+    <dataStoreReference id="DS_Balances" name="balance" />
+    <dataStoreReference id="DS_TariffCategories" name="tariff_category" />
+    <dataStoreReference id="DS_TariffOptions" name="tariff_option" />
+    <dataStoreReference id="DS_SubscriberTariffs" name="subscriber_tariff" />
+    <dataStoreReference id="DS_Services" name="service" />
+    <dataStoreReference id="DS_SubscriberServices" />
+    <serviceTask id="Task_LoadServices" name="Загрузить список&#10;подключённых услуг">
+      <incoming>Flow_U1</incoming>
+      <outgoing>Flow_U1c</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_1r8c6pa">
+        <targetRef>DS_SubscriberServices</targetRef>
+      </dataOutputAssociation>
+      <dataOutputAssociation id="DataOutputAssociation_1094d0j">
+        <targetRef>DS_Services</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <serviceTask id="Task_LoadTariffInfo" name="Загрузить информацию&#10;о тарифе и балансе">
+      <incoming>Flow_T1</incoming>
+      <outgoing>Flow_T1c</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_0nq9mzi">
+        <targetRef>DS_Tariffs</targetRef>
+      </dataOutputAssociation>
+      <dataOutputAssociation id="DataOutputAssociation_1p3i3nv">
+        <targetRef>DS_Balances</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <serviceTask id="Task_LoadCategories" name="Загрузить категории&#10;тарифов">
+      <incoming>Flow_T4</incoming>
+      <outgoing>Flow_T4c</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_1v83nj9">
+        <targetRef>DS_TariffCategories</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <serviceTask id="Task_LoadTariffPage" name="Загрузить страницу&#10;тарифа">
+      <incoming>Flow_T_Name2</incoming>
+      <outgoing>Flow_T_Name4</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_0vpr1ba">
+        <targetRef>DS_TariffOptions</targetRef>
+      </dataOutputAssociation>
+      <dataOutputAssociation id="DataOutputAssociation_1rrean1">
+        <targetRef>DS_Tariffs</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <exclusiveGateway id="Gateway_IsCustomizable" name="Тариф&#10;кастомизируется?">
+      <incoming>Flow_T_Name4</incoming>
+      <outgoing>Flow_T_CustYes</outgoing>
+      <outgoing>Flow_T_CustNo</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="Gateway_SwitchMerge">
+      <incoming>Flow_T_CustNo</incoming>
+      <incoming>Flow_T_AfterCust</incoming>
+      <incoming>Flow_1pvhl6j</incoming>
+      <outgoing>Flow_T_Switch1</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="Gateway_HasSwitchFee" name="Есть плата&#10;за смену?">
+      <incoming>Flow_T_Switch1</incoming>
+      <outgoing>Flow_T_SFYes</outgoing>
+      <outgoing>Flow_T_SFNo</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="Task_BillingChargeSwitchFee" name="Биллинг: списать&#10;плату за смену тарифа">
+      <incoming>Flow_T_SFYes</incoming>
+      <outgoing>Flow_T_SFDone</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="Gateway_FeeMerge">
+      <incoming>Flow_T_SFDone</incoming>
+      <incoming>Flow_T_SFNo</incoming>
+      <outgoing>Flow_T_FM</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="Task_BillingChargeMonthly" name="Биллинг: списать&#10;абонентскую плату&#10;нового тарифа">
+      <incoming>Flow_T_FM</incoming>
+      <outgoing>Flow_T_BCM</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_UpdateSubscriberTariff" name="Обновить тариф&#10;абонента в БД">
+      <incoming>Flow_T_BCM</incoming>
+      <outgoing>Flow_T_DBUp</outgoing>
+      <dataOutputAssociation id="DOA_UpdateTariff">
+        <targetRef>DS_SubscriberTariffs</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <serviceTask id="Task_LoadTariffsByCategory" name="Загрузить тарифы&#10;по категории">
+      <incoming>Flow_T6_Cat</incoming>
+      <outgoing>Flow_T6b_Cat</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_0i80og8">
+        <targetRef>DS_Tariffs</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <serviceTask id="Task_LoadServiceDetails" name="Загрузить описание&#10;услуги">
+      <incoming>Flow_U7_Details</incoming>
+      <outgoing>Flow_U7c_Details</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_101gam2">
+        <targetRef>DS_Services</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <endEvent id="EndEvent_ServiceDetails" name="Страница услуги&#10;отображена">
+      <incoming>Flow_U7c_Details</incoming>
+    </endEvent>
+    <serviceTask id="Task_SearchTariffsDB" name="Поиск тарифов">
+      <incoming>Flow_T6_Search</incoming>
+      <outgoing>Flow_T6b_Search</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_0fdjjfr">
+        <targetRef>DS_Tariffs</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <exclusiveGateway id="Gateway_ChangeResult" name="Результат&#10;смены?">
+      <incoming>Flow_T_DBUp</incoming>
+      <outgoing>Flow_T_OK</outgoing>
+      <outgoing>Flow_T_Err</outgoing>
+    </exclusiveGateway>
+    <endEvent id="EndEvent_TariffError" name="Ошибка смены&#10;тарифа">
+      <incoming>Flow_T_NE</incoming>
+    </endEvent>
+    <endEvent id="EndEvent_TariffChanged" name="Тариф успешно&#10;изменён">
+      <incoming>Flow_T_ULK</incoming>
+    </endEvent>
+    <sendTask id="Task_NotifyError" name="Уведомление:&#10;ошибка смены тарифа">
+      <incoming>Flow_T_Err</incoming>
+      <outgoing>Flow_T_NE</outgoing>
+    </sendTask>
+    <sendTask id="Task_NotifySuccess" name="Уведомление:&#10;тариф изменён (SMS+push)">
+      <incoming>Flow_T_OK</incoming>
+      <outgoing>Flow_T_NS</outgoing>
+    </sendTask>
+    <serviceTask id="Task_UpdateLK_Tariff" name="Обновить данные&#10;в ЛК">
+      <incoming>Flow_T_NS</incoming>
+      <outgoing>Flow_T_ULK</outgoing>
+    </serviceTask>
+    <startEvent id="StartEvent_Main" name="Абонент открывает&#10;Личный кабинет">
+      <outgoing>Flow_S1</outgoing>
+    </startEvent>
+    <exclusiveGateway id="Gateway_Section" name="Выбор раздела">
+      <incoming>Flow_S1</incoming>
+      <outgoing>Flow_ToTariff</outgoing>
+      <outgoing>Flow_ToServices</outgoing>
+    </exclusiveGateway>
+    <userTask id="Task_ViewTariffInfo" name="Открыть раздел&#10;«Мой тариф»">
+      <incoming>Flow_ToTariff</incoming>
+      <outgoing>Flow_T1</outgoing>
+    </userTask>
+    <exclusiveGateway id="Gateway_TariffAction" name="Действие&#10;абонента">
+      <incoming>Flow_T1c</incoming>
+      <outgoing>Flow_T2_PDF</outgoing>
+      <outgoing>Flow_T2_Change</outgoing>
+    </exclusiveGateway>
+    <userTask id="Task_OpenPDF" name="Нажать «Условия»&#10;(открыть PDF)">
+      <incoming>Flow_T2_PDF</incoming>
+      <outgoing>Flow_T3_PDF</outgoing>
+    </userTask>
+    <endEvent id="EndEvent_PDF" name="PDF с условиями&#10;тарифа открыт">
+      <incoming>Flow_T3_PDF</incoming>
+    </endEvent>
+    <userTask id="Task_ClickChangeTariff" name="Нажать&#10;«Сменить тариф»">
+      <incoming>Flow_T2_Change</incoming>
+      <outgoing>Flow_T4</outgoing>
+    </userTask>
+    <parallelGateway id="Gateway_TariffSearch" name="Параллельный&#10;выбор / поиск">
+      <incoming>Flow_T4c</incoming>
+      <outgoing>Flow_T5_Cat</outgoing>
+      <outgoing>Flow_T5_Search</outgoing>
+    </parallelGateway>
+    <userTask id="Task_SelectTariffFromCategory" name="Выбрать тариф&#10;из категории">
+      <incoming>Flow_T6b_Cat</incoming>
+      <outgoing>Flow_T7_Cat</outgoing>
+    </userTask>
+    <exclusiveGateway id="Gateway_TariffMerge">
+      <incoming>Flow_T7_Cat</incoming>
+      <incoming>Flow_T6b_Search</incoming>
+      <outgoing>Flow_T8</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="Gateway_TariffDetailAction" name="Действие&#10;с тарифом">
+      <incoming>Flow_T8</incoming>
+      <outgoing>Flow_T_Direct</outgoing>
+      <outgoing>Flow_T_Name</outgoing>
+    </exclusiveGateway>
+    <userTask id="Task_ClickTariffName" name="Нажать на название&#10;тарифа">
+      <incoming>Flow_T_Name</incoming>
+      <outgoing>Flow_T_Name2</outgoing>
+    </userTask>
+    <userTask id="Task_ViewServices" name="Открыть раздел&#10;«Мои услуги»">
+      <incoming>Flow_ToServices</incoming>
+      <outgoing>Flow_U1</outgoing>
+    </userTask>
+    <userTask id="Task_SelectServiceFromCategory" name="Выбрать услугу&#10;из списка">
+      <incoming>Flow_U3_Cat</incoming>
+      <outgoing>Flow_U4_Cat</outgoing>
+    </userTask>
+    <exclusiveGateway id="Gateway_ServiceMerge">
+      <incoming>Flow_U4_Cat</incoming>
+      <incoming>Flow_U3b_Search</incoming>
+      <outgoing>Flow_U5</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="Gateway_ServiceAction" name="Действие&#10;с услугой">
+      <incoming>Flow_U5</incoming>
+      <outgoing>Flow_U6_Details</outgoing>
+      <outgoing>Flow_U6_Disable</outgoing>
+    </exclusiveGateway>
+    <parallelGateway id="Gateway_ServiceSearch" name="Параллельный&#10;выбор / поиск">
+      <incoming>Flow_U1c</incoming>
+      <outgoing>Flow_U2_Cat</outgoing>
+      <outgoing>Flow_U2_Search</outgoing>
+    </parallelGateway>
+    <userTask id="Task_SelectServiceCategory" name="Выбрать категорию">
+      <incoming>Flow_U2_Cat</incoming>
+      <outgoing>Flow_U3_Cat</outgoing>
+    </userTask>
+    <userTask id="Task_SearchTariff" name="Ввести запрос&#10;в поиск тарифов">
+      <incoming>Flow_T5_Search</incoming>
+      <outgoing>Flow_T6_Search</outgoing>
+    </userTask>
+    <userTask id="Task_ViewServiceDetails" name="Нажать «Подробнее»">
+      <incoming>Flow_U6_Details</incoming>
+      <outgoing>Flow_U7_Details</outgoing>
+    </userTask>
+    <userTask id="Task_SelectCategory" name="Выбрать категорию&#10;тарифов">
+      <incoming>Flow_T5_Cat</incoming>
+      <outgoing>Flow_T6_Cat</outgoing>
+    </userTask>
+    <userTask id="Activity_08wagg3" name="Нажать на кнопку &#34;Перейти&#34;">
+      <incoming>Flow_T_Direct</incoming>
+      <outgoing>Flow_1pvhl6j</outgoing>
+    </userTask>
+    <serviceTask id="Task_CallBillingDisable" name="Биллинг: отключить&#10;услугу">
+      <incoming>Flow_U7_Disable</incoming>
+      <outgoing>Flow_U8</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_DeleteSubscriberService" name="Удалить запись&#10;об услуге">
+      <incoming>Flow_U8</incoming>
+      <outgoing>Flow_U8b</outgoing>
+      <dataOutputAssociation id="DOA_DeleteService">
+        <targetRef>DS_SubscriberServices</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <endEvent id="EndEvent_ServiceDisabled" name="Услуга успешно&#10;отключена">
+      <incoming>Flow_U11</incoming>
+    </endEvent>
+    <serviceTask id="Task_UpdateLK_Service" name="Обновить список&#10;услуг в ЛК">
+      <incoming>Flow_U10</incoming>
+      <outgoing>Flow_U11</outgoing>
+    </serviceTask>
+    <sendTask id="Task_NotifyDisableOK" name="Уведомление:&#10;услуга отключена">
+      <incoming>Flow_U9_OK</incoming>
+      <outgoing>Flow_U10</outgoing>
+    </sendTask>
+    <endEvent id="EndEvent_ServiceError" name="Ошибка отключения&#10;услуги">
+      <incoming>Flow_U12</incoming>
+    </endEvent>
+    <sendTask id="Task_NotifyDisableErr" name="Уведомление:&#10;ошибка отключения">
+      <incoming>Flow_U9_Err</incoming>
+      <outgoing>Flow_U12</outgoing>
+    </sendTask>
+    <exclusiveGateway id="Gateway_DisableResult" name="Результат&#10;отключения?">
+      <incoming>Flow_U8b</incoming>
+      <outgoing>Flow_U9_OK</outgoing>
+      <outgoing>Flow_U9_Err</outgoing>
+    </exclusiveGateway>
+    <userTask id="Task_ClickDisable" name="Нажать «Отключить»">
+      <incoming>Flow_U6_Disable</incoming>
+      <outgoing>Flow_U7_Disable</outgoing>
+    </userTask>
+    <userTask id="Task_SearchService" name="Ввести запрос&#10;в поиск услуг">
+      <incoming>Flow_U2_Search</incoming>
+      <outgoing>Flow_U3_Search</outgoing>
+    </userTask>
+    <serviceTask id="Task_SearchServicesDB" name="Поиск услуг&#10;в базе данных">
+      <incoming>Flow_U3_Search</incoming>
+      <outgoing>Flow_U3b_Search</outgoing>
+      <dataOutputAssociation id="DataOutputAssociation_14sosi3">
+        <targetRef>DS_Services</targetRef>
+      </dataOutputAssociation>
+    </serviceTask>
+    <userTask id="Task_CustomizeTariff" name="Настроить параметры&#10;тарифа">
+      <incoming>Flow_T_CustYes</incoming>
+      <outgoing>Flow_T_AfterCust</outgoing>
+    </userTask>
+    <sequenceFlow id="Flow_U1" sourceRef="Task_ViewServices" targetRef="Task_LoadServices" />
+    <sequenceFlow id="Flow_U1c" sourceRef="Task_LoadServices" targetRef="Gateway_ServiceSearch" />
+    <sequenceFlow id="Flow_T1" sourceRef="Task_ViewTariffInfo" targetRef="Task_LoadTariffInfo" />
+    <sequenceFlow id="Flow_T1c" sourceRef="Task_LoadTariffInfo" targetRef="Gateway_TariffAction" />
+    <sequenceFlow id="Flow_T4" sourceRef="Task_ClickChangeTariff" targetRef="Task_LoadCategories" />
+    <sequenceFlow id="Flow_T4c" sourceRef="Task_LoadCategories" targetRef="Gateway_TariffSearch" />
+    <sequenceFlow id="Flow_T_Name2" sourceRef="Task_ClickTariffName" targetRef="Task_LoadTariffPage" />
+    <sequenceFlow id="Flow_T_Name4" sourceRef="Task_LoadTariffPage" targetRef="Gateway_IsCustomizable" />
+    <sequenceFlow id="Flow_T_CustYes" name="Да" sourceRef="Gateway_IsCustomizable" targetRef="Task_CustomizeTariff" />
+    <sequenceFlow id="Flow_T_CustNo" name="Нет" sourceRef="Gateway_IsCustomizable" targetRef="Gateway_SwitchMerge" />
+    <sequenceFlow id="Flow_T_AfterCust" sourceRef="Task_CustomizeTariff" targetRef="Gateway_SwitchMerge" />
+    <sequenceFlow id="Flow_1pvhl6j" sourceRef="Activity_08wagg3" targetRef="Gateway_SwitchMerge" />
+    <sequenceFlow id="Flow_T_Switch1" sourceRef="Gateway_SwitchMerge" targetRef="Gateway_HasSwitchFee" />
+    <sequenceFlow id="Flow_T_SFYes" name="Да (есть плата)" sourceRef="Gateway_HasSwitchFee" targetRef="Task_BillingChargeSwitchFee" />
+    <sequenceFlow id="Flow_T_SFNo" name="Нет" sourceRef="Gateway_HasSwitchFee" targetRef="Gateway_FeeMerge" />
+    <sequenceFlow id="Flow_T_SFDone" sourceRef="Task_BillingChargeSwitchFee" targetRef="Gateway_FeeMerge" />
+    <sequenceFlow id="Flow_T_FM" sourceRef="Gateway_FeeMerge" targetRef="Task_BillingChargeMonthly" />
+    <sequenceFlow id="Flow_T_BCM" sourceRef="Task_BillingChargeMonthly" targetRef="Task_UpdateSubscriberTariff" />
+    <sequenceFlow id="Flow_T_DBUp" sourceRef="Task_UpdateSubscriberTariff" targetRef="Gateway_ChangeResult" />
+    <sequenceFlow id="Flow_T6_Cat" sourceRef="Task_SelectCategory" targetRef="Task_LoadTariffsByCategory" />
+    <sequenceFlow id="Flow_T6b_Cat" sourceRef="Task_LoadTariffsByCategory" targetRef="Task_SelectTariffFromCategory" />
+    <sequenceFlow id="Flow_U7_Details" sourceRef="Task_ViewServiceDetails" targetRef="Task_LoadServiceDetails" />
+    <sequenceFlow id="Flow_U7c_Details" sourceRef="Task_LoadServiceDetails" targetRef="EndEvent_ServiceDetails" />
+    <sequenceFlow id="Flow_T6_Search" sourceRef="Task_SearchTariff" targetRef="Task_SearchTariffsDB" />
+    <sequenceFlow id="Flow_T6b_Search" sourceRef="Task_SearchTariffsDB" targetRef="Gateway_TariffMerge" />
+    <sequenceFlow id="Flow_T_OK" name="Успех" sourceRef="Gateway_ChangeResult" targetRef="Task_NotifySuccess" />
+    <sequenceFlow id="Flow_T_Err" name="Ошибка" sourceRef="Gateway_ChangeResult" targetRef="Task_NotifyError" />
+    <sequenceFlow id="Flow_T_NE" sourceRef="Task_NotifyError" targetRef="EndEvent_TariffError" />
+    <sequenceFlow id="Flow_T_ULK" sourceRef="Task_UpdateLK_Tariff" targetRef="EndEvent_TariffChanged" />
+    <sequenceFlow id="Flow_T_NS" sourceRef="Task_NotifySuccess" targetRef="Task_UpdateLK_Tariff" />
+    <sequenceFlow id="Flow_S1" sourceRef="StartEvent_Main" targetRef="Gateway_Section" />
+    <sequenceFlow id="Flow_ToTariff" sourceRef="Gateway_Section" targetRef="Task_ViewTariffInfo" />
+    <sequenceFlow id="Flow_ToServices" sourceRef="Gateway_Section" targetRef="Task_ViewServices" />
+    <sequenceFlow id="Flow_T2_PDF" name="Условия" sourceRef="Gateway_TariffAction" targetRef="Task_OpenPDF" />
+    <sequenceFlow id="Flow_T2_Change" name="Сменить тариф" sourceRef="Gateway_TariffAction" targetRef="Task_ClickChangeTariff" />
+    <sequenceFlow id="Flow_T3_PDF" sourceRef="Task_OpenPDF" targetRef="EndEvent_PDF" />
+    <sequenceFlow id="Flow_T5_Cat" sourceRef="Gateway_TariffSearch" targetRef="Task_SelectCategory" />
+    <sequenceFlow id="Flow_T5_Search" sourceRef="Gateway_TariffSearch" targetRef="Task_SearchTariff" />
+    <sequenceFlow id="Flow_T7_Cat" sourceRef="Task_SelectTariffFromCategory" targetRef="Gateway_TariffMerge" />
+    <sequenceFlow id="Flow_T8" sourceRef="Gateway_TariffMerge" targetRef="Gateway_TariffDetailAction" />
+    <sequenceFlow id="Flow_T_Direct" sourceRef="Gateway_TariffDetailAction" targetRef="Activity_08wagg3" />
+    <sequenceFlow id="Flow_T_Name" sourceRef="Gateway_TariffDetailAction" targetRef="Task_ClickTariffName" />
+    <sequenceFlow id="Flow_U3_Cat" sourceRef="Task_SelectServiceCategory" targetRef="Task_SelectServiceFromCategory" />
+    <sequenceFlow id="Flow_U4_Cat" sourceRef="Task_SelectServiceFromCategory" targetRef="Gateway_ServiceMerge" />
+    <sequenceFlow id="Flow_U3b_Search" sourceRef="Task_SearchServicesDB" targetRef="Gateway_ServiceMerge" />
+    <sequenceFlow id="Flow_U5" sourceRef="Gateway_ServiceMerge" targetRef="Gateway_ServiceAction" />
+    <sequenceFlow id="Flow_U6_Details" sourceRef="Gateway_ServiceAction" targetRef="Task_ViewServiceDetails" />
+    <sequenceFlow id="Flow_U6_Disable" sourceRef="Gateway_ServiceAction" targetRef="Task_ClickDisable" />
+    <sequenceFlow id="Flow_U2_Cat" sourceRef="Gateway_ServiceSearch" targetRef="Task_SelectServiceCategory" />
+    <sequenceFlow id="Flow_U2_Search" sourceRef="Gateway_ServiceSearch" targetRef="Task_SearchService" />
+    <sequenceFlow id="Flow_U7_Disable" sourceRef="Task_ClickDisable" targetRef="Task_CallBillingDisable" />
+    <sequenceFlow id="Flow_U8" sourceRef="Task_CallBillingDisable" targetRef="Task_DeleteSubscriberService" />
+    <sequenceFlow id="Flow_U8b" sourceRef="Task_DeleteSubscriberService" targetRef="Gateway_DisableResult" />
+    <sequenceFlow id="Flow_U11" sourceRef="Task_UpdateLK_Service" targetRef="EndEvent_ServiceDisabled" />
+    <sequenceFlow id="Flow_U10" sourceRef="Task_NotifyDisableOK" targetRef="Task_UpdateLK_Service" />
+    <sequenceFlow id="Flow_U9_OK" name="Успех" sourceRef="Gateway_DisableResult" targetRef="Task_NotifyDisableOK" />
+    <sequenceFlow id="Flow_U12" sourceRef="Task_NotifyDisableErr" targetRef="EndEvent_ServiceError" />
+    <sequenceFlow id="Flow_U9_Err" name="Ошибка" sourceRef="Gateway_DisableResult" targetRef="Task_NotifyDisableErr" />
+    <sequenceFlow id="Flow_U3_Search" sourceRef="Task_SearchService" targetRef="Task_SearchServicesDB" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_MTS_di" bpmnElement="Participant_MTS" isHorizontal="true">
+        <omgdc:Bounds x="160" y="80" width="4700" height="1530" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <omgdc:Bounds x="190" y="1030" width="4670" height="580" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_User_di" bpmnElement="Lane_User" isHorizontal="true">
+        <omgdc:Bounds x="190" y="80" width="4670" height="950" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadServices_di" bpmnElement="Task_LoadServices">
+        <omgdc:Bounds x="470" y="1170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadTariffInfo_di" bpmnElement="Task_LoadTariffInfo">
+        <omgdc:Bounds x="470" y="1340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadCategories_di" bpmnElement="Task_LoadCategories">
+        <omgdc:Bounds x="2300" y="1190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadTariffPage_di" bpmnElement="Task_LoadTariffPage">
+        <omgdc:Bounds x="3222" y="1290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_IsCustomizable_di" bpmnElement="Gateway_IsCustomizable" isMarkerVisible="true">
+        <omgdc:Bounds x="3377" y="1305" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3436.5" y="1310" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_SwitchMerge_di" bpmnElement="Gateway_SwitchMerge" isMarkerVisible="true">
+        <omgdc:Bounds x="3632" y="1305" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasSwitchFee_di" bpmnElement="Gateway_HasSwitchFee" isMarkerVisible="true">
+        <omgdc:Bounds x="3742" y="1305" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3803" y="1317" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BillingChargeSwitchFee_di" bpmnElement="Task_BillingChargeSwitchFee">
+        <omgdc:Bounds x="3842" y="1180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_FeeMerge_di" bpmnElement="Gateway_FeeMerge" isMarkerVisible="true">
+        <omgdc:Bounds x="3992" y="1305" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BillingChargeMonthly_di" bpmnElement="Task_BillingChargeMonthly">
+        <omgdc:Bounds x="4092" y="1290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSubscriberTariff_di" bpmnElement="Task_UpdateSubscriberTariff">
+        <omgdc:Bounds x="4242" y="1290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadTariffsByCategory_di" bpmnElement="Task_LoadTariffsByCategory">
+        <omgdc:Bounds x="2782" y="1130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadServiceDetails_di" bpmnElement="Task_LoadServiceDetails">
+        <omgdc:Bounds x="1650" y="1220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ServiceDetails_di" bpmnElement="EndEvent_ServiceDetails">
+        <omgdc:Bounds x="1872" y="1242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1847" y="1205" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SearchTariffsDB_di" bpmnElement="Task_SearchTariffsDB">
+        <omgdc:Bounds x="2902" y="1290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ChangeResult_di" bpmnElement="Gateway_ChangeResult" isMarkerVisible="true">
+        <omgdc:Bounds x="4415" y="1305" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4364" y="1296" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_TariffError_di" bpmnElement="EndEvent_TariffError">
+        <omgdc:Bounds x="4752" y="1412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4731" y="1455" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_TariffChanged_di" bpmnElement="EndEvent_TariffChanged">
+        <omgdc:Bounds x="4772" y="1262" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4750" y="1305" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyError_di" bpmnElement="Task_NotifyError">
+        <omgdc:Bounds x="4570" y="1390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifySuccess_di" bpmnElement="Task_NotifySuccess">
+        <omgdc:Bounds x="4510" y="1240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateLK_Tariff_di" bpmnElement="Task_UpdateLK_Tariff">
+        <omgdc:Bounds x="4640" y="1240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_Main_di" bpmnElement="StartEvent_Main">
+        <omgdc:Bounds x="252" y="589" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="229" y="632" width="83" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Section_di" bpmnElement="Gateway_Section" isMarkerVisible="true">
+        <omgdc:Bounds x="365" y="582" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="430" y="600" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ViewTariffInfo_di" bpmnElement="Task_ViewTariffInfo">
+        <omgdc:Bounds x="470" y="427" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffAction_di" bpmnElement="Gateway_TariffAction" isMarkerVisible="true">
+        <omgdc:Bounds x="1985" y="872" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2045" y="886" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OpenPDF_di" bpmnElement="Task_OpenPDF">
+        <omgdc:Bounds x="2130" y="757" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_PDF_di" bpmnElement="EndEvent_PDF">
+        <omgdc:Bounds x="2332" y="779" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2306" y="822" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ClickChangeTariff_di" bpmnElement="Task_ClickChangeTariff">
+        <omgdc:Bounds x="2300" y="917" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffSearch_di" bpmnElement="Gateway_TariffSearch">
+        <omgdc:Bounds x="2497" y="612" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2557" y="623" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectTariffFromCategory_di" bpmnElement="Task_SelectTariffFromCategory">
+        <omgdc:Bounds x="2782" y="427" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffMerge_di" bpmnElement="Gateway_TariffMerge" isMarkerVisible="true">
+        <omgdc:Bounds x="2927" y="442" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffDetailAction_di" bpmnElement="Gateway_TariffDetailAction" isMarkerVisible="true">
+        <omgdc:Bounds x="3062" y="582" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2997" y="593" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ClickTariffName_di" bpmnElement="Task_ClickTariffName">
+        <omgdc:Bounds x="3222" y="677" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ViewServices_di" bpmnElement="Task_ViewServices">
+        <omgdc:Bounds x="470" y="737" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectServiceFromCategory_di" bpmnElement="Task_SelectServiceFromCategory">
+        <omgdc:Bounds x="1070" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ServiceMerge_di" bpmnElement="Gateway_ServiceMerge" isMarkerVisible="true">
+        <omgdc:Bounds x="1265" y="312" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ServiceAction_di" bpmnElement="Gateway_ServiceAction" isMarkerVisible="true">
+        <omgdc:Bounds x="1435" y="312" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1435" y="283" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ServiceSearch_di" bpmnElement="Gateway_ServiceSearch">
+        <omgdc:Bounds x="745" y="292" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="801" y="303" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectServiceCategory_di" bpmnElement="Task_SelectServiceCategory">
+        <omgdc:Bounds x="870" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SearchTariff_di" bpmnElement="Task_SearchTariff">
+        <omgdc:Bounds x="2572" y="707" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ViewServiceDetails_di" bpmnElement="Task_ViewServiceDetails">
+        <omgdc:Bounds x="1660" y="437" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectCategory_di" bpmnElement="Task_SelectCategory">
+        <omgdc:Bounds x="2562" y="427" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_047mo3x" bpmnElement="Activity_08wagg3">
+        <omgdc:Bounds x="3222" y="567" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CallBillingDisable_di" bpmnElement="Task_CallBillingDisable">
+        <omgdc:Bounds x="1410" y="1440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DeleteSubscriberService_di" bpmnElement="Task_DeleteSubscriberService">
+        <omgdc:Bounds x="1530" y="1440" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ServiceDisabled_di" bpmnElement="EndEvent_ServiceDisabled">
+        <omgdc:Bounds x="2112" y="1412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2090" y="1455" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateLK_Service_di" bpmnElement="Task_UpdateLK_Service">
+        <omgdc:Bounds x="1980" y="1390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyDisableOK_di" bpmnElement="Task_NotifyDisableOK">
+        <omgdc:Bounds x="1860" y="1390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ServiceError_di" bpmnElement="EndEvent_ServiceError">
+        <omgdc:Bounds x="2112" y="1512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2100" y="1555" width="61" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyDisableErr_di" bpmnElement="Task_NotifyDisableErr">
+        <omgdc:Bounds x="1860" y="1490" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DisableResult_di" bpmnElement="Gateway_DisableResult" isMarkerVisible="true">
+        <omgdc:Bounds x="1675" y="1455" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1734.5" y="1466" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ClickDisable_di" bpmnElement="Task_ClickDisable">
+        <omgdc:Bounds x="1410" y="437" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SearchService_di" bpmnElement="Task_SearchService">
+        <omgdc:Bounds x="970" y="427" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SearchServicesDB_di" bpmnElement="Task_SearchServicesDB">
+        <omgdc:Bounds x="970" y="1170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CustomizeTariff_di" bpmnElement="Task_CustomizeTariff">
+        <omgdc:Bounds x="3460" y="677" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_T1_di" bpmnElement="Flow_T1">
+        <omgdi:waypoint x="570" y="467" />
+        <omgdi:waypoint x="610" y="467" />
+        <omgdi:waypoint x="610" y="1370" />
+        <omgdi:waypoint x="570" y="1370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T1c_di" bpmnElement="Flow_T1c">
+        <omgdi:waypoint x="570" y="1390" />
+        <omgdi:waypoint x="780" y="1390" />
+        <omgdi:waypoint x="780" y="897" />
+        <omgdi:waypoint x="1985" y="897" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U1_di" bpmnElement="Flow_U1">
+        <omgdi:waypoint x="520" y="817" />
+        <omgdi:waypoint x="520" y="1170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U1c_di" bpmnElement="Flow_U1c">
+        <omgdi:waypoint x="570" y="1210" />
+        <omgdi:waypoint x="680" y="1210" />
+        <omgdi:waypoint x="680" y="317" />
+        <omgdi:waypoint x="745" y="317" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U7_Details_di" bpmnElement="Flow_U7_Details">
+        <omgdi:waypoint x="1700" y="517" />
+        <omgdi:waypoint x="1700" y="1220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U7_Disable_di" bpmnElement="Flow_U7_Disable">
+        <omgdi:waypoint x="1460" y="517" />
+        <omgdi:waypoint x="1460" y="1440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T4_di" bpmnElement="Flow_T4">
+        <omgdi:waypoint x="2350" y="997" />
+        <omgdi:waypoint x="2350" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T4c_di" bpmnElement="Flow_T4c">
+        <omgdi:waypoint x="2400" y="1230" />
+        <omgdi:waypoint x="2462" y="1230" />
+        <omgdi:waypoint x="2462" y="637" />
+        <omgdi:waypoint x="2497" y="637" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T6b_Cat_di" bpmnElement="Flow_T6b_Cat">
+        <omgdi:waypoint x="2832" y="1130" />
+        <omgdi:waypoint x="2832" y="507" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T6b_Search_di" bpmnElement="Flow_T6b_Search">
+        <omgdi:waypoint x="2952" y="1290" />
+        <omgdi:waypoint x="2952" y="492" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Name2_di" bpmnElement="Flow_T_Name2">
+        <omgdi:waypoint x="3272" y="757" />
+        <omgdi:waypoint x="3272" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Name4_di" bpmnElement="Flow_T_Name4">
+        <omgdi:waypoint x="3322" y="1330" />
+        <omgdi:waypoint x="3377" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CustYes_di" bpmnElement="Flow_T_CustYes">
+        <omgdi:waypoint x="3402" y="1305" />
+        <omgdi:waypoint x="3402" y="717" />
+        <omgdi:waypoint x="3460" y="717" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3410" y="1273" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CustNo_di" bpmnElement="Flow_T_CustNo">
+        <omgdi:waypoint x="3402" y="1355" />
+        <omgdi:waypoint x="3402" y="1400" />
+        <omgdi:waypoint x="3657" y="1400" />
+        <omgdi:waypoint x="3657" y="1355" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3407" y="1373" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_AfterCust_di" bpmnElement="Flow_T_AfterCust">
+        <omgdi:waypoint x="3560" y="717" />
+        <omgdi:waypoint x="3612" y="717" />
+        <omgdi:waypoint x="3612" y="1330" />
+        <omgdi:waypoint x="3632" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Switch1_di" bpmnElement="Flow_T_Switch1">
+        <omgdi:waypoint x="3682" y="1330" />
+        <omgdi:waypoint x="3742" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SFYes_di" bpmnElement="Flow_T_SFYes">
+        <omgdi:waypoint x="3767" y="1305" />
+        <omgdi:waypoint x="3767" y="1220" />
+        <omgdi:waypoint x="3842" y="1220" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3752" y="1203" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SFNo_di" bpmnElement="Flow_T_SFNo">
+        <omgdi:waypoint x="3767" y="1355" />
+        <omgdi:waypoint x="3767" y="1420" />
+        <omgdi:waypoint x="4017" y="1420" />
+        <omgdi:waypoint x="4017" y="1355" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3783" y="1403" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SFDone_di" bpmnElement="Flow_T_SFDone">
+        <omgdi:waypoint x="3942" y="1220" />
+        <omgdi:waypoint x="4017" y="1220" />
+        <omgdi:waypoint x="4017" y="1305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_FM_di" bpmnElement="Flow_T_FM">
+        <omgdi:waypoint x="4042" y="1330" />
+        <omgdi:waypoint x="4092" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_BCM_di" bpmnElement="Flow_T_BCM">
+        <omgdi:waypoint x="4192" y="1330" />
+        <omgdi:waypoint x="4242" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_DBUp_di" bpmnElement="Flow_T_DBUp">
+        <omgdi:waypoint x="4342" y="1330" />
+        <omgdi:waypoint x="4415" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T6_Cat_di" bpmnElement="Flow_T6_Cat">
+        <omgdi:waypoint x="2662" y="467" />
+        <omgdi:waypoint x="2750" y="467" />
+        <omgdi:waypoint x="2750" y="1170" />
+        <omgdi:waypoint x="2782" y="1170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T6_Search_di" bpmnElement="Flow_T6_Search">
+        <omgdi:waypoint x="2622" y="787" />
+        <omgdi:waypoint x="2622" y="1330" />
+        <omgdi:waypoint x="2902" y="1330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U7c_Details_di" bpmnElement="Flow_U7c_Details">
+        <omgdi:waypoint x="1750" y="1260" />
+        <omgdi:waypoint x="1872" y="1260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pvhl6j_di" bpmnElement="Flow_1pvhl6j">
+        <omgdi:waypoint x="3322" y="607" />
+        <omgdi:waypoint x="3657" y="607" />
+        <omgdi:waypoint x="3657" y="1305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_OK_di" bpmnElement="Flow_T_OK">
+        <omgdi:waypoint x="4440" y="1305" />
+        <omgdi:waypoint x="4440" y="1280" />
+        <omgdi:waypoint x="4510" y="1280" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4460" y="1263" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Err_di" bpmnElement="Flow_T_Err">
+        <omgdi:waypoint x="4440" y="1355" />
+        <omgdi:waypoint x="4440" y="1430" />
+        <omgdi:waypoint x="4570" y="1430" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4454" y="1413" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_NE_di" bpmnElement="Flow_T_NE">
+        <omgdi:waypoint x="4670" y="1430" />
+        <omgdi:waypoint x="4752" y="1430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_ULK_di" bpmnElement="Flow_T_ULK">
+        <omgdi:waypoint x="4740" y="1280" />
+        <omgdi:waypoint x="4772" y="1280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_NS_di" bpmnElement="Flow_T_NS">
+        <omgdi:waypoint x="4610" y="1280" />
+        <omgdi:waypoint x="4640" y="1280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_di" bpmnElement="Flow_S1">
+        <omgdi:waypoint x="288" y="607" />
+        <omgdi:waypoint x="365" y="607" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToTariff_di" bpmnElement="Flow_ToTariff">
+        <omgdi:waypoint x="390" y="582" />
+        <omgdi:waypoint x="390" y="467" />
+        <omgdi:waypoint x="470" y="467" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="401" y="-60" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToServices_di" bpmnElement="Flow_ToServices">
+        <omgdi:waypoint x="390" y="632" />
+        <omgdi:waypoint x="390" y="777" />
+        <omgdi:waypoint x="470" y="777" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="401" y="250" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T2_PDF_di" bpmnElement="Flow_T2_PDF">
+        <omgdi:waypoint x="2010" y="872" />
+        <omgdi:waypoint x="2010" y="797" />
+        <omgdi:waypoint x="2130" y="797" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2029" y="780" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T2_Change_di" bpmnElement="Flow_T2_Change">
+        <omgdi:waypoint x="2010" y="922" />
+        <omgdi:waypoint x="2010" y="957" />
+        <omgdi:waypoint x="2300" y="957" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2019" y="936" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T3_PDF_di" bpmnElement="Flow_T3_PDF">
+        <omgdi:waypoint x="2230" y="797" />
+        <omgdi:waypoint x="2332" y="797" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T5_Cat_di" bpmnElement="Flow_T5_Cat">
+        <omgdi:waypoint x="2522" y="612" />
+        <omgdi:waypoint x="2522" y="467" />
+        <omgdi:waypoint x="2562" y="467" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T5_Search_di" bpmnElement="Flow_T5_Search">
+        <omgdi:waypoint x="2522" y="662" />
+        <omgdi:waypoint x="2522" y="747" />
+        <omgdi:waypoint x="2572" y="747" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T7_Cat_di" bpmnElement="Flow_T7_Cat">
+        <omgdi:waypoint x="2882" y="467" />
+        <omgdi:waypoint x="2927" y="467" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T8_di" bpmnElement="Flow_T8">
+        <omgdi:waypoint x="2977" y="467" />
+        <omgdi:waypoint x="3087" y="467" />
+        <omgdi:waypoint x="3087" y="582" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Direct_di" bpmnElement="Flow_T_Direct">
+        <omgdi:waypoint x="3112" y="607" />
+        <omgdi:waypoint x="3222" y="607" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3120" y="26" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Name_di" bpmnElement="Flow_T_Name">
+        <omgdi:waypoint x="3087" y="632" />
+        <omgdi:waypoint x="3087" y="717" />
+        <omgdi:waypoint x="3222" y="717" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3066" y="176" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U3_Cat_di" bpmnElement="Flow_U3_Cat">
+        <omgdi:waypoint x="970" y="177" />
+        <omgdi:waypoint x="1070" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U4_Cat_di" bpmnElement="Flow_U4_Cat">
+        <omgdi:waypoint x="1170" y="177" />
+        <omgdi:waypoint x="1290" y="177" />
+        <omgdi:waypoint x="1290" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U3_Search_di" bpmnElement="Flow_U3_Search">
+        <omgdi:waypoint x="1020" y="507" />
+        <omgdi:waypoint x="1020" y="1170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U3b_Search_di" bpmnElement="Flow_U3b_Search">
+        <omgdi:waypoint x="1070" y="1210" />
+        <omgdi:waypoint x="1290" y="1210" />
+        <omgdi:waypoint x="1290" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U5_di" bpmnElement="Flow_U5">
+        <omgdi:waypoint x="1315" y="337" />
+        <omgdi:waypoint x="1435" y="337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U6_Details_di" bpmnElement="Flow_U6_Details">
+        <omgdi:waypoint x="1485" y="337" />
+        <omgdi:waypoint x="1710" y="337" />
+        <omgdi:waypoint x="1710" y="437" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1531" y="-190" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U6_Disable_di" bpmnElement="Flow_U6_Disable">
+        <omgdi:waypoint x="1460" y="362" />
+        <omgdi:waypoint x="1460" y="437" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1472" y="-127" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U2_Search_di" bpmnElement="Flow_U2_Search">
+        <omgdi:waypoint x="770" y="342" />
+        <omgdi:waypoint x="770" y="467" />
+        <omgdi:waypoint x="970" y="467" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U2_Cat_di" bpmnElement="Flow_U2_Cat">
+        <omgdi:waypoint x="770" y="292" />
+        <omgdi:waypoint x="770" y="177" />
+        <omgdi:waypoint x="870" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U8_di" bpmnElement="Flow_U8">
+        <omgdi:waypoint x="1510" y="1480" />
+        <omgdi:waypoint x="1530" y="1480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U8b_di" bpmnElement="Flow_U8b">
+        <omgdi:waypoint x="1630" y="1480" />
+        <omgdi:waypoint x="1675" y="1480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U11_di" bpmnElement="Flow_U11">
+        <omgdi:waypoint x="2080" y="1430" />
+        <omgdi:waypoint x="2112" y="1430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U10_di" bpmnElement="Flow_U10">
+        <omgdi:waypoint x="1960" y="1430" />
+        <omgdi:waypoint x="1980" y="1430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U9_OK_di" bpmnElement="Flow_U9_OK">
+        <omgdi:waypoint x="1700" y="1455" />
+        <omgdi:waypoint x="1700" y="1430" />
+        <omgdi:waypoint x="1860" y="1430" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1746" y="1413" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U12_di" bpmnElement="Flow_U12">
+        <omgdi:waypoint x="1960" y="1530" />
+        <omgdi:waypoint x="2112" y="1530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U9_Err_di" bpmnElement="Flow_U9_Err">
+        <omgdi:waypoint x="1700" y="1505" />
+        <omgdi:waypoint x="1700" y="1530" />
+        <omgdi:waypoint x="1860" y="1530" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1740" y="1513" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Billing_di" bpmnElement="Participant_Billing" isHorizontal="true" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <omgdc:Bounds x="160" y="1650" width="4700" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_TariffCategories_di" bpmnElement="DS_TariffCategories">
+        <omgdc:Bounds x="2325" y="1835" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="2316" y="1890" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_TariffOptions_di" bpmnElement="DS_TariffOptions">
+        <omgdc:Bounds x="3237" y="1810" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3234" y="1865" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_SubscriberTariffs_di" bpmnElement="DS_SubscriberTariffs">
+        <omgdc:Bounds x="4267" y="1810" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4253" y="1865" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Services_di" bpmnElement="DS_Services">
+        <omgdc:Bounds x="1755" y="1810" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1762" y="1793" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariffs_di" bpmnElement="DS_Tariffs">
+        <omgdc:Bounds x="495" y="1855" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="549" y="1873" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_SubscriberServices_di" bpmnElement="DS_SubscriberServices">
+        <omgdc:Bounds x="1555" y="1795" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1287" y="1316" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Balances_di" bpmnElement="DS_Balances">
+        <omgdc:Bounds x="345" y="1735" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="400" y="1753" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_00pumgi_di" bpmnElement="Association_00pumgi">
+        <omgdi:waypoint x="1580" y="1845" />
+        <omgdi:waypoint x="1580" y="1847" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0nq9mzi_di" bpmnElement="DataOutputAssociation_0nq9mzi">
+        <omgdi:waypoint x="520" y="1420" />
+        <omgdi:waypoint x="520" y="1855" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1p3i3nv_di" bpmnElement="DataOutputAssociation_1p3i3nv">
+        <omgdi:waypoint x="470" y="1390" />
+        <omgdi:waypoint x="370" y="1390" />
+        <omgdi:waypoint x="370" y="1700" />
+        <omgdi:waypoint x="370" y="1735" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1rrean1_di" bpmnElement="DataOutputAssociation_1rrean1">
+        <omgdi:waypoint x="3300" y="1370" />
+        <omgdi:waypoint x="3300" y="2070" />
+        <omgdi:waypoint x="510" y="2070" />
+        <omgdi:waypoint x="510" y="1905" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1r8c6pa_di" bpmnElement="DataOutputAssociation_1r8c6pa">
+        <omgdi:waypoint x="470" y="1230" />
+        <omgdi:waypoint x="270" y="1230" />
+        <omgdi:waypoint x="270" y="1820" />
+        <omgdi:waypoint x="1555" y="1820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1094d0j_di" bpmnElement="DataOutputAssociation_1094d0j">
+        <omgdi:waypoint x="470" y="1200" />
+        <omgdi:waypoint x="230" y="1200" />
+        <omgdi:waypoint x="230" y="1940" />
+        <omgdi:waypoint x="1780" y="1940" />
+        <omgdi:waypoint x="1780" y="1860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_14sosi3_di" bpmnElement="DataOutputAssociation_14sosi3">
+        <omgdi:waypoint x="1020" y="1250" />
+        <omgdi:waypoint x="1020" y="1900" />
+        <omgdi:waypoint x="1730" y="1900" />
+        <omgdi:waypoint x="1730" y="1850" />
+        <omgdi:waypoint x="1755" y="1850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_DeleteService_di" bpmnElement="DOA_DeleteService">
+        <omgdi:waypoint x="1580" y="1520" />
+        <omgdi:waypoint x="1580" y="1795" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_101gam2_di" bpmnElement="DataOutputAssociation_101gam2">
+        <omgdi:waypoint x="1650" y="1290" />
+        <omgdi:waypoint x="1650" y="1835" />
+        <omgdi:waypoint x="1755" y="1835" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0i80og8_di" bpmnElement="DataOutputAssociation_0i80og8">
+        <omgdi:waypoint x="2832" y="1210" />
+        <omgdi:waypoint x="2832" y="2020" />
+        <omgdi:waypoint x="470" y="2020" />
+        <omgdi:waypoint x="470" y="1875" />
+        <omgdi:waypoint x="495" y="1875" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0fdjjfr_di" bpmnElement="DataOutputAssociation_0fdjjfr">
+        <omgdi:waypoint x="2952" y="1370" />
+        <omgdi:waypoint x="2952" y="1970" />
+        <omgdi:waypoint x="525" y="1970" />
+        <omgdi:waypoint x="525" y="1905" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_SwitchFee_di" bpmnElement="MF_SwitchFee">
+        <omgdi:waypoint x="3892" y="1260" />
+        <omgdi:waypoint x="3892" y="1650" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="3787" y="1506" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_MonthlyFee_di" bpmnElement="MF_MonthlyFee">
+        <omgdi:waypoint x="4142" y="1370" />
+        <omgdi:waypoint x="4142" y="1650" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="4064" y="1493" width="72" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_DisableService_di" bpmnElement="MF_DisableService">
+        <omgdi:waypoint x="1460" y="1520" />
+        <omgdi:waypoint x="1460" y="1650" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1046" y="1040" width="67" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1v83nj9_di" bpmnElement="DataOutputAssociation_1v83nj9">
+        <omgdi:waypoint x="2350" y="1270" />
+        <omgdi:waypoint x="2350" y="1835" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0vpr1ba_di" bpmnElement="DataOutputAssociation_0vpr1ba">
+        <omgdi:waypoint x="3262" y="1370" />
+        <omgdi:waypoint x="3262" y="1810" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_UpdateTariff_di" bpmnElement="DOA_UpdateTariff">
+        <omgdi:waypoint x="4292" y="1370" />
+        <omgdi:waypoint x="4292" y="1810" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="TextAnnotation_0pg5juc_di" bpmnElement="TextAnnotation_0pg5juc">
+        <omgdc:Bounds x="1530" y="1847" width="118.51988976933146" height="26.179885581478178" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
