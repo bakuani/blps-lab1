@@ -1,6 +1,7 @@
 package ru.urasha.callmeani.blps.api.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,13 +21,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class TariffController {
 
     private final TariffManagementService tariffManagementService;
-
-    public TariffController(TariffManagementService tariffManagementService) {
-        this.tariffManagementService = tariffManagementService;
-    }
 
     @GetMapping("/subscribers/{subscriberId}/tariff")
     public TariffInfoResponse getSubscriberTariffInfo(@PathVariable Long subscriberId) {

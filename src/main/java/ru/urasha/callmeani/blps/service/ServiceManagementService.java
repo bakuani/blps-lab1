@@ -1,5 +1,6 @@
 package ru.urasha.callmeani.blps.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.BillingTransactionDto;
@@ -29,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ServiceManagementService {
 
     private final SubscriberRepository subscriberRepository;
@@ -37,22 +39,6 @@ public class ServiceManagementService {
     private final ServiceCategoryRepository serviceCategoryRepository;
     private final BillingTransactionRepository billingTransactionRepository;
     private final NotificationEventRepository notificationEventRepository;
-
-    public ServiceManagementService(
-        SubscriberRepository subscriberRepository,
-        SubscriberServiceRepository subscriberServiceRepository,
-        AdditionalServiceRepository additionalServiceRepository,
-        ServiceCategoryRepository serviceCategoryRepository,
-        BillingTransactionRepository billingTransactionRepository,
-        NotificationEventRepository notificationEventRepository
-    ) {
-        this.subscriberRepository = subscriberRepository;
-        this.subscriberServiceRepository = subscriberServiceRepository;
-        this.additionalServiceRepository = additionalServiceRepository;
-        this.serviceCategoryRepository = serviceCategoryRepository;
-        this.billingTransactionRepository = billingTransactionRepository;
-        this.notificationEventRepository = notificationEventRepository;
-    }
 
     @Transactional(readOnly = true)
     public List<ServiceSummaryDto> findSubscriberServices(Long subscriberId, Long categoryId, String query) {

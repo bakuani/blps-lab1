@@ -1,5 +1,6 @@
 package ru.urasha.callmeani.blps.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.BillingTransactionDto;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class TariffManagementService {
 
     private final SubscriberRepository subscriberRepository;
@@ -41,20 +43,6 @@ public class TariffManagementService {
     private final TariffCategoryRepository tariffCategoryRepository;
     private final BillingTransactionRepository billingTransactionRepository;
     private final NotificationEventRepository notificationEventRepository;
-
-    public TariffManagementService(
-        SubscriberRepository subscriberRepository,
-        TariffRepository tariffRepository,
-        TariffCategoryRepository tariffCategoryRepository,
-        BillingTransactionRepository billingTransactionRepository,
-        NotificationEventRepository notificationEventRepository
-    ) {
-        this.subscriberRepository = subscriberRepository;
-        this.tariffRepository = tariffRepository;
-        this.tariffCategoryRepository = tariffCategoryRepository;
-        this.billingTransactionRepository = billingTransactionRepository;
-        this.notificationEventRepository = notificationEventRepository;
-    }
 
     @Transactional(readOnly = true)
     public TariffInfoResponse getSubscriberTariffInfo(Long subscriberId) {

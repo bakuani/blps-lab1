@@ -1,5 +1,6 @@
 package ru.urasha.callmeani.blps.api.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,13 +17,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ServiceController {
 
     private final ServiceManagementService serviceManagementService;
-
-    public ServiceController(ServiceManagementService serviceManagementService) {
-        this.serviceManagementService = serviceManagementService;
-    }
 
     @GetMapping("/subscribers/{subscriberId}/services")
     public List<ServiceSummaryDto> findSubscriberServices(
