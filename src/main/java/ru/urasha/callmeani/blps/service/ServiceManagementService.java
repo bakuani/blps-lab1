@@ -24,6 +24,7 @@ import ru.urasha.callmeani.blps.repository.NotificationEventRepository;
 import ru.urasha.callmeani.blps.repository.ServiceCategoryRepository;
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
 import ru.urasha.callmeani.blps.repository.SubscriberServiceRepository;
+import ru.urasha.callmeani.blps.mapper.ClientMapper;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -39,6 +40,7 @@ public class ServiceManagementService {
     private final ServiceCategoryRepository serviceCategoryRepository;
     private final BillingTransactionRepository billingTransactionRepository;
     private final NotificationEventRepository notificationEventRepository;
+    private final ClientMapper clientMapper;
 
     @Transactional(readOnly = true)
     public List<ServiceSummaryDto> findSubscriberServices(Long subscriberId, Long categoryId, String query) {
@@ -50,13 +52,7 @@ public class ServiceManagementService {
         return services.stream()
             .filter(item -> categoryId == null || item.getService().getCategory().getId().equals(categoryId))
             .filter(item -> query == null || query.isBlank() || item.getService().getName().toLowerCase().contains(query.toLowerCase()))
-            .map(item -> new ServiceSummaryDto(
-                item.getService().getId(),
-                item.getService().getName(),
-                item.getService().getCategory().getName(),
-                item.getService().getMonthlyFee(),
-                item.getStatus().name()
-            ))
+            .map(clientMapper::toServiceSummaryDto)
             .toList();
     }
 
@@ -64,7 +60,7 @@ public class ServiceManagementService {
     public List<IdNameDto> getServiceCategories() {
         return serviceCategoryRepository.findAll()
             .stream()
-            .map(c -> new IdNameDto(c.getId(), c.getName()))
+            .map(clientMapper::toIdNameDto)
             .toList();
     }
 
@@ -73,13 +69,7 @@ public class ServiceManagementService {
         AdditionalService service = additionalServiceRepository.findById(serviceId)
             .orElseThrow(() -> new NotFoundException("Service not found: " + serviceId));
 
-        return new ServiceDetailsResponse(
-            service.getId(),
-            service.getName(),
-            service.getDescription(),
-            service.getCategory().getName(),
-            service.getMonthlyFee()
-        );
+        return clientMapper.toServiceDetailsResponse(service);
     }
 
     @Transactional
@@ -103,7 +93,7 @@ public class ServiceManagementService {
                 "Service is not active for subscriber",
                 serviceId,
                 List.of(),
-                toNotificationDto(notification)
+                clientMapper.toNotificationDto(notification)
             );
         }
 
@@ -129,8 +119,8 @@ public class ServiceManagementService {
             true,
             "Service disabled successfully",
             serviceId,
-            List.of(toBillingDto(disableCall)),
-            toNotificationDto(notification)
+            List.of(clientMapper.toBillingTransactionDto(disableCall)),
+            clientMapper.toNotificationDto(notification)
         );
     }
 
@@ -152,23 +142,5 @@ public class ServiceManagementService {
         notification.setSuccess(success);
         notification.setCreatedAt(OffsetDateTime.now());
         return notificationEventRepository.save(notification);
-    }
-
-    private BillingTransactionDto toBillingDto(BillingTransaction transaction) {
-        return new BillingTransactionDto(
-            transaction.getType().name(),
-            transaction.getAmount(),
-            transaction.getDescription(),
-            transaction.getCreatedAt()
-        );
-    }
-
-    private NotificationDto toNotificationDto(NotificationEvent notification) {
-        return new NotificationDto(
-            notification.getType().name(),
-            notification.getMessage(),
-            notification.isSuccess(),
-            notification.getCreatedAt()
-        );
     }
 }

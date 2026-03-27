@@ -1,0 +1,1201 @@
+﻿openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /api/v1/admin/tariffs/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariff
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffAdminResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateTariff
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TariffUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffAdminResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteTariff
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/tariff-options/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariffOption
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffOptionAdminResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateTariffOption
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TariffOptionUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffOptionAdminResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteTariffOption
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/tariff-categories/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariffCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateTariffCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NameRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteTariffCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/subscribers/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getSubscriber
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberAdminResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateSubscriber
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriberUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberAdminResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteSubscriber
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/subscriber-services/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getSubscriberService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberServiceAdminResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateSubscriberService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriberServiceUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberServiceAdminResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteSubscriberService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/services/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdditionalServiceAdminResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdditionalServiceUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdditionalServiceAdminResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteService
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/admin/service-categories/{id}:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getServiceCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+    put:
+      tags:
+      - admin-data-controller
+      operationId: updateServiceCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NameRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+    delete:
+      tags:
+      - admin-data-controller
+      operationId: deleteServiceCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+  /api/v1/subscribers/{subscriberId}/tariff/change:
+    post:
+      tags:
+      - tariff-controller
+      operationId: changeTariff
+      parameters:
+      - name: subscriberId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeTariffRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChangeTariffResponse"
+  /api/v1/subscribers/{subscriberId}/services/{serviceId}/disable:
+    post:
+      tags:
+      - service-controller
+      operationId: disableService
+      parameters:
+      - name: subscriberId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: serviceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DisableServiceResponse"
+  /api/v1/admin/tariffs:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariffs
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TariffAdminResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createTariff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TariffUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffAdminResponse"
+  /api/v1/admin/tariff-options:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariffOptions
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TariffOptionAdminResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createTariffOption
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TariffOptionUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffOptionAdminResponse"
+  /api/v1/admin/tariff-categories:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getTariffCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdNameResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createTariffCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NameRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+  /api/v1/admin/subscribers:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getSubscribers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriberAdminResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createSubscriber
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriberUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberAdminResponse"
+  /api/v1/admin/subscriber-services:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getSubscriberServices
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriberServiceAdminResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createSubscriberService
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriberServiceUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SubscriberServiceAdminResponse"
+  /api/v1/admin/services:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getServices
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdditionalServiceAdminResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createService
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdditionalServiceUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdditionalServiceAdminResponse"
+  /api/v1/admin/service-categories:
+    get:
+      tags:
+      - admin-data-controller
+      operationId: getServiceCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdNameResponse"
+    post:
+      tags:
+      - admin-data-controller
+      operationId: createServiceCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NameRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/IdNameResponse"
+  /api/v1/tariffs:
+    get:
+      tags:
+      - tariff-controller
+      operationId: findTariffs
+      parameters:
+      - name: categoryId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TariffSummaryDto"
+  /api/v1/tariffs/{tariffId}:
+    get:
+      tags:
+      - tariff-controller
+      operationId: getTariffDetails
+      parameters:
+      - name: tariffId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffDetailsResponse"
+  /api/v1/tariffs/categories:
+    get:
+      tags:
+      - tariff-controller
+      operationId: getTariffCategories_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdNameDto"
+  /api/v1/subscribers/{subscriberId}/tariff:
+    get:
+      tags:
+      - tariff-controller
+      operationId: getSubscriberTariffInfo
+      parameters:
+      - name: subscriberId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TariffInfoResponse"
+  /api/v1/subscribers/{subscriberId}/services:
+    get:
+      tags:
+      - service-controller
+      operationId: findSubscriberServices
+      parameters:
+      - name: subscriberId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: categoryId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceSummaryDto"
+  /api/v1/services/{serviceId}:
+    get:
+      tags:
+      - service-controller
+      operationId: getServiceDetails
+      parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ServiceDetailsResponse"
+  /api/v1/services/categories:
+    get:
+      tags:
+      - service-controller
+      operationId: getServiceCategories_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdNameDto"
+components:
+  schemas:
+    TariffUpsertRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        monthlyFee:
+          type: number
+          minimum: 0.00
+        switchFee:
+          type: number
+          minimum: 0.00
+        customizable:
+          type: boolean
+        pdfUrl:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+      required:
+      - categoryId
+      - description
+      - monthlyFee
+      - name
+      - pdfUrl
+      - switchFee
+    TariffAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        monthlyFee:
+          type: number
+        switchFee:
+          type: number
+        customizable:
+          type: boolean
+        pdfUrl:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+    TariffOptionUpsertRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0.00
+        tariffId:
+          type: integer
+          format: int64
+      required:
+      - description
+      - name
+      - price
+      - tariffId
+    TariffOptionAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        tariffId:
+          type: integer
+          format: int64
+    NameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+      - name
+    IdNameResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    SubscriberUpsertRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        fullName:
+          type: string
+        balance:
+          type: number
+          minimum: 0.00
+        currentTariffId:
+          type: integer
+          format: int64
+      required:
+      - balance
+      - fullName
+      - phone
+    SubscriberAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        phone:
+          type: string
+        fullName:
+          type: string
+        balance:
+          type: number
+        currentTariffId:
+          type: integer
+          format: int64
+    SubscriberServiceUpsertRequest:
+      type: object
+      properties:
+        subscriberId:
+          type: integer
+          format: int64
+        serviceId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - DISABLED
+        connectedAt:
+          type: string
+          format: date-time
+        disabledAt:
+          type: string
+          format: date-time
+      required:
+      - serviceId
+      - status
+      - subscriberId
+    SubscriberServiceAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        subscriberId:
+          type: integer
+          format: int64
+        serviceId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - DISABLED
+        connectedAt:
+          type: string
+          format: date-time
+        disabledAt:
+          type: string
+          format: date-time
+    AdditionalServiceUpsertRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        monthlyFee:
+          type: number
+          minimum: 0.00
+        categoryId:
+          type: integer
+          format: int64
+      required:
+      - categoryId
+      - description
+      - monthlyFee
+      - name
+    AdditionalServiceAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        monthlyFee:
+          type: number
+        categoryId:
+          type: integer
+          format: int64
+    ChangeTariffRequest:
+      type: object
+      properties:
+        targetTariffId:
+          type: integer
+          format: int64
+        options:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - targetTariffId
+    BillingTransactionDto:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ChangeTariffResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        previousTariff:
+          $ref: "#/components/schemas/TariffSummaryDto"
+        newTariff:
+          $ref: "#/components/schemas/TariffSummaryDto"
+        selectedOptions:
+          type: object
+          additionalProperties:
+            type: string
+        balance:
+          type: number
+        billingTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingTransactionDto"
+        notification:
+          $ref: "#/components/schemas/NotificationDto"
+    NotificationDto:
+      type: object
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+        success:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    TariffSummaryDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        category:
+          type: string
+        monthlyFee:
+          type: number
+    DisableServiceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        serviceId:
+          type: integer
+          format: int64
+        billingTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingTransactionDto"
+        notification:
+          $ref: "#/components/schemas/NotificationDto"
+    TariffDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        monthlyFee:
+          type: number
+        switchFee:
+          type: number
+        customizable:
+          type: boolean
+        pdfUrl:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/TariffOptionDto"
+    TariffOptionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+    IdNameDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    TariffInfoResponse:
+      type: object
+      properties:
+        subscriberId:
+          type: integer
+          format: int64
+        subscriberPhone:
+          type: string
+        subscriberName:
+          type: string
+        balance:
+          type: number
+        currentTariff:
+          $ref: "#/components/schemas/TariffSummaryDto"
+    ServiceSummaryDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        category:
+          type: string
+        monthlyFee:
+          type: number
+        status:
+          type: string
+    ServiceDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        monthlyFee:
+          type: number
+

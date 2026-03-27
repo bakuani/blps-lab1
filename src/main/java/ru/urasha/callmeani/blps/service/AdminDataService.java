@@ -23,6 +23,7 @@ import ru.urasha.callmeani.blps.domain.entity.SubscriberService;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.entity.TariffCategory;
 import ru.urasha.callmeani.blps.domain.entity.TariffOption;
+import ru.urasha.callmeani.blps.mapper.AdminMapper;
 import ru.urasha.callmeani.blps.repository.AdditionalServiceRepository;
 import ru.urasha.callmeani.blps.repository.ServiceCategoryRepository;
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
@@ -45,15 +46,16 @@ public class AdminDataService {
     private final AdditionalServiceRepository additionalServiceRepository;
     private final SubscriberRepository subscriberRepository;
     private final SubscriberServiceRepository subscriberServiceRepository;
+    private final AdminMapper adminMapper;
 
     @Transactional(readOnly = true)
     public List<IdNameResponse> getTariffCategories() {
-        return tariffCategoryRepository.findAll().stream().map(this::toIdNameResponse).toList();
+        return tariffCategoryRepository.findAll().stream().map(adminMapper::toIdNameResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public IdNameResponse getTariffCategory(Long id) {
-        return toIdNameResponse(getTariffCategoryEntity(id));
+        return adminMapper.toIdNameResponse(getTariffCategoryEntity(id));
     }
 
     @Transactional
@@ -61,14 +63,14 @@ public class AdminDataService {
         TariffCategory category = new TariffCategory();
         category.setName(request.name());
         TariffCategory saved = tariffCategoryRepository.save(category);
-        return toIdNameResponse(saved);
+        return adminMapper.toIdNameResponse(saved);
     }
 
     @Transactional
     public IdNameResponse updateTariffCategory(Long id, NameRequest request) {
         TariffCategory category = getTariffCategoryEntity(id);
         category.setName(request.name());
-        return toIdNameResponse(tariffCategoryRepository.save(category));
+        return adminMapper.toIdNameResponse(tariffCategoryRepository.save(category));
     }
 
     @Transactional
@@ -79,12 +81,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<IdNameResponse> getServiceCategories() {
-        return serviceCategoryRepository.findAll().stream().map(this::toIdNameResponse).toList();
+        return serviceCategoryRepository.findAll().stream().map(adminMapper::toIdNameResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public IdNameResponse getServiceCategory(Long id) {
-        return toIdNameResponse(getServiceCategoryEntity(id));
+        return adminMapper.toIdNameResponse(getServiceCategoryEntity(id));
     }
 
     @Transactional
@@ -92,14 +94,14 @@ public class AdminDataService {
         ServiceCategory category = new ServiceCategory();
         category.setName(request.name());
         ServiceCategory saved = serviceCategoryRepository.save(category);
-        return toIdNameResponse(saved);
+        return adminMapper.toIdNameResponse(saved);
     }
 
     @Transactional
     public IdNameResponse updateServiceCategory(Long id, NameRequest request) {
         ServiceCategory category = getServiceCategoryEntity(id);
         category.setName(request.name());
-        return toIdNameResponse(serviceCategoryRepository.save(category));
+        return adminMapper.toIdNameResponse(serviceCategoryRepository.save(category));
     }
 
     @Transactional
@@ -110,12 +112,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<TariffAdminResponse> getTariffs() {
-        return tariffRepository.findAll().stream().map(this::toTariffResponse).toList();
+        return tariffRepository.findAll().stream().map(adminMapper::toTariffResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public TariffAdminResponse getTariff(Long id) {
-        return toTariffResponse(getTariffEntity(id));
+        return adminMapper.toTariffResponse(getTariffEntity(id));
     }
 
     @Transactional
@@ -123,18 +125,22 @@ public class AdminDataService {
         TariffCategory category = getTariffCategoryEntity(request.categoryId());
 
         Tariff tariff = new Tariff();
-        applyTariffRequest(tariff, request, category);
+        adminMapper.updateTariff(tariff, request);
+        tariff.setCategory(category);
 
         Tariff saved = tariffRepository.save(tariff);
-        return toTariffResponse(saved);
+        return adminMapper.toTariffResponse(saved);
     }
 
     @Transactional
     public TariffAdminResponse updateTariff(Long id, TariffUpsertRequest request) {
         Tariff tariff = getTariffEntity(id);
         TariffCategory category = getTariffCategoryEntity(request.categoryId());
-        applyTariffRequest(tariff, request, category);
-        return toTariffResponse(tariffRepository.save(tariff));
+        
+        adminMapper.updateTariff(tariff, request);
+        tariff.setCategory(category);
+        
+        return adminMapper.toTariffResponse(tariffRepository.save(tariff));
     }
 
     @Transactional
@@ -145,12 +151,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<TariffOptionAdminResponse> getTariffOptions() {
-        return tariffOptionRepository.findAll().stream().map(this::toTariffOptionResponse).toList();
+        return tariffOptionRepository.findAll().stream().map(adminMapper::toTariffOptionResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public TariffOptionAdminResponse getTariffOption(Long id) {
-        return toTariffOptionResponse(getTariffOptionEntity(id));
+        return adminMapper.toTariffOptionResponse(getTariffOptionEntity(id));
     }
 
     @Transactional
@@ -158,18 +164,22 @@ public class AdminDataService {
         Tariff tariff = getTariffEntity(request.tariffId());
 
         TariffOption option = new TariffOption();
-        applyTariffOptionRequest(option, request, tariff);
+        adminMapper.updateTariffOption(option, request);
+        option.setTariff(tariff);
 
         TariffOption saved = tariffOptionRepository.save(option);
-        return toTariffOptionResponse(saved);
+        return adminMapper.toTariffOptionResponse(saved);
     }
 
     @Transactional
     public TariffOptionAdminResponse updateTariffOption(Long id, TariffOptionUpsertRequest request) {
         TariffOption option = getTariffOptionEntity(id);
         Tariff tariff = getTariffEntity(request.tariffId());
-        applyTariffOptionRequest(option, request, tariff);
-        return toTariffOptionResponse(tariffOptionRepository.save(option));
+        
+        adminMapper.updateTariffOption(option, request);
+        option.setTariff(tariff);
+        
+        return adminMapper.toTariffOptionResponse(tariffOptionRepository.save(option));
     }
 
     @Transactional
@@ -180,12 +190,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<AdditionalServiceAdminResponse> getServices() {
-        return additionalServiceRepository.findAll().stream().map(this::toServiceResponse).toList();
+        return additionalServiceRepository.findAll().stream().map(adminMapper::toServiceResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public AdditionalServiceAdminResponse getService(Long id) {
-        return toServiceResponse(getServiceEntity(id));
+        return adminMapper.toServiceResponse(getServiceEntity(id));
     }
 
     @Transactional
@@ -193,18 +203,22 @@ public class AdminDataService {
         ServiceCategory category = getServiceCategoryEntity(request.categoryId());
 
         AdditionalService service = new AdditionalService();
-        applyAdditionalServiceRequest(service, request, category);
+        adminMapper.updateAdditionalService(service, request);
+        service.setCategory(category);
 
         AdditionalService saved = additionalServiceRepository.save(service);
-        return toServiceResponse(saved);
+        return adminMapper.toServiceResponse(saved);
     }
 
     @Transactional
     public AdditionalServiceAdminResponse updateService(Long id, AdditionalServiceUpsertRequest request) {
         AdditionalService service = getServiceEntity(id);
         ServiceCategory category = getServiceCategoryEntity(request.categoryId());
-        applyAdditionalServiceRequest(service, request, category);
-        return toServiceResponse(additionalServiceRepository.save(service));
+        
+        adminMapper.updateAdditionalService(service, request);
+        service.setCategory(category);
+        
+        return adminMapper.toServiceResponse(additionalServiceRepository.save(service));
     }
 
     @Transactional
@@ -215,12 +229,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<SubscriberAdminResponse> getSubscribers() {
-        return subscriberRepository.findAll().stream().map(this::toSubscriberResponse).toList();
+        return subscriberRepository.findAll().stream().map(adminMapper::toSubscriberResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public SubscriberAdminResponse getSubscriber(Long id) {
-        return toSubscriberResponse(getSubscriberEntity(id));
+        return adminMapper.toSubscriberResponse(getSubscriberEntity(id));
     }
 
     @Transactional
@@ -228,18 +242,22 @@ public class AdminDataService {
         Tariff tariff = request.currentTariffId() == null ? null : getTariffEntity(request.currentTariffId());
 
         Subscriber subscriber = new Subscriber();
-        applySubscriberRequest(subscriber, request, tariff);
+        adminMapper.updateSubscriber(subscriber, request);
+        subscriber.setCurrentTariff(tariff);
 
         Subscriber saved = subscriberRepository.save(subscriber);
-        return toSubscriberResponse(saved);
+        return adminMapper.toSubscriberResponse(saved);
     }
 
     @Transactional
     public SubscriberAdminResponse updateSubscriber(Long id, SubscriberUpsertRequest request) {
         Subscriber subscriber = getSubscriberEntity(id);
         Tariff tariff = request.currentTariffId() == null ? null : getTariffEntity(request.currentTariffId());
-        applySubscriberRequest(subscriber, request, tariff);
-        return toSubscriberResponse(subscriberRepository.save(subscriber));
+        
+        adminMapper.updateSubscriber(subscriber, request);
+        subscriber.setCurrentTariff(tariff);
+        
+        return adminMapper.toSubscriberResponse(subscriberRepository.save(subscriber));
     }
 
     @Transactional
@@ -250,12 +268,12 @@ public class AdminDataService {
 
     @Transactional(readOnly = true)
     public List<SubscriberServiceAdminResponse> getSubscriberServices() {
-        return subscriberServiceRepository.findAll().stream().map(this::toSubscriberServiceResponse).toList();
+        return subscriberServiceRepository.findAll().stream().map(adminMapper::toSubscriberServiceResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public SubscriberServiceAdminResponse getSubscriberService(Long id) {
-        return toSubscriberServiceResponse(getSubscriberServiceEntity(id));
+        return adminMapper.toSubscriberServiceResponse(getSubscriberServiceEntity(id));
     }
 
     @Transactional
@@ -264,10 +282,15 @@ public class AdminDataService {
         AdditionalService service = getServiceEntity(request.serviceId());
 
         SubscriberService subscriberService = new SubscriberService();
-        applySubscriberServiceRequest(subscriberService, request, subscriber, service);
+        adminMapper.updateSubscriberService(subscriberService, request);
+        subscriberService.setSubscriber(subscriber);
+        subscriberService.setService(service);
+        if (subscriberService.getConnectedAt() == null) {
+            subscriberService.setConnectedAt(OffsetDateTime.now());
+        }
 
         SubscriberService saved = subscriberServiceRepository.save(subscriberService);
-        return toSubscriberServiceResponse(saved);
+        return adminMapper.toSubscriberServiceResponse(saved);
     }
 
     @Transactional
@@ -275,125 +298,18 @@ public class AdminDataService {
         SubscriberService subscriberService = getSubscriberServiceEntity(id);
         Subscriber subscriber = getSubscriberEntity(request.subscriberId());
         AdditionalService service = getServiceEntity(request.serviceId());
-        applySubscriberServiceRequest(subscriberService, request, subscriber, service);
-        return toSubscriberServiceResponse(subscriberServiceRepository.save(subscriberService));
+        
+        adminMapper.updateSubscriberService(subscriberService, request);
+        subscriberService.setSubscriber(subscriber);
+        subscriberService.setService(service);
+        
+        return adminMapper.toSubscriberServiceResponse(subscriberServiceRepository.save(subscriberService));
     }
 
     @Transactional
     public void deleteSubscriberService(Long id) {
         SubscriberService subscriberService = getSubscriberServiceEntity(id);
         subscriberServiceRepository.delete(subscriberService);
-    }
-
-    private void applyTariffRequest(Tariff tariff, TariffUpsertRequest request, TariffCategory category) {
-        tariff.setName(request.name());
-        tariff.setDescription(request.description());
-        tariff.setMonthlyFee(request.monthlyFee());
-        tariff.setSwitchFee(request.switchFee());
-        tariff.setCustomizable(request.customizable());
-        tariff.setPdfUrl(request.pdfUrl());
-        tariff.setCategory(category);
-    }
-
-    private void applyTariffOptionRequest(TariffOption option, TariffOptionUpsertRequest request, Tariff tariff) {
-        option.setName(request.name());
-        option.setDescription(request.description());
-        option.setPrice(request.price());
-        option.setTariff(tariff);
-    }
-
-    private void applyAdditionalServiceRequest(
-        AdditionalService service,
-        AdditionalServiceUpsertRequest request,
-        ServiceCategory category
-    ) {
-        service.setName(request.name());
-        service.setDescription(request.description());
-        service.setMonthlyFee(request.monthlyFee());
-        service.setCategory(category);
-    }
-
-    private void applySubscriberRequest(Subscriber subscriber, SubscriberUpsertRequest request, Tariff tariff) {
-        subscriber.setPhone(request.phone());
-        subscriber.setFullName(request.fullName());
-        subscriber.setBalance(request.balance());
-        subscriber.setCurrentTariff(tariff);
-    }
-
-    private void applySubscriberServiceRequest(
-        SubscriberService subscriberService,
-        SubscriberServiceUpsertRequest request,
-        Subscriber subscriber,
-        AdditionalService service
-    ) {
-        subscriberService.setSubscriber(subscriber);
-        subscriberService.setService(service);
-        subscriberService.setStatus(request.status());
-        subscriberService.setConnectedAt(request.connectedAt() == null ? OffsetDateTime.now() : request.connectedAt());
-        subscriberService.setDisabledAt(request.disabledAt());
-    }
-
-    private IdNameResponse toIdNameResponse(TariffCategory category) {
-        return new IdNameResponse(category.getId(), category.getName());
-    }
-
-    private IdNameResponse toIdNameResponse(ServiceCategory category) {
-        return new IdNameResponse(category.getId(), category.getName());
-    }
-
-    private TariffAdminResponse toTariffResponse(Tariff tariff) {
-        return new TariffAdminResponse(
-            tariff.getId(),
-            tariff.getName(),
-            tariff.getDescription(),
-            tariff.getMonthlyFee(),
-            tariff.getSwitchFee(),
-            tariff.isCustomizable(),
-            tariff.getPdfUrl(),
-            tariff.getCategory().getId()
-        );
-    }
-
-    private TariffOptionAdminResponse toTariffOptionResponse(TariffOption option) {
-        return new TariffOptionAdminResponse(
-            option.getId(),
-            option.getName(),
-            option.getDescription(),
-            option.getPrice(),
-            option.getTariff().getId()
-        );
-    }
-
-    private AdditionalServiceAdminResponse toServiceResponse(AdditionalService service) {
-        return new AdditionalServiceAdminResponse(
-            service.getId(),
-            service.getName(),
-            service.getDescription(),
-            service.getMonthlyFee(),
-            service.getCategory().getId()
-        );
-    }
-
-    private SubscriberAdminResponse toSubscriberResponse(Subscriber subscriber) {
-        Long tariffId = subscriber.getCurrentTariff() == null ? null : subscriber.getCurrentTariff().getId();
-        return new SubscriberAdminResponse(
-            subscriber.getId(),
-            subscriber.getPhone(),
-            subscriber.getFullName(),
-            subscriber.getBalance(),
-            tariffId
-        );
-    }
-
-    private SubscriberServiceAdminResponse toSubscriberServiceResponse(SubscriberService subscriberService) {
-        return new SubscriberServiceAdminResponse(
-            subscriberService.getId(),
-            subscriberService.getSubscriber().getId(),
-            subscriberService.getService().getId(),
-            subscriberService.getStatus(),
-            subscriberService.getConnectedAt(),
-            subscriberService.getDisabledAt()
-        );
     }
 
     private TariffCategory getTariffCategoryEntity(Long id) {

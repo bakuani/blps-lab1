@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(NotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -28,31 +28,25 @@ public class GlobalExceptionHandler {
             .stream()
             .map(this::formatFieldError)
             .collect(Collectors.joining("; "));
-        return build(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
+        return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleAny(Exception ex, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     private String formatFieldError(FieldError error) {
         return error.getField() + ": " + error.getDefaultMessage();
     }
 
-    private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, String path) {
-        ApiErrorResponse response = new ApiErrorResponse(
-            OffsetDateTime.now(),
-            status.value(),
-            status.getReasonPhrase(),
-            message,
-            path
-        );
+    private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message) {
+        ApiErrorResponse response = new ApiErrorResponse(OffsetDateTime.now(), message);
         return ResponseEntity.status(status).body(response);
     }
 }
