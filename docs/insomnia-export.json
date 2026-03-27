@@ -124,6 +124,142 @@
       "name": "Disable service",
       "method": "POST",
       "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services/{{ _.service_id }}/disable"
+    },
+    {
+      "_id": "fld_admin_data_init",
+      "_type": "request_group",
+      "parentId": "wrk_blps",
+      "name": "Admin - Test Data Init"
+    },
+    {
+      "_id": "req_admin_tariff_cat_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "1. Create Base Tariff Category",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariff-categories",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Базовые\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_tariff_cat_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "2. Create Premium Tariff Category",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariff-categories",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Премиум\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_tariff_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "3. Create Smart Tariff",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariffs",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Smart\",\n  \"description\": \"Базовый тариф для звонков и интернета\",\n  \"monthlyFee\": 650.00,\n  \"switchFee\": 100.00,\n  \"customizable\": false,\n  \"pdfUrl\": \"https://mts.ru/tariffs/smart.pdf\",\n  \"categoryId\": 1\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_tariff_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "4. Create My Tariff",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariffs",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Мой Тариф\",\n  \"description\": \"Кастомизируемый тариф\",\n  \"monthlyFee\": 900.00,\n  \"switchFee\": 0.00,\n  \"customizable\": true,\n  \"pdfUrl\": \"https://mts.ru/tariffs/my-tariff.pdf\",\n  \"categoryId\": 2\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_tariff_opt_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "5. Create Tariff Option Minutes",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariff-options",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Пакет минут +200\",\n  \"description\": \"Дополнительные 200 минут\",\n  \"price\": 150.00,\n  \"tariffId\": 2\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_tariff_opt_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "6. Create Tariff Option Traffic",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/tariff-options",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Интернет +20 ГБ\",\n  \"description\": \"Дополнительный интернет-пакет\",\n  \"price\": 220.00,\n  \"tariffId\": 2\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_svc_cat_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "7. Create Safety Service Category",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/service-categories",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Безопасность\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_svc_cat_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "8. Create Entertainment Service Category",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/service-categories",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Развлечения\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_svc_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "9. Create Blocker Service",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/services",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Блокировка спама\",\n  \"description\": \"Фильтрация нежелательных звонков\",\n  \"monthlyFee\": 99.00,\n  \"categoryId\": 1\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_svc_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "10. Create Music Service",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/services",
+      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"МТС Music\",\n  \"description\": \"Подписка на музыкальный сервис\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_sub_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "11. Create Subscriber",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/subscribers",
+      "body": { "mimeType": "application/json", "text": "{\n  \"phone\": \"+79990000000\",\n  \"fullName\": \"Тестовый Абонент\",\n  \"balance\": 3000.00,\n  \"currentTariffId\": 1\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_sub_svc_1",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "12. Connect Blocker to Subscriber",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/subscriber-services",
+      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"serviceId\": 1,\n  \"status\": \"ACTIVE\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_admin_sub_svc_2",
+      "_type": "request",
+      "parentId": "fld_admin_data_init",
+      "name": "13. Connect Music to Subscriber",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/admin/subscriber-services",
+      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"serviceId\": 2,\n  \"status\": \"ACTIVE\"\n}" },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
     }
   ]
 }
