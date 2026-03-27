@@ -73,7 +73,9 @@
 #image("diagram(1).svg", width: 100%)
 
 = UML-диаграммы классов и пакетов разработанного приложения
+#image("uml.png", width: 100%)
 
+#image("package.png", width: 100%)
 
 = Исходный код системы
 Ссылка на репозиторий: https://github.com/bakuani/blps-lab1
