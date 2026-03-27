@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+blps_pg_data/
+blps_pg_data/**

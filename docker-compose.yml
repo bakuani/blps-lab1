@@ -12,7 +12,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - blps_pg_data:/var/lib/postgresql/data
+      - ./blps_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d blps"]
       interval: 5s
