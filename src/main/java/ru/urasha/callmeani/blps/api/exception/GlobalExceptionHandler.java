@@ -1,6 +1,5 @@
 package ru.urasha.callmeani.blps.api.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
