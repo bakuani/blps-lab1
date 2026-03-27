@@ -51,20 +51,20 @@ public class TariffManagementService {
         Subscriber subscriber = getSubscriber(subscriberId);
         TariffSummaryDto currentTariff = subscriber.getCurrentTariff() != null ? clientMapper.toTariffSummaryDto(subscriber.getCurrentTariff()) : null;
         return new TariffInfoResponse(
-            subscriber.getId(),
-            subscriber.getPhone(),
-            subscriber.getFullName(),
-            subscriber.getBalance(),
-            currentTariff
+                subscriber.getId(),
+                subscriber.getPhone(),
+                subscriber.getFullName(),
+                subscriber.getBalance(),
+                currentTariff
         );
     }
 
     @Transactional(readOnly = true)
     public List<IdNameDto> getTariffCategories() {
         return tariffCategoryRepository.findAll()
-            .stream()
-            .map(clientMapper::toIdNameDto)
-            .toList();
+                .stream()
+                .map(clientMapper::toIdNameDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -84,14 +84,14 @@ public class TariffManagementService {
         }
 
         return tariffs.stream()
-            .map(clientMapper::toTariffSummaryDto)
-            .toList();
+                .map(clientMapper::toTariffSummaryDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public TariffDetailsResponse getTariffDetails(Long tariffId) {
         Tariff tariff = tariffRepository.findById(tariffId)
-            .orElseThrow(() -> new NotFoundException("Tariff not found: " + tariffId));
+                .orElseThrow(() -> new NotFoundException("Tariff not found: " + tariffId));
 
         return clientMapper.toTariffDetailsResponse(tariff);
     }
@@ -100,25 +100,25 @@ public class TariffManagementService {
     public ChangeTariffResponse changeTariff(Long subscriberId, ChangeTariffRequest request) {
         Subscriber subscriber = getSubscriber(subscriberId);
         Tariff targetTariff = tariffRepository.findById(request.targetTariffId())
-            .orElseThrow(() -> new NotFoundException("Tariff not found: " + request.targetTariffId()));
+                .orElseThrow(() -> new NotFoundException("Tariff not found: " + request.targetTariffId()));
 
         Tariff currentTariff = subscriber.getCurrentTariff();
         if (currentTariff != null && Objects.equals(currentTariff.getId(), targetTariff.getId())) {
             NotificationEvent notification = saveNotification(
-                subscriber,
-                NotificationType.TARIFF_CHANGE_ERROR,
-                "Выбран текущий тариф. Смена не выполнена.",
-                false
+                    subscriber,
+                    NotificationType.TARIFF_CHANGE_ERROR,
+                    "Выбран текущий тариф. Смена не выполнена.",
+                    false
             );
             return new ChangeTariffResponse(
-                false,
-                "Current tariff is already selected",
-                currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
-                currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
-                safeOptions(request.options()),
-                subscriber.getBalance(),
-                List.of(),
-                clientMapper.toNotificationDto(notification)
+                    false,
+                    "Current tariff is already selected",
+                    clientMapper.toTariffSummaryDto(currentTariff),
+                    clientMapper.toTariffSummaryDto(currentTariff),
+                    safeOptions(request.options()),
+                    subscriber.getBalance(),
+                    List.of(),
+                    clientMapper.toNotificationDto(notification)
             );
         }
 
@@ -128,57 +128,57 @@ public class TariffManagementService {
 
         if (subscriber.getBalance().compareTo(total) < 0) {
             NotificationEvent notification = saveNotification(
-                subscriber,
-                NotificationType.TARIFF_CHANGE_ERROR,
-                "Недостаточно средств для смены тарифа.",
-                false
+                    subscriber,
+                    NotificationType.TARIFF_CHANGE_ERROR,
+                    "Недостаточно средств для смены тарифа.",
+                    false
             );
             return new ChangeTariffResponse(
-                false,
-                "Insufficient funds",
-                currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
-                clientMapper.toTariffSummaryDto(targetTariff),
-                safeOptions(request.options()),
-                subscriber.getBalance(),
-                List.of(),
-                clientMapper.toNotificationDto(notification)
+                    false,
+                    "Insufficient funds",
+                    currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
+                    clientMapper.toTariffSummaryDto(targetTariff),
+                    safeOptions(request.options()),
+                    subscriber.getBalance(),
+                    List.of(),
+                    clientMapper.toNotificationDto(notification)
             );
         }
 
         List<BillingTransactionDto> transactions = new ArrayList<>();
         if (switchFee.compareTo(BigDecimal.ZERO) > 0) {
             transactions.add(clientMapper.toBillingTransactionDto(charge(subscriber, BillingTransactionType.TARIFF_SWITCH_FEE, switchFee,
-                "Списание платы за смену тарифа")));
+                    "Списание платы за смену тарифа")));
         }
 
         transactions.add(clientMapper.toBillingTransactionDto(charge(subscriber, BillingTransactionType.MONTHLY_TARIFF_FEE, monthlyFee,
-            "Списание абонентской платы нового тарифа")));
+                "Списание абонентской платы нового тарифа")));
 
         subscriber.setCurrentTariff(targetTariff);
         subscriberRepository.save(subscriber);
 
         NotificationEvent notification = saveNotification(
-            subscriber,
-            NotificationType.TARIFF_CHANGED,
-            "Тариф успешно изменен.",
-            true
+                subscriber,
+                NotificationType.TARIFF_CHANGED,
+                "Тариф успешно изменен.",
+                true
         );
 
         return new ChangeTariffResponse(
-            true,
-            "Tariff changed successfully",
-            currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
-            clientMapper.toTariffSummaryDto(targetTariff),
-            safeOptions(request.options()),
-            subscriber.getBalance(),
-            transactions,
-            clientMapper.toNotificationDto(notification)
+                true,
+                "Tariff changed successfully",
+                currentTariff != null ? clientMapper.toTariffSummaryDto(currentTariff) : null,
+                clientMapper.toTariffSummaryDto(targetTariff),
+                safeOptions(request.options()),
+                subscriber.getBalance(),
+                transactions,
+                clientMapper.toNotificationDto(notification)
         );
     }
 
     private Subscriber getSubscriber(Long subscriberId) {
         return subscriberRepository.findById(subscriberId)
-            .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
+                .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
     }
 
     private BillingTransaction charge(Subscriber subscriber, BillingTransactionType type, BigDecimal amount, String description) {

@@ -23,10 +23,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult()
-            .getFieldErrors()
-            .stream()
-            .map(this::formatFieldError)
-            .collect(Collectors.joining("; "));
+                .getFieldErrors()
+                .stream()
+                .map(this::formatFieldError)
+                .collect(Collectors.joining("; "));
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
