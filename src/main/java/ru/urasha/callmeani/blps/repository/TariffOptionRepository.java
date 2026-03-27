@@ -6,6 +6,4 @@ import ru.urasha.callmeani.blps.domain.entity.TariffOption;
 import java.util.List;
 
 public interface TariffOptionRepository extends JpaRepository<TariffOption, Long> {
-
-    List<TariffOption> findByTariffId(Long tariffId);
 }
