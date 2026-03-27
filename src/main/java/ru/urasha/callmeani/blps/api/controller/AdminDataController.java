@@ -26,6 +26,9 @@ import ru.urasha.callmeani.blps.api.dto.admin.TariffOptionUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffUpsertRequest;
 import ru.urasha.callmeani.blps.service.AdminDataService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @RestController
@@ -174,8 +177,8 @@ public class AdminDataController {
     }
 
     @GetMapping("/subscribers")
-    public List<SubscriberAdminResponse> getSubscribers() {
-        return adminDataService.getSubscribers();
+    public Page<SubscriberAdminResponse> getSubscribers(Pageable pageable) {
+        return adminDataService.getSubscribers(pageable);
     }
 
     @GetMapping("/subscribers/{id}")
@@ -200,8 +203,8 @@ public class AdminDataController {
     }
 
     @GetMapping("/subscriber-services")
-    public List<SubscriberServiceAdminResponse> getSubscriberServices() {
-        return adminDataService.getSubscriberServices();
+    public Page<SubscriberServiceAdminResponse> getSubscriberServices(Pageable pageable) {
+        return adminDataService.getSubscriberServices(pageable);
     }
 
     @GetMapping("/subscriber-services/{id}")

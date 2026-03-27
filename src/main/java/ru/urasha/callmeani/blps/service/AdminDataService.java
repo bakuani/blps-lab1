@@ -33,6 +33,9 @@ import ru.urasha.callmeani.blps.repository.TariffOptionRepository;
 import ru.urasha.callmeani.blps.repository.TariffRepository;
 
 import java.time.OffsetDateTime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @Service
@@ -228,8 +231,8 @@ public class AdminDataService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubscriberAdminResponse> getSubscribers() {
-        return subscriberRepository.findAll().stream().map(adminMapper::toSubscriberResponse).toList();
+    public Page<SubscriberAdminResponse> getSubscribers(Pageable pageable) {
+        return subscriberRepository.findAll(pageable).map(adminMapper::toSubscriberResponse);
     }
 
     @Transactional(readOnly = true)
@@ -267,8 +270,8 @@ public class AdminDataService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubscriberServiceAdminResponse> getSubscriberServices() {
-        return subscriberServiceRepository.findAll().stream().map(adminMapper::toSubscriberServiceResponse).toList();
+    public Page<SubscriberServiceAdminResponse> getSubscriberServices(Pageable pageable) {
+        return subscriberServiceRepository.findAll(pageable).map(adminMapper::toSubscriberServiceResponse);
     }
 
     @Transactional(readOnly = true)
