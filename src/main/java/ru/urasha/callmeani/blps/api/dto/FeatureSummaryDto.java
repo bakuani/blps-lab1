@@ -2,7 +2,7 @@ package ru.urasha.callmeani.blps.api.dto;
 
 import java.math.BigDecimal;
 
-public record ServiceSummaryDto(
+public record FeatureSummaryDto(
     Long id,
     String name,
     String category,
@@ -10,3 +10,4 @@ public record ServiceSummaryDto(
     String status
 ) {
 }
+

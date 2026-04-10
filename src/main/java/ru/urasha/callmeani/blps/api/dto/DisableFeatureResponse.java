@@ -2,7 +2,7 @@ package ru.urasha.callmeani.blps.api.dto;
 
 import java.util.List;
 
-public record DisableServiceResponse(
+public record DisableFeatureResponse(
     boolean success,
     String message,
     Long serviceId,
@@ -10,3 +10,4 @@ public record DisableServiceResponse(
     NotificationDto notification
 ) {
 }
+

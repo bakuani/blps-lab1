@@ -2,7 +2,7 @@ package ru.urasha.callmeani.blps.api.dto.admin;
 
 import java.math.BigDecimal;
 
-public record AdditionalServiceAdminResponse(
+public record AdditionalFeatureAdminResponse(
     Long id,
     String name,
     String description,
@@ -10,3 +10,4 @@ public record AdditionalServiceAdminResponse(
     Long categoryId
 ) {
 }
+

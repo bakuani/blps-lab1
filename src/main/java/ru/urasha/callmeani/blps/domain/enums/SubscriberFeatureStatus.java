@@ -1,6 +1,7 @@
 package ru.urasha.callmeani.blps.domain.enums;
 
-public enum SubscriberServiceStatus {
+public enum SubscriberFeatureStatus {
     ACTIVE,
     DISABLED
 }
+

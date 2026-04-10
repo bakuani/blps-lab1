@@ -10,7 +10,7 @@ import ru.urasha.callmeani.blps.domain.entity.*;
 public interface AdminMapper {
 
     IdNameResponse toIdNameResponse(TariffCategory category);
-    IdNameResponse toIdNameResponse(ServiceCategory category);
+    IdNameResponse toIdNameResponse(FeatureCategory category);
 
     @Mapping(target = "categoryId", source = "category.id")
     TariffAdminResponse toTariffResponse(Tariff tariff);
@@ -19,14 +19,14 @@ public interface AdminMapper {
     TariffOptionAdminResponse toTariffOptionResponse(TariffOption option);
 
     @Mapping(target = "categoryId", source = "category.id")
-    AdditionalServiceAdminResponse toServiceResponse(AdditionalService service);
+    AdditionalFeatureAdminResponse toServiceResponse(AdditionalFeature service);
 
     @Mapping(target = "currentTariffId", source = "currentTariff.id")
     SubscriberAdminResponse toSubscriberResponse(Subscriber subscriber);
 
     @Mapping(target = "subscriberId", source = "subscriber.id")
     @Mapping(target = "serviceId", source = "service.id")
-    SubscriberServiceAdminResponse toSubscriberServiceResponse(SubscriberService subscriberService);
+    SubscriberFeatureAdminResponse toSubscriberFeatureResponse(SubscriberFeature SubscriberFeature);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
@@ -39,7 +39,7 @@ public interface AdminMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
-    void updateAdditionalService(@MappingTarget AdditionalService service, AdditionalServiceUpsertRequest request);
+    void updateAdditionalFeature(@MappingTarget AdditionalFeature service, AdditionalFeatureUpsertRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "currentTariff", ignore = true)
@@ -48,5 +48,5 @@ public interface AdminMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "subscriber", ignore = true)
     @Mapping(target = "service", ignore = true)
-    void updateSubscriberService(@MappingTarget SubscriberService subscriberService, SubscriberServiceUpsertRequest request);
+    void updateSubscriberFeature(@MappingTarget SubscriberFeature SubscriberFeature, SubscriberFeatureUpsertRequest request);
 }

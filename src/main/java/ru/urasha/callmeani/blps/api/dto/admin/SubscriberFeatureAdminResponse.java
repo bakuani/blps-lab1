@@ -1,15 +1,16 @@
 package ru.urasha.callmeani.blps.api.dto.admin;
 
-import ru.urasha.callmeani.blps.domain.enums.SubscriberServiceStatus;
+import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
 
 import java.time.OffsetDateTime;
 
-public record SubscriberServiceAdminResponse(
+public record SubscriberFeatureAdminResponse(
     Long id,
     Long subscriberId,
     Long serviceId,
-    SubscriberServiceStatus status,
+    SubscriberFeatureStatus status,
     OffsetDateTime connectedAt,
     OffsetDateTime disabledAt
 ) {
 }
+

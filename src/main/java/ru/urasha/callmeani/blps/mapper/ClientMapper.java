@@ -10,7 +10,7 @@ public interface ClientMapper {
 
     IdNameDto toIdNameDto(TariffCategory category);
     
-    IdNameDto toIdNameDto(ServiceCategory category);
+    IdNameDto toIdNameDto(FeatureCategory category);
 
     @Mapping(target = "category", source = "category.name")
     TariffSummaryDto toTariffSummaryDto(Tariff tariff);
@@ -25,10 +25,10 @@ public interface ClientMapper {
     @Mapping(target = "category", source = "service.category.name")
     @Mapping(target = "monthlyFee", source = "service.monthlyFee")
     @Mapping(target = "status", source = "status")
-    ServiceSummaryDto toServiceSummaryDto(SubscriberService subscriberService);
+    FeatureSummaryDto toFeatureSummaryDto(SubscriberFeature SubscriberFeature);
 
     @Mapping(target = "category", source = "category.name")
-    ServiceDetailsResponse toServiceDetailsResponse(AdditionalService service);
+    FeatureDetailsResponse toFeatureDetailsResponse(AdditionalFeature service);
 
     @Mapping(target = "type", source = "type")
     BillingTransactionDto toBillingTransactionDto(BillingTransaction transaction);
@@ -36,3 +36,4 @@ public interface ClientMapper {
     @Mapping(target = "type", source = "type")
     NotificationDto toNotificationDto(NotificationEvent notification);
 }
+

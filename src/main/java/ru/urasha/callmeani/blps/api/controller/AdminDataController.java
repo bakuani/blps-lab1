@@ -24,7 +24,13 @@ import ru.urasha.callmeani.blps.api.dto.admin.TariffAdminResponse;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffOptionAdminResponse;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffOptionUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffUpsertRequest;
-import ru.urasha.callmeani.blps.service.AdminDataService;
+import ru.urasha.callmeani.blps.service.AdminTariffCategoryService;
+import ru.urasha.callmeani.blps.service.AdminServiceCategoryService;
+import ru.urasha.callmeani.blps.service.AdminTariffService;
+import ru.urasha.callmeani.blps.service.AdminTariffOptionService;
+import ru.urasha.callmeani.blps.service.AdminAdditionalServiceService;
+import ru.urasha.callmeani.blps.service.AdminSubscriberService;
+import ru.urasha.callmeani.blps.service.AdminSubscriberServiceService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,99 +42,105 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminDataController {
 
-    private final AdminDataService adminDataService;
+    private final AdminTariffCategoryService adminTariffCategoryService;
+    private final AdminServiceCategoryService adminServiceCategoryService;
+    private final AdminTariffService adminTariffService;
+    private final AdminTariffOptionService adminTariffOptionService;
+    private final AdminAdditionalServiceService adminAdditionalServiceService;
+    private final AdminSubscriberService adminSubscriberService;
+    private final AdminSubscriberServiceService adminSubscriberServiceService;
 
     @GetMapping("/tariff-categories")
     public List<IdNameResponse> getTariffCategories() {
-        return adminDataService.getTariffCategories();
+        return adminTariffCategoryService.getTariffCategories();
     }
 
     @GetMapping("/tariff-categories/{id}")
     public IdNameResponse getTariffCategory(@PathVariable Long id) {
-        return adminDataService.getTariffCategory(id);
+        return adminTariffCategoryService.getTariffCategory(id);
     }
 
     @PostMapping("/tariff-categories")
     public ResponseEntity<IdNameResponse> createTariffCategory(@Valid @RequestBody NameRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createTariffCategory(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminTariffCategoryService.createTariffCategory(request));
     }
 
     @PutMapping("/tariff-categories/{id}")
     public IdNameResponse updateTariffCategory(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
-        return adminDataService.updateTariffCategory(id, request);
+        return adminTariffCategoryService.updateTariffCategory(id, request);
     }
 
     @DeleteMapping("/tariff-categories/{id}")
     public ResponseEntity<Void> deleteTariffCategory(@PathVariable Long id) {
-        adminDataService.deleteTariffCategory(id);
+        adminTariffCategoryService.deleteTariffCategory(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/service-categories")
     public List<IdNameResponse> getServiceCategories() {
-        return adminDataService.getServiceCategories();
+        return adminServiceCategoryService.getServiceCategories();
     }
 
     @GetMapping("/service-categories/{id}")
     public IdNameResponse getServiceCategory(@PathVariable Long id) {
-        return adminDataService.getServiceCategory(id);
+        return adminServiceCategoryService.getServiceCategory(id);
     }
 
     @PostMapping("/service-categories")
     public ResponseEntity<IdNameResponse> createServiceCategory(@Valid @RequestBody NameRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createServiceCategory(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminServiceCategoryService.createServiceCategory(request));
     }
 
     @PutMapping("/service-categories/{id}")
     public IdNameResponse updateServiceCategory(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
-        return adminDataService.updateServiceCategory(id, request);
+        return adminServiceCategoryService.updateServiceCategory(id, request);
     }
 
     @DeleteMapping("/service-categories/{id}")
     public ResponseEntity<Void> deleteServiceCategory(@PathVariable Long id) {
-        adminDataService.deleteServiceCategory(id);
+        adminServiceCategoryService.deleteServiceCategory(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/tariffs")
     public List<TariffAdminResponse> getTariffs() {
-        return adminDataService.getTariffs();
+        return adminTariffService.getTariffs();
     }
 
     @GetMapping("/tariffs/{id}")
     public TariffAdminResponse getTariff(@PathVariable Long id) {
-        return adminDataService.getTariff(id);
+        return adminTariffService.getTariff(id);
     }
 
     @PostMapping("/tariffs")
     public ResponseEntity<TariffAdminResponse> createTariff(@Valid @RequestBody TariffUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createTariff(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminTariffService.createTariff(request));
     }
 
     @PutMapping("/tariffs/{id}")
     public TariffAdminResponse updateTariff(@PathVariable Long id, @Valid @RequestBody TariffUpsertRequest request) {
-        return adminDataService.updateTariff(id, request);
+        return adminTariffService.updateTariff(id, request);
     }
 
     @DeleteMapping("/tariffs/{id}")
     public ResponseEntity<Void> deleteTariff(@PathVariable Long id) {
-        adminDataService.deleteTariff(id);
+        adminTariffService.deleteTariff(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/tariff-options")
     public List<TariffOptionAdminResponse> getTariffOptions() {
-        return adminDataService.getTariffOptions();
+        return adminTariffOptionService.getTariffOptions();
     }
 
     @GetMapping("/tariff-options/{id}")
     public TariffOptionAdminResponse getTariffOption(@PathVariable Long id) {
-        return adminDataService.getTariffOption(id);
+        return adminTariffOptionService.getTariffOption(id);
     }
 
     @PostMapping("/tariff-options")
     public ResponseEntity<TariffOptionAdminResponse> createTariffOption(@Valid @RequestBody TariffOptionUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createTariffOption(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminTariffOptionService.createTariffOption(request));
     }
 
     @PutMapping("/tariff-options/{id}")
@@ -136,30 +148,30 @@ public class AdminDataController {
         @PathVariable Long id,
         @Valid @RequestBody TariffOptionUpsertRequest request
     ) {
-        return adminDataService.updateTariffOption(id, request);
+        return adminTariffOptionService.updateTariffOption(id, request);
     }
 
     @DeleteMapping("/tariff-options/{id}")
     public ResponseEntity<Void> deleteTariffOption(@PathVariable Long id) {
-        adminDataService.deleteTariffOption(id);
+        adminTariffOptionService.deleteTariffOption(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/services")
     public List<AdditionalServiceAdminResponse> getServices() {
-        return adminDataService.getServices();
+        return adminAdditionalServiceService.getServices();
     }
 
     @GetMapping("/services/{id}")
     public AdditionalServiceAdminResponse getService(@PathVariable Long id) {
-        return adminDataService.getService(id);
+        return adminAdditionalServiceService.getService(id);
     }
 
     @PostMapping("/services")
     public ResponseEntity<AdditionalServiceAdminResponse> createService(
         @Valid @RequestBody AdditionalServiceUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createService(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminAdditionalServiceService.createService(request));
     }
 
     @PutMapping("/services/{id}")
@@ -167,56 +179,56 @@ public class AdminDataController {
         @PathVariable Long id,
         @Valid @RequestBody AdditionalServiceUpsertRequest request
     ) {
-        return adminDataService.updateService(id, request);
+        return adminAdditionalServiceService.updateService(id, request);
     }
 
     @DeleteMapping("/services/{id}")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
-        adminDataService.deleteService(id);
+        adminAdditionalServiceService.deleteService(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/subscribers")
     public Page<SubscriberAdminResponse> getSubscribers(Pageable pageable) {
-        return adminDataService.getSubscribers(pageable);
+        return adminSubscriberService.getSubscribers(pageable);
     }
 
     @GetMapping("/subscribers/{id}")
     public SubscriberAdminResponse getSubscriber(@PathVariable Long id) {
-        return adminDataService.getSubscriber(id);
+        return adminSubscriberService.getSubscriber(id);
     }
 
     @PostMapping("/subscribers")
     public ResponseEntity<SubscriberAdminResponse> createSubscriber(@Valid @RequestBody SubscriberUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createSubscriber(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminSubscriberService.createSubscriber(request));
     }
 
     @PutMapping("/subscribers/{id}")
     public SubscriberAdminResponse updateSubscriber(@PathVariable Long id, @Valid @RequestBody SubscriberUpsertRequest request) {
-        return adminDataService.updateSubscriber(id, request);
+        return adminSubscriberService.updateSubscriber(id, request);
     }
 
     @DeleteMapping("/subscribers/{id}")
     public ResponseEntity<Void> deleteSubscriber(@PathVariable Long id) {
-        adminDataService.deleteSubscriber(id);
+        adminSubscriberService.deleteSubscriber(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/subscriber-services")
     public Page<SubscriberServiceAdminResponse> getSubscriberServices(Pageable pageable) {
-        return adminDataService.getSubscriberServices(pageable);
+        return adminSubscriberServiceService.getSubscriberServices(pageable);
     }
 
     @GetMapping("/subscriber-services/{id}")
     public SubscriberServiceAdminResponse getSubscriberService(@PathVariable Long id) {
-        return adminDataService.getSubscriberService(id);
+        return adminSubscriberServiceService.getSubscriberService(id);
     }
 
     @PostMapping("/subscriber-services")
     public ResponseEntity<SubscriberServiceAdminResponse> createSubscriberService(
         @Valid @RequestBody SubscriberServiceUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminDataService.createSubscriberService(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminSubscriberServiceService.createSubscriberService(request));
     }
 
     @PutMapping("/subscriber-services/{id}")
@@ -224,12 +236,14 @@ public class AdminDataController {
         @PathVariable Long id,
         @Valid @RequestBody SubscriberServiceUpsertRequest request
     ) {
-        return adminDataService.updateSubscriberService(id, request);
+        return adminSubscriberServiceService.updateSubscriberService(id, request);
     }
 
     @DeleteMapping("/subscriber-services/{id}")
     public ResponseEntity<Void> deleteSubscriberService(@PathVariable Long id) {
-        adminDataService.deleteSubscriberService(id);
+        adminSubscriberServiceService.deleteSubscriberService(id);
         return ResponseEntity.noContent().build();
     }
 }
+
+

@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.urasha.callmeani.blps.domain.enums.SubscriberServiceStatus;
+import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
 
 import java.time.OffsetDateTime;
 
@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SubscriberService {
+public class SubscriberFeature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,14 +35,15 @@ public class SubscriberService {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "service_id", nullable = false)
-    private AdditionalService service;
+    private AdditionalFeature service;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SubscriberServiceStatus status;
+    private SubscriberFeatureStatus status;
 
     @Column(nullable = false)
     private OffsetDateTime connectedAt;
 
     private OffsetDateTime disabledAt;
 }
+
