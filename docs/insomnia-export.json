@@ -19,7 +19,7 @@
         "base_url": "http://localhost:8080",
         "subscriber_id": 1,
         "tariff_id": 2,
-        "service_id": 1,
+        "feature_id": 1,
         "category_id": 1
       }
     },
@@ -91,7 +91,7 @@
       "parentId": "fld_service",
       "name": "Get subscriber services",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services"
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features"
     },
     {
       "_id": "req_get_service_categories",
@@ -99,7 +99,7 @@
       "parentId": "fld_service",
       "name": "Get service categories",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/services/categories"
+      "url": "{{ _.base_url }}/api/v1/features/categories"
     },
     {
       "_id": "req_search_services",
@@ -107,7 +107,7 @@
       "parentId": "fld_service",
       "name": "Search services",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services?categoryId={{ _.category_id }}&query=music"
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features?categoryId={{ _.category_id }}&query=music"
     },
     {
       "_id": "req_service_details",
@@ -115,7 +115,7 @@
       "parentId": "fld_service",
       "name": "Get service details",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/services/{{ _.service_id }}"
+      "url": "{{ _.base_url }}/api/v1/features/{{ _.feature_id }}"
     },
     {
       "_id": "req_disable_service",
@@ -123,7 +123,7 @@
       "parentId": "fld_service",
       "name": "Disable service",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/services/{{ _.service_id }}/disable"
+      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable"
     },
     {
       "_id": "fld_admin_data_init",
@@ -197,7 +197,7 @@
       "parentId": "fld_admin_data_init",
       "name": "7. Create Safety Service Category",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/service-categories",
+      "url": "{{ _.base_url }}/api/v1/admin/feature-categories",
       "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Безопасность\"\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
@@ -207,7 +207,7 @@
       "parentId": "fld_admin_data_init",
       "name": "8. Create Entertainment Service Category",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/service-categories",
+      "url": "{{ _.base_url }}/api/v1/admin/feature-categories",
       "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Развлечения\"\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
@@ -217,7 +217,7 @@
       "parentId": "fld_admin_data_init",
       "name": "9. Create Blocker Service",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/services",
+      "url": "{{ _.base_url }}/api/v1/admin/features",
       "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Блокировка спама\",\n  \"description\": \"Фильтрация нежелательных звонков\",\n  \"monthlyFee\": 99.00,\n  \"categoryId\": 1\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
@@ -227,7 +227,7 @@
       "parentId": "fld_admin_data_init",
       "name": "10. Create Music Service",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/services",
+      "url": "{{ _.base_url }}/api/v1/admin/features",
       "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"МТС Music\",\n  \"description\": \"Подписка на музыкальный сервис\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
@@ -247,8 +247,8 @@
       "parentId": "fld_admin_data_init",
       "name": "12. Connect Blocker to Subscriber",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/subscriber-services",
-      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"serviceId\": 1,\n  \"status\": \"ACTIVE\"\n}" },
+      "url": "{{ _.base_url }}/api/v1/admin/subscriber-features",
+      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"featureId\": 1,\n  \"status\": \"ACTIVE\"\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     },
     {
@@ -257,8 +257,8 @@
       "parentId": "fld_admin_data_init",
       "name": "13. Connect Music to Subscriber",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/admin/subscriber-services",
-      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"serviceId\": 2,\n  \"status\": \"ACTIVE\"\n}" },
+      "url": "{{ _.base_url }}/api/v1/admin/subscriber-features",
+      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"featureId\": 2,\n  \"status\": \"ACTIVE\"\n}" },
       "headers": [{ "name": "Content-Type", "value": "application/json" }]
     }
   ]

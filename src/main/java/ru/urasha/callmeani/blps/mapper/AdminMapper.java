@@ -19,13 +19,13 @@ public interface AdminMapper {
     TariffOptionAdminResponse toTariffOptionResponse(TariffOption option);
 
     @Mapping(target = "categoryId", source = "category.id")
-    AdditionalFeatureAdminResponse toServiceResponse(AdditionalFeature service);
+    AdditionalFeatureAdminResponse toFeatureResponse(AdditionalFeature feature);
 
     @Mapping(target = "currentTariffId", source = "currentTariff.id")
     SubscriberAdminResponse toSubscriberResponse(Subscriber subscriber);
 
     @Mapping(target = "subscriberId", source = "subscriber.id")
-    @Mapping(target = "serviceId", source = "service.id")
+    @Mapping(target = "featureId", source = "service.id")
     SubscriberFeatureAdminResponse toSubscriberFeatureResponse(SubscriberFeature SubscriberFeature);
 
     @Mapping(target = "id", ignore = true)

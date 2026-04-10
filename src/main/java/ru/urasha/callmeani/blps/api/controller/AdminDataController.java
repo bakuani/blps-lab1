@@ -12,25 +12,25 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.urasha.callmeani.blps.api.dto.admin.AdditionalServiceAdminResponse;
-import ru.urasha.callmeani.blps.api.dto.admin.AdditionalServiceUpsertRequest;
+import ru.urasha.callmeani.blps.api.dto.admin.AdditionalFeatureAdminResponse;
+import ru.urasha.callmeani.blps.api.dto.admin.AdditionalFeatureUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.IdNameResponse;
 import ru.urasha.callmeani.blps.api.dto.admin.NameRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.SubscriberAdminResponse;
-import ru.urasha.callmeani.blps.api.dto.admin.SubscriberServiceAdminResponse;
-import ru.urasha.callmeani.blps.api.dto.admin.SubscriberServiceUpsertRequest;
+import ru.urasha.callmeani.blps.api.dto.admin.SubscriberFeatureAdminResponse;
+import ru.urasha.callmeani.blps.api.dto.admin.SubscriberFeatureUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.SubscriberUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffAdminResponse;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffOptionAdminResponse;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffOptionUpsertRequest;
 import ru.urasha.callmeani.blps.api.dto.admin.TariffUpsertRequest;
-import ru.urasha.callmeani.blps.service.AdminTariffCategoryService;
-import ru.urasha.callmeani.blps.service.AdminServiceCategoryService;
-import ru.urasha.callmeani.blps.service.AdminTariffService;
-import ru.urasha.callmeani.blps.service.AdminTariffOptionService;
-import ru.urasha.callmeani.blps.service.AdminAdditionalServiceService;
+import ru.urasha.callmeani.blps.service.AdminAdditionalFeatureService;
+import ru.urasha.callmeani.blps.service.AdminFeatureCategoryService;
+import ru.urasha.callmeani.blps.service.AdminSubscriberFeatureService;
 import ru.urasha.callmeani.blps.service.AdminSubscriberService;
-import ru.urasha.callmeani.blps.service.AdminSubscriberServiceService;
+import ru.urasha.callmeani.blps.service.AdminTariffCategoryService;
+import ru.urasha.callmeani.blps.service.AdminTariffOptionService;
+import ru.urasha.callmeani.blps.service.AdminTariffService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,12 +43,12 @@ import java.util.List;
 public class AdminDataController {
 
     private final AdminTariffCategoryService adminTariffCategoryService;
-    private final AdminServiceCategoryService adminServiceCategoryService;
+    private final AdminFeatureCategoryService adminFeatureCategoryService;
     private final AdminTariffService adminTariffService;
     private final AdminTariffOptionService adminTariffOptionService;
-    private final AdminAdditionalServiceService adminAdditionalServiceService;
+    private final AdminAdditionalFeatureService adminAdditionalFeatureService;
     private final AdminSubscriberService adminSubscriberService;
-    private final AdminSubscriberServiceService adminSubscriberServiceService;
+    private final AdminSubscriberFeatureService adminSubscriberFeatureService;
 
     @GetMapping("/tariff-categories")
     public List<IdNameResponse> getTariffCategories() {
@@ -76,29 +76,29 @@ public class AdminDataController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/service-categories")
-    public List<IdNameResponse> getServiceCategories() {
-        return adminServiceCategoryService.getServiceCategories();
+    @GetMapping("/feature-categories")
+    public List<IdNameResponse> getFeatureCategories() {
+        return adminFeatureCategoryService.getFeatureCategories();
     }
 
-    @GetMapping("/service-categories/{id}")
-    public IdNameResponse getServiceCategory(@PathVariable Long id) {
-        return adminServiceCategoryService.getServiceCategory(id);
+    @GetMapping("/feature-categories/{id}")
+    public IdNameResponse getFeatureCategory(@PathVariable Long id) {
+        return adminFeatureCategoryService.getFeatureCategory(id);
     }
 
-    @PostMapping("/service-categories")
-    public ResponseEntity<IdNameResponse> createServiceCategory(@Valid @RequestBody NameRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminServiceCategoryService.createServiceCategory(request));
+    @PostMapping("/feature-categories")
+    public ResponseEntity<IdNameResponse> createFeatureCategory(@Valid @RequestBody NameRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminFeatureCategoryService.createFeatureCategory(request));
     }
 
-    @PutMapping("/service-categories/{id}")
-    public IdNameResponse updateServiceCategory(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
-        return adminServiceCategoryService.updateServiceCategory(id, request);
+    @PutMapping("/feature-categories/{id}")
+    public IdNameResponse updateFeatureCategory(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
+        return adminFeatureCategoryService.updateFeatureCategory(id, request);
     }
 
-    @DeleteMapping("/service-categories/{id}")
-    public ResponseEntity<Void> deleteServiceCategory(@PathVariable Long id) {
-        adminServiceCategoryService.deleteServiceCategory(id);
+    @DeleteMapping("/feature-categories/{id}")
+    public ResponseEntity<Void> deleteFeatureCategory(@PathVariable Long id) {
+        adminFeatureCategoryService.deleteFeatureCategory(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -157,34 +157,34 @@ public class AdminDataController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/services")
-    public List<AdditionalServiceAdminResponse> getServices() {
-        return adminAdditionalServiceService.getServices();
+    @GetMapping("/features")
+    public List<AdditionalFeatureAdminResponse> getFeatures() {
+        return adminAdditionalFeatureService.getFeatures();
     }
 
-    @GetMapping("/services/{id}")
-    public AdditionalServiceAdminResponse getService(@PathVariable Long id) {
-        return adminAdditionalServiceService.getService(id);
+    @GetMapping("/features/{id}")
+    public AdditionalFeatureAdminResponse getFeature(@PathVariable Long id) {
+        return adminAdditionalFeatureService.getFeature(id);
     }
 
-    @PostMapping("/services")
-    public ResponseEntity<AdditionalServiceAdminResponse> createService(
-        @Valid @RequestBody AdditionalServiceUpsertRequest request
+    @PostMapping("/features")
+    public ResponseEntity<AdditionalFeatureAdminResponse> createFeature(
+        @Valid @RequestBody AdditionalFeatureUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminAdditionalServiceService.createService(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminAdditionalFeatureService.createFeature(request));
     }
 
-    @PutMapping("/services/{id}")
-    public AdditionalServiceAdminResponse updateService(
+    @PutMapping("/features/{id}")
+    public AdditionalFeatureAdminResponse updateFeature(
         @PathVariable Long id,
-        @Valid @RequestBody AdditionalServiceUpsertRequest request
+        @Valid @RequestBody AdditionalFeatureUpsertRequest request
     ) {
-        return adminAdditionalServiceService.updateService(id, request);
+        return adminAdditionalFeatureService.updateFeature(id, request);
     }
 
-    @DeleteMapping("/services/{id}")
-    public ResponseEntity<Void> deleteService(@PathVariable Long id) {
-        adminAdditionalServiceService.deleteService(id);
+    @DeleteMapping("/features/{id}")
+    public ResponseEntity<Void> deleteFeature(@PathVariable Long id) {
+        adminAdditionalFeatureService.deleteFeature(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -214,34 +214,34 @@ public class AdminDataController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/subscriber-services")
-    public Page<SubscriberServiceAdminResponse> getSubscriberServices(Pageable pageable) {
-        return adminSubscriberServiceService.getSubscriberServices(pageable);
+    @GetMapping("/subscriber-features")
+    public Page<SubscriberFeatureAdminResponse> getSubscriberFeatures(Pageable pageable) {
+        return adminSubscriberFeatureService.getSubscriberFeatures(pageable);
     }
 
-    @GetMapping("/subscriber-services/{id}")
-    public SubscriberServiceAdminResponse getSubscriberService(@PathVariable Long id) {
-        return adminSubscriberServiceService.getSubscriberService(id);
+    @GetMapping("/subscriber-features/{id}")
+    public SubscriberFeatureAdminResponse getSubscriberFeature(@PathVariable Long id) {
+        return adminSubscriberFeatureService.getSubscriberFeature(id);
     }
 
-    @PostMapping("/subscriber-services")
-    public ResponseEntity<SubscriberServiceAdminResponse> createSubscriberService(
-        @Valid @RequestBody SubscriberServiceUpsertRequest request
+    @PostMapping("/subscriber-features")
+    public ResponseEntity<SubscriberFeatureAdminResponse> createSubscriberFeature(
+        @Valid @RequestBody SubscriberFeatureUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(adminSubscriberServiceService.createSubscriberService(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(adminSubscriberFeatureService.createSubscriberFeature(request));
     }
 
-    @PutMapping("/subscriber-services/{id}")
-    public SubscriberServiceAdminResponse updateSubscriberService(
+    @PutMapping("/subscriber-features/{id}")
+    public SubscriberFeatureAdminResponse updateSubscriberFeature(
         @PathVariable Long id,
-        @Valid @RequestBody SubscriberServiceUpsertRequest request
+        @Valid @RequestBody SubscriberFeatureUpsertRequest request
     ) {
-        return adminSubscriberServiceService.updateSubscriberService(id, request);
+        return adminSubscriberFeatureService.updateSubscriberFeature(id, request);
     }
 
-    @DeleteMapping("/subscriber-services/{id}")
-    public ResponseEntity<Void> deleteSubscriberService(@PathVariable Long id) {
-        adminSubscriberServiceService.deleteSubscriberService(id);
+    @DeleteMapping("/subscriber-features/{id}")
+    public ResponseEntity<Void> deleteSubscriberFeature(@PathVariable Long id) {
+        adminSubscriberFeatureService.deleteSubscriberFeature(id);
         return ResponseEntity.noContent().build();
     }
 }

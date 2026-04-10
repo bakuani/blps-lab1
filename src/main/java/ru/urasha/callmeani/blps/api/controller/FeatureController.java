@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FeatureController {
 
-    private final FeatureManagementService FeatureManagementService;
+    private final FeatureManagementService featureManagementService;
 
     @GetMapping("/subscribers/{subscriberId}/features")
     public List<FeatureSummaryDto> findSubscriberFeatures(
@@ -28,22 +28,22 @@ public class FeatureController {
         @RequestParam(required = false) Long categoryId,
         @RequestParam(required = false) String query
     ) {
-        return FeatureManagementService.findSubscriberFeatures(subscriberId, categoryId, query);
+        return featureManagementService.findSubscriberFeatures(subscriberId, categoryId, query);
     }
 
     @GetMapping("/features/categories")
     public List<IdNameDto> getFeatureCategories() {
-        return FeatureManagementService.getFeatureCategories();
+        return featureManagementService.getFeatureCategories();
     }
 
-    @GetMapping("/features/{serviceId}")
-    public FeatureDetailsResponse getServiceDetails(@PathVariable Long serviceId) {
-        return FeatureManagementService.getServiceDetails(serviceId);
+    @GetMapping("/features/{featureId}")
+    public FeatureDetailsResponse getFeatureDetails(@PathVariable Long featureId) {
+        return featureManagementService.getFeatureDetails(featureId);
     }
 
-    @PostMapping("/subscribers/{subscriberId}/features/{serviceId}/disable")
-    public DisableFeatureResponse disableService(@PathVariable Long subscriberId, @PathVariable Long serviceId) {
-        return FeatureManagementService.disableService(subscriberId, serviceId);
+    @PostMapping("/subscribers/{subscriberId}/features/{featureId}/disable")
+    public DisableFeatureResponse disableFeature(@PathVariable Long subscriberId, @PathVariable Long featureId) {
+        return featureManagementService.disableFeature(subscriberId, featureId);
     }
 }
 

@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 
 public record SubscriberFeatureUpsertRequest(
     @NotNull Long subscriberId,
-    @NotNull Long serviceId,
+    @NotNull Long featureId,
     @NotNull SubscriberFeatureStatus status,
     OffsetDateTime connectedAt,
     OffsetDateTime disabledAt

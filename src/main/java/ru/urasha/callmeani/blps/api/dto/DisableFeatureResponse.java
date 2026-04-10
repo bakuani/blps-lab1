@@ -5,7 +5,7 @@ import java.util.List;
 public record DisableFeatureResponse(
     boolean success,
     String message,
-    Long serviceId,
+    Long featureId,
     List<BillingTransactionDto> billingTransactions,
     NotificationDto notification
 ) {

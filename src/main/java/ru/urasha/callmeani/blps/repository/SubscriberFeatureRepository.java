@@ -11,6 +11,6 @@ public interface SubscriberFeatureRepository extends JpaRepository<SubscriberFea
 
     List<SubscriberFeature> findBySubscriberIdAndStatus(Long subscriberId, SubscriberFeatureStatus status);
 
-    Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long serviceId, SubscriberFeatureStatus status);
+    Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status);
 }
 

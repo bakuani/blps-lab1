@@ -10,8 +10,8 @@ import java.util.List;
 public interface FeatureManagementService {
     List<FeatureSummaryDto> findSubscriberFeatures(Long subscriberId, Long categoryId, String query);
     List<IdNameDto> getFeatureCategories();
-    FeatureDetailsResponse getServiceDetails(Long serviceId);
-    DisableFeatureResponse disableService(Long subscriberId, Long serviceId);
+    FeatureDetailsResponse getFeatureDetails(Long featureId);
+    DisableFeatureResponse disableFeature(Long subscriberId, Long featureId);
 }
 
 

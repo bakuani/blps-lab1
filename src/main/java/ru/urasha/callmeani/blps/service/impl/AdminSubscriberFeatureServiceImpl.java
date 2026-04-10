@@ -41,11 +41,11 @@ public class AdminSubscriberFeatureServiceImpl implements AdminSubscriberFeature
     @Transactional
     public SubscriberFeatureAdminResponse createSubscriberFeature(SubscriberFeatureUpsertRequest request) {
         Subscriber subscriber = getSubscriberEntity(request.subscriberId());
-        AdditionalFeature service = getServiceEntity(request.serviceId());
+        AdditionalFeature feature = getFeatureEntity(request.featureId());
         SubscriberFeature SubscriberFeature = new SubscriberFeature();
         adminMapper.updateSubscriberFeature(SubscriberFeature, request);
         SubscriberFeature.setSubscriber(subscriber);
-        SubscriberFeature.setService(service);
+        SubscriberFeature.setService(feature);
         if (SubscriberFeature.getConnectedAt() == null) {
             SubscriberFeature.setConnectedAt(OffsetDateTime.now());
         }
@@ -56,10 +56,10 @@ public class AdminSubscriberFeatureServiceImpl implements AdminSubscriberFeature
     public SubscriberFeatureAdminResponse updateSubscriberFeature(Long id, SubscriberFeatureUpsertRequest request) {
         SubscriberFeature SubscriberFeature = getSubscriberFeatureEntity(id);
         Subscriber subscriber = getSubscriberEntity(request.subscriberId());
-        AdditionalFeature service = getServiceEntity(request.serviceId());
+        AdditionalFeature feature = getFeatureEntity(request.featureId());
         adminMapper.updateSubscriberFeature(SubscriberFeature, request);
         SubscriberFeature.setSubscriber(subscriber);
-        SubscriberFeature.setService(service);
+        SubscriberFeature.setService(feature);
         return adminMapper.toSubscriberFeatureResponse(SubscriberFeatureRepository.save(SubscriberFeature));
     }
 
@@ -69,14 +69,14 @@ public class AdminSubscriberFeatureServiceImpl implements AdminSubscriberFeature
     }
 
     private SubscriberFeature getSubscriberFeatureEntity(Long id) {
-        return SubscriberFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber service not found: " + id));
+        return SubscriberFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber feature not found: " + id));
     }
 
     private Subscriber getSubscriberEntity(Long id) {
         return subscriberRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber not found: " + id));
     }
 
-    private AdditionalFeature getServiceEntity(Long id) {
-        return AdditionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Service not found: " + id));
+    private AdditionalFeature getFeatureEntity(Long id) {
+        return AdditionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Feature not found: " + id));
     }
 }

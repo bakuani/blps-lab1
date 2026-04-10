@@ -9,7 +9,7 @@
     <textAnnotation id="TextAnnotation_0pg5juc">
       <text>subscriber_service</text>
     </textAnnotation>
-    <association id="Association_00pumgi" associationDirection="None" sourceRef="DS_SubscriberServices" targetRef="TextAnnotation_0pg5juc" />
+    <association id="Association_00pumgi" associationDirection="None" sourceRef="DS_SubscriberFeatures" targetRef="TextAnnotation_0pg5juc" />
   </collaboration>
   <process id="Process_LK" name="Управление тарифом и услугами" isExecutable="true">
     <laneSet id="LaneSet_1">
@@ -26,8 +26,8 @@
         <flowNodeRef>Task_BillingChargeMonthly</flowNodeRef>
         <flowNodeRef>Task_UpdateSubscriberTariff</flowNodeRef>
         <flowNodeRef>Task_LoadTariffsByCategory</flowNodeRef>
-        <flowNodeRef>Task_LoadServiceDetails</flowNodeRef>
-        <flowNodeRef>EndEvent_ServiceDetails</flowNodeRef>
+        <flowNodeRef>Task_LoadFeatureDetails</flowNodeRef>
+        <flowNodeRef>EndEvent_FeatureDetails</flowNodeRef>
         <flowNodeRef>Task_SearchTariffsDB</flowNodeRef>
         <flowNodeRef>Gateway_ChangeResult</flowNodeRef>
         <flowNodeRef>EndEvent_TariffError</flowNodeRef>
@@ -36,7 +36,7 @@
         <flowNodeRef>Task_NotifySuccess</flowNodeRef>
         <flowNodeRef>Task_UpdateLK_Tariff</flowNodeRef>
         <flowNodeRef>Task_CallBillingDisable</flowNodeRef>
-        <flowNodeRef>Task_DeleteSubscriberService</flowNodeRef>
+        <flowNodeRef>Task_DeleteSubscriberFeature</flowNodeRef>
         <flowNodeRef>EndEvent_ServiceDisabled</flowNodeRef>
         <flowNodeRef>Task_UpdateLK_Service</flowNodeRef>
         <flowNodeRef>Task_NotifyDisableOK</flowNodeRef>
@@ -65,7 +65,7 @@
         <flowNodeRef>Gateway_ServiceSearch</flowNodeRef>
         <flowNodeRef>Task_SelectServiceCategory</flowNodeRef>
         <flowNodeRef>Task_SearchTariff</flowNodeRef>
-        <flowNodeRef>Task_ViewServiceDetails</flowNodeRef>
+        <flowNodeRef>Task_ViewFeatureDetails</flowNodeRef>
         <flowNodeRef>Task_SelectCategory</flowNodeRef>
         <flowNodeRef>Activity_08wagg3</flowNodeRef>
         <flowNodeRef>Task_ClickDisable</flowNodeRef>
@@ -79,12 +79,12 @@
     <dataStoreReference id="DS_TariffOptions" name="tariff_option" />
     <dataStoreReference id="DS_SubscriberTariffs" name="subscriber_tariff" />
     <dataStoreReference id="DS_Services" name="service" />
-    <dataStoreReference id="DS_SubscriberServices" />
+    <dataStoreReference id="DS_SubscriberFeatures" />
     <serviceTask id="Task_LoadServices" name="Загрузить список&#10;подключённых услуг">
       <incoming>Flow_U1</incoming>
       <outgoing>Flow_U1c</outgoing>
       <dataOutputAssociation id="DataOutputAssociation_1r8c6pa">
-        <targetRef>DS_SubscriberServices</targetRef>
+        <targetRef>DS_SubscriberFeatures</targetRef>
       </dataOutputAssociation>
       <dataOutputAssociation id="DataOutputAssociation_1094d0j">
         <targetRef>DS_Services</targetRef>
@@ -160,14 +160,14 @@
         <targetRef>DS_Tariffs</targetRef>
       </dataOutputAssociation>
     </serviceTask>
-    <serviceTask id="Task_LoadServiceDetails" name="Загрузить описание&#10;услуги">
+    <serviceTask id="Task_LoadFeatureDetails" name="Загрузить описание&#10;услуги">
       <incoming>Flow_U7_Details</incoming>
       <outgoing>Flow_U7c_Details</outgoing>
       <dataOutputAssociation id="DataOutputAssociation_101gam2">
         <targetRef>DS_Services</targetRef>
       </dataOutputAssociation>
     </serviceTask>
-    <endEvent id="EndEvent_ServiceDetails" name="Страница услуги&#10;отображена">
+    <endEvent id="EndEvent_FeatureDetails" name="Страница услуги&#10;отображена">
       <incoming>Flow_U7c_Details</incoming>
     </endEvent>
     <serviceTask id="Task_SearchTariffsDB" name="Поиск тарифов">
@@ -282,7 +282,7 @@
       <incoming>Flow_T5_Search</incoming>
       <outgoing>Flow_T6_Search</outgoing>
     </userTask>
-    <userTask id="Task_ViewServiceDetails" name="Нажать «Подробнее»">
+    <userTask id="Task_ViewFeatureDetails" name="Нажать «Подробнее»">
       <incoming>Flow_U6_Details</incoming>
       <outgoing>Flow_U7_Details</outgoing>
     </userTask>
@@ -298,11 +298,11 @@
       <incoming>Flow_U7_Disable</incoming>
       <outgoing>Flow_U8</outgoing>
     </serviceTask>
-    <serviceTask id="Task_DeleteSubscriberService" name="Удалить запись&#10;об услуге">
+    <serviceTask id="Task_DeleteSubscriberFeature" name="Удалить запись&#10;об услуге">
       <incoming>Flow_U8</incoming>
       <outgoing>Flow_U8b</outgoing>
       <dataOutputAssociation id="DOA_DeleteService">
-        <targetRef>DS_SubscriberServices</targetRef>
+        <targetRef>DS_SubscriberFeatures</targetRef>
       </dataOutputAssociation>
     </serviceTask>
     <endEvent id="EndEvent_ServiceDisabled" name="Услуга успешно&#10;отключена">
@@ -368,8 +368,8 @@
     <sequenceFlow id="Flow_T_DBUp" sourceRef="Task_UpdateSubscriberTariff" targetRef="Gateway_ChangeResult" />
     <sequenceFlow id="Flow_T6_Cat" sourceRef="Task_SelectCategory" targetRef="Task_LoadTariffsByCategory" />
     <sequenceFlow id="Flow_T6b_Cat" sourceRef="Task_LoadTariffsByCategory" targetRef="Task_SelectTariffFromCategory" />
-    <sequenceFlow id="Flow_U7_Details" sourceRef="Task_ViewServiceDetails" targetRef="Task_LoadServiceDetails" />
-    <sequenceFlow id="Flow_U7c_Details" sourceRef="Task_LoadServiceDetails" targetRef="EndEvent_ServiceDetails" />
+    <sequenceFlow id="Flow_U7_Details" sourceRef="Task_ViewFeatureDetails" targetRef="Task_LoadFeatureDetails" />
+    <sequenceFlow id="Flow_U7c_Details" sourceRef="Task_LoadFeatureDetails" targetRef="EndEvent_FeatureDetails" />
     <sequenceFlow id="Flow_T6_Search" sourceRef="Task_SearchTariff" targetRef="Task_SearchTariffsDB" />
     <sequenceFlow id="Flow_T6b_Search" sourceRef="Task_SearchTariffsDB" targetRef="Gateway_TariffMerge" />
     <sequenceFlow id="Flow_T_OK" name="Успех" sourceRef="Gateway_ChangeResult" targetRef="Task_NotifySuccess" />
@@ -393,13 +393,13 @@
     <sequenceFlow id="Flow_U4_Cat" sourceRef="Task_SelectServiceFromCategory" targetRef="Gateway_ServiceMerge" />
     <sequenceFlow id="Flow_U3b_Search" sourceRef="Task_SearchServicesDB" targetRef="Gateway_ServiceMerge" />
     <sequenceFlow id="Flow_U5" sourceRef="Gateway_ServiceMerge" targetRef="Gateway_ServiceAction" />
-    <sequenceFlow id="Flow_U6_Details" sourceRef="Gateway_ServiceAction" targetRef="Task_ViewServiceDetails" />
+    <sequenceFlow id="Flow_U6_Details" sourceRef="Gateway_ServiceAction" targetRef="Task_ViewFeatureDetails" />
     <sequenceFlow id="Flow_U6_Disable" sourceRef="Gateway_ServiceAction" targetRef="Task_ClickDisable" />
     <sequenceFlow id="Flow_U2_Cat" sourceRef="Gateway_ServiceSearch" targetRef="Task_SelectServiceCategory" />
     <sequenceFlow id="Flow_U2_Search" sourceRef="Gateway_ServiceSearch" targetRef="Task_SearchService" />
     <sequenceFlow id="Flow_U7_Disable" sourceRef="Task_ClickDisable" targetRef="Task_CallBillingDisable" />
-    <sequenceFlow id="Flow_U8" sourceRef="Task_CallBillingDisable" targetRef="Task_DeleteSubscriberService" />
-    <sequenceFlow id="Flow_U8b" sourceRef="Task_DeleteSubscriberService" targetRef="Gateway_DisableResult" />
+    <sequenceFlow id="Flow_U8" sourceRef="Task_CallBillingDisable" targetRef="Task_DeleteSubscriberFeature" />
+    <sequenceFlow id="Flow_U8b" sourceRef="Task_DeleteSubscriberFeature" targetRef="Gateway_DisableResult" />
     <sequenceFlow id="Flow_U11" sourceRef="Task_UpdateLK_Service" targetRef="EndEvent_ServiceDisabled" />
     <sequenceFlow id="Flow_U10" sourceRef="Task_NotifyDisableOK" targetRef="Task_UpdateLK_Service" />
     <sequenceFlow id="Flow_U9_OK" name="Успех" sourceRef="Gateway_DisableResult" targetRef="Task_NotifyDisableOK" />
@@ -462,10 +462,10 @@
       <bpmndi:BPMNShape id="Task_LoadTariffsByCategory_di" bpmnElement="Task_LoadTariffsByCategory">
         <omgdc:Bounds x="2782" y="1130" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_LoadServiceDetails_di" bpmnElement="Task_LoadServiceDetails">
+      <bpmndi:BPMNShape id="Task_LoadFeatureDetails_di" bpmnElement="Task_LoadFeatureDetails">
         <omgdc:Bounds x="1650" y="1220" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_ServiceDetails_di" bpmnElement="EndEvent_ServiceDetails">
+      <bpmndi:BPMNShape id="EndEvent_FeatureDetails_di" bpmnElement="EndEvent_FeatureDetails">
         <omgdc:Bounds x="1872" y="1242" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <omgdc:Bounds x="1847" y="1205" width="86" height="27" />
@@ -585,7 +585,7 @@
       <bpmndi:BPMNShape id="Task_SearchTariff_di" bpmnElement="Task_SearchTariff">
         <omgdc:Bounds x="2572" y="707" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ViewServiceDetails_di" bpmnElement="Task_ViewServiceDetails">
+      <bpmndi:BPMNShape id="Task_ViewFeatureDetails_di" bpmnElement="Task_ViewFeatureDetails">
         <omgdc:Bounds x="1660" y="437" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_SelectCategory_di" bpmnElement="Task_SelectCategory">
@@ -598,7 +598,7 @@
       <bpmndi:BPMNShape id="Task_CallBillingDisable_di" bpmnElement="Task_CallBillingDisable">
         <omgdc:Bounds x="1410" y="1440" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_DeleteSubscriberService_di" bpmnElement="Task_DeleteSubscriberService">
+      <bpmndi:BPMNShape id="Task_DeleteSubscriberFeature_di" bpmnElement="Task_DeleteSubscriberFeature">
         <omgdc:Bounds x="1530" y="1440" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
@@ -997,7 +997,7 @@
           <omgdc:Bounds x="549" y="1873" width="22" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DS_SubscriberServices_di" bpmnElement="DS_SubscriberServices">
+      <bpmndi:BPMNShape id="DS_SubscriberFeatures_di" bpmnElement="DS_SubscriberFeatures">
         <omgdc:Bounds x="1555" y="1795" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <omgdc:Bounds x="1287" y="1316" width="86" height="27" />

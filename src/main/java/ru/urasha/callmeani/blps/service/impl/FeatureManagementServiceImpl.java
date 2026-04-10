@@ -69,20 +69,20 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
     }
 
     @Transactional(readOnly = true)
-    public FeatureDetailsResponse getServiceDetails(Long serviceId) {
-        AdditionalFeature service = AdditionalFeatureRepository.findById(serviceId)
-            .orElseThrow(() -> new NotFoundException("Service not found: " + serviceId));
+    public FeatureDetailsResponse getFeatureDetails(Long featureId) {
+        AdditionalFeature feature = AdditionalFeatureRepository.findById(featureId)
+            .orElseThrow(() -> new NotFoundException("Feature not found: " + featureId));
 
-        return clientMapper.toFeatureDetailsResponse(service);
+        return clientMapper.toFeatureDetailsResponse(feature);
     }
 
     @Transactional
-    public DisableFeatureResponse disableService(Long subscriberId, Long serviceId) {
+    public DisableFeatureResponse disableFeature(Long subscriberId, Long featureId) {
         Subscriber subscriber = subscriberRepository.findById(subscriberId)
             .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
 
         SubscriberFeature SubscriberFeature = SubscriberFeatureRepository
-            .findBySubscriberIdAndServiceIdAndStatus(subscriberId, serviceId, SubscriberFeatureStatus.ACTIVE)
+            .findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
             .orElse(null);
 
         if (SubscriberFeature == null) {
@@ -94,8 +94,8 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             );
             return new DisableFeatureResponse(
                 false,
-                "Service is not active for subscriber",
-                serviceId,
+                "Feature is not active for subscriber",
+                featureId,
                 List.of(),
                 clientMapper.toNotificationDto(notification)
             );
@@ -121,8 +121,8 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
         return new DisableFeatureResponse(
             true,
-            "Service disabled successfully",
-            serviceId,
+            "Feature disabled successfully",
+            featureId,
             List.of(clientMapper.toBillingTransactionDto(disableCall)),
             clientMapper.toNotificationDto(notification)
         );

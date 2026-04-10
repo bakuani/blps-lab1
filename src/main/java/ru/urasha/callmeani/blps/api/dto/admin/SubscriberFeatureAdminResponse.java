@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 public record SubscriberFeatureAdminResponse(
     Long id,
     Long subscriberId,
-    Long serviceId,
+    Long featureId,
     SubscriberFeatureStatus status,
     OffsetDateTime connectedAt,
     OffsetDateTime disabledAt

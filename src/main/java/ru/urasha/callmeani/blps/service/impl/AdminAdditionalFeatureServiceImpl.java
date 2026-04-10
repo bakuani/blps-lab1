@@ -25,39 +25,39 @@ public class AdminAdditionalFeatureServiceImpl implements AdminAdditionalFeature
 
     @Transactional(readOnly = true)
     public List<AdditionalFeatureAdminResponse> getFeatures() {
-        return AdditionalFeatureRepository.findAll().stream().map(adminMapper::toServiceResponse).toList();
+        return AdditionalFeatureRepository.findAll().stream().map(adminMapper::toFeatureResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public AdditionalFeatureAdminResponse getFeature(Long id) {
-        return adminMapper.toServiceResponse(getServiceEntity(id));
+        return adminMapper.toFeatureResponse(getFeatureEntity(id));
     }
 
     @Transactional
     public AdditionalFeatureAdminResponse createFeature(AdditionalFeatureUpsertRequest request) {
         FeatureCategory category = getFeatureCategoryEntity(request.categoryId());
-        AdditionalFeature service = new AdditionalFeature();
-        adminMapper.updateAdditionalFeature(service, request);
-        service.setCategory(category);
-        return adminMapper.toServiceResponse(AdditionalFeatureRepository.save(service));
+        AdditionalFeature feature = new AdditionalFeature();
+        adminMapper.updateAdditionalFeature(feature, request);
+        feature.setCategory(category);
+        return adminMapper.toFeatureResponse(AdditionalFeatureRepository.save(feature));
     }
 
     @Transactional
     public AdditionalFeatureAdminResponse updateFeature(Long id, AdditionalFeatureUpsertRequest request) {
-        AdditionalFeature service = getServiceEntity(id);
+        AdditionalFeature feature = getFeatureEntity(id);
         FeatureCategory category = getFeatureCategoryEntity(request.categoryId());
-        adminMapper.updateAdditionalFeature(service, request);
-        service.setCategory(category);
-        return adminMapper.toServiceResponse(AdditionalFeatureRepository.save(service));
+        adminMapper.updateAdditionalFeature(feature, request);
+        feature.setCategory(category);
+        return adminMapper.toFeatureResponse(AdditionalFeatureRepository.save(feature));
     }
 
     @Transactional
     public void deleteFeature(Long id) {
-        AdditionalFeatureRepository.delete(getServiceEntity(id));
+        AdditionalFeatureRepository.delete(getFeatureEntity(id));
     }
 
-    private AdditionalFeature getServiceEntity(Long id) {
-        return AdditionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Service not found: " + id));
+    private AdditionalFeature getFeatureEntity(Long id) {
+        return AdditionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Feature not found: " + id));
     }
 
     private FeatureCategory getFeatureCategoryEntity(Long id) {
