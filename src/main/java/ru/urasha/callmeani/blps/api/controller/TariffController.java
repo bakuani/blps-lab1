@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.urasha.callmeani.blps.api.dto.ChangeTariffRequest;
-import ru.urasha.callmeani.blps.api.dto.ChangeTariffResponse;
-import ru.urasha.callmeani.blps.api.dto.IdNameDto;
-import ru.urasha.callmeani.blps.api.dto.TariffDetailsResponse;
-import ru.urasha.callmeani.blps.api.dto.TariffInfoResponse;
-import ru.urasha.callmeani.blps.api.dto.TariffSummaryDto;
-import ru.urasha.callmeani.blps.service.TariffManagementService;
+import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffRequest;
+import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
+import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
+import ru.urasha.callmeani.blps.api.dto.tariff.TariffDetailsResponse;
+import ru.urasha.callmeani.blps.api.dto.tariff.TariffInfoResponse;
+import ru.urasha.callmeani.blps.api.dto.tariff.TariffSummaryDto;
+import ru.urasha.callmeani.blps.service.tariff.TariffManagementService;
 
 import java.util.List;
 

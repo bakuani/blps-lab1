@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.urasha.callmeani.blps.api.dto.DisableFeatureResponse;
-import ru.urasha.callmeani.blps.api.dto.IdNameDto;
-import ru.urasha.callmeani.blps.api.dto.FeatureDetailsResponse;
-import ru.urasha.callmeani.blps.api.dto.FeatureSummaryDto;
-import ru.urasha.callmeani.blps.service.FeatureManagementService;
+import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
+import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
+import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
+import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
+import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
 
 import java.util.List;
 
@@ -46,6 +46,3 @@ public class FeatureController {
         return featureManagementService.disableFeature(subscriberId, featureId);
     }
 }
-
-
-

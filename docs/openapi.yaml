@@ -6,10 +6,10 @@ servers:
 - url: http://localhost:8080
   description: Generated server url
 paths:
-  /api/v1/admin/tariffs/{id}:
+  /api/v1/Management/tariffs/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariff
       parameters:
       - name: id
@@ -24,10 +24,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffAdminResponse"
+                $ref: "#/components/schemas/TariffResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateTariff
       parameters:
       - name: id
@@ -48,10 +48,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffAdminResponse"
+                $ref: "#/components/schemas/TariffResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteTariff
       parameters:
       - name: id
@@ -63,10 +63,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/tariff-options/{id}:
+  /api/v1/Management/tariff-options/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariffOption
       parameters:
       - name: id
@@ -81,10 +81,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffOptionAdminResponse"
+                $ref: "#/components/schemas/TariffOptionResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateTariffOption
       parameters:
       - name: id
@@ -105,10 +105,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffOptionAdminResponse"
+                $ref: "#/components/schemas/TariffOptionResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteTariffOption
       parameters:
       - name: id
@@ -120,10 +120,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/tariff-categories/{id}:
+  /api/v1/Management/tariff-categories/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariffCategory
       parameters:
       - name: id
@@ -141,7 +141,7 @@ paths:
                 $ref: "#/components/schemas/IdNameResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateTariffCategory
       parameters:
       - name: id
@@ -165,7 +165,7 @@ paths:
                 $ref: "#/components/schemas/IdNameResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteTariffCategory
       parameters:
       - name: id
@@ -177,10 +177,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/subscribers/{id}:
+  /api/v1/Management/subscribers/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getSubscriber
       parameters:
       - name: id
@@ -195,10 +195,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberAdminResponse"
+                $ref: "#/components/schemas/SubscriberResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateSubscriber
       parameters:
       - name: id
@@ -219,10 +219,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberAdminResponse"
+                $ref: "#/components/schemas/SubscriberResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteSubscriber
       parameters:
       - name: id
@@ -234,10 +234,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/subscriber-features/{id}:
+  /api/v1/Management/subscriber-features/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getSubscriberFeature
       parameters:
       - name: id
@@ -252,10 +252,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberFeatureAdminResponse"
+                $ref: "#/components/schemas/SubscriberFeatureResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateSubscriberFeature
       parameters:
       - name: id
@@ -276,10 +276,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberFeatureAdminResponse"
+                $ref: "#/components/schemas/SubscriberFeatureResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteSubscriberFeature
       parameters:
       - name: id
@@ -291,10 +291,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/features/{id}:
+  /api/v1/Management/features/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getService
       parameters:
       - name: id
@@ -309,10 +309,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/AdditionalFeatureAdminResponse"
+                $ref: "#/components/schemas/AdditionalFeatureResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateService
       parameters:
       - name: id
@@ -333,10 +333,10 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/AdditionalFeatureAdminResponse"
+                $ref: "#/components/schemas/AdditionalFeatureResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteService
       parameters:
       - name: id
@@ -348,10 +348,10 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/admin/feature-categories/{id}:
+  /api/v1/Management/feature-categories/{id}:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getServiceCategory
       parameters:
       - name: id
@@ -369,7 +369,7 @@ paths:
                 $ref: "#/components/schemas/IdNameResponse"
     put:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: updateServiceCategory
       parameters:
       - name: id
@@ -393,7 +393,7 @@ paths:
                 $ref: "#/components/schemas/IdNameResponse"
     delete:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: deleteServiceCategory
       parameters:
       - name: id
@@ -455,10 +455,10 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/DisableFeatureResponse"
-  /api/v1/admin/tariffs:
+  /api/v1/Management/tariffs:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariffs
       responses:
         "200":
@@ -468,10 +468,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TariffAdminResponse"
+                  $ref: "#/components/schemas/TariffResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createTariff
       requestBody:
         content:
@@ -485,11 +485,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffAdminResponse"
-  /api/v1/admin/tariff-options:
+                $ref: "#/components/schemas/TariffResponse"
+  /api/v1/Management/tariff-options:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariffOptions
       responses:
         "200":
@@ -499,10 +499,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TariffOptionAdminResponse"
+                  $ref: "#/components/schemas/TariffOptionResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createTariffOption
       requestBody:
         content:
@@ -516,11 +516,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TariffOptionAdminResponse"
-  /api/v1/admin/tariff-categories:
+                $ref: "#/components/schemas/TariffOptionResponse"
+  /api/v1/Management/tariff-categories:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getTariffCategories
       responses:
         "200":
@@ -533,7 +533,7 @@ paths:
                   $ref: "#/components/schemas/IdNameResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createTariffCategory
       requestBody:
         content:
@@ -548,10 +548,10 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/IdNameResponse"
-  /api/v1/admin/subscribers:
+  /api/v1/Management/subscribers:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getSubscribers
       responses:
         "200":
@@ -561,10 +561,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriberAdminResponse"
+                  $ref: "#/components/schemas/SubscriberResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createSubscriber
       requestBody:
         content:
@@ -578,11 +578,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberAdminResponse"
-  /api/v1/admin/subscriber-features:
+                $ref: "#/components/schemas/SubscriberResponse"
+  /api/v1/Management/subscriber-features:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getSubscriberFeatures
       responses:
         "200":
@@ -592,10 +592,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SubscriberFeatureAdminResponse"
+                  $ref: "#/components/schemas/SubscriberFeatureResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createSubscriberFeature
       requestBody:
         content:
@@ -609,11 +609,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SubscriberFeatureAdminResponse"
-  /api/v1/admin/features:
+                $ref: "#/components/schemas/SubscriberFeatureResponse"
+  /api/v1/Management/features:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getServices
       responses:
         "200":
@@ -623,10 +623,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AdditionalFeatureAdminResponse"
+                  $ref: "#/components/schemas/AdditionalFeatureResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createService
       requestBody:
         content:
@@ -640,11 +640,11 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/AdditionalFeatureAdminResponse"
-  /api/v1/admin/feature-categories:
+                $ref: "#/components/schemas/AdditionalFeatureResponse"
+  /api/v1/Management/feature-categories:
     get:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: getServiceCategories
       responses:
         "200":
@@ -657,7 +657,7 @@ paths:
                   $ref: "#/components/schemas/IdNameResponse"
     post:
       tags:
-      - admin-data-controller
+      - Management-data-controller
       operationId: createServiceCategory
       requestBody:
         content:
@@ -844,7 +844,7 @@ components:
       - name
       - pdfUrl
       - switchFee
-    TariffAdminResponse:
+    TariffResponse:
       type: object
       properties:
         id:
@@ -883,7 +883,7 @@ components:
       - name
       - price
       - tariffId
-    TariffOptionAdminResponse:
+    TariffOptionResponse:
       type: object
       properties:
         id:
@@ -930,7 +930,7 @@ components:
       - balance
       - fullName
       - phone
-    SubscriberAdminResponse:
+    SubscriberResponse:
       type: object
       properties:
         id:
@@ -969,7 +969,7 @@ components:
       - featureId
       - status
       - subscriberId
-    SubscriberFeatureAdminResponse:
+    SubscriberFeatureResponse:
       type: object
       properties:
         id:
@@ -1010,7 +1010,7 @@ components:
       - description
       - monthlyFee
       - name
-    AdditionalFeatureAdminResponse:
+    AdditionalFeatureResponse:
       type: object
       properties:
         id:
@@ -1198,4 +1198,5 @@ components:
           type: string
         monthlyFee:
           type: number
+
 
