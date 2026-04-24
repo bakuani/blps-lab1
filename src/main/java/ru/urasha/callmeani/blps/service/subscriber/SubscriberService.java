@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberResponse;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
+import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 
 public interface SubscriberService {
     Page<SubscriberResponse> getSubscribers(Pageable pageable);
@@ -11,11 +12,6 @@ public interface SubscriberService {
     SubscriberResponse createSubscriber(SubscriberUpsertRequest request);
     SubscriberResponse updateSubscriber(Long id, SubscriberUpsertRequest request);
     void deleteSubscriber(Long id);
-    ru.urasha.callmeani.blps.domain.entity.Subscriber getSubscriberEntity(Long id);
-    ru.urasha.callmeani.blps.domain.entity.Subscriber save(ru.urasha.callmeani.blps.domain.entity.Subscriber subscriber);
+    Subscriber getSubscriberEntity(Long id);
+    Subscriber save(Subscriber subscriber);
 }
-
-
-
-
-

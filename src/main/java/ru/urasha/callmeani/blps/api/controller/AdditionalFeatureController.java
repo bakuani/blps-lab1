@@ -14,25 +14,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/features")
 @RequiredArgsConstructor
-public class AdditionalFeatureManagementController {
+public class AdditionalFeatureController {
 
-    private final AdditionalFeatureService AdditionalFeatureService;
+    private final AdditionalFeatureService additionalFeatureService;
 
     @GetMapping
     public List<AdditionalFeatureResponse> getFeatures() {
-        return AdditionalFeatureService.getFeatures();
+        return additionalFeatureService.getFeatures();
     }
 
     @GetMapping("/{id}")
     public AdditionalFeatureResponse getFeature(@PathVariable Long id) {
-        return AdditionalFeatureService.getFeature(id);
+        return additionalFeatureService.getFeature(id);
     }
 
     @PostMapping
     public ResponseEntity<AdditionalFeatureResponse> createFeature(
         @Valid @RequestBody AdditionalFeatureUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(AdditionalFeatureService.createFeature(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(additionalFeatureService.createFeature(request));
     }
 
     @PutMapping("/{id}")
@@ -40,12 +40,13 @@ public class AdditionalFeatureManagementController {
         @PathVariable Long id,
         @Valid @RequestBody AdditionalFeatureUpsertRequest request
     ) {
-        return AdditionalFeatureService.updateFeature(id, request);
+        return additionalFeatureService.updateFeature(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFeature(@PathVariable Long id) {
-        AdditionalFeatureService.deleteFeature(id);
+        additionalFeatureService.deleteFeature(id);
         return ResponseEntity.noContent().build();
     }
 }
+

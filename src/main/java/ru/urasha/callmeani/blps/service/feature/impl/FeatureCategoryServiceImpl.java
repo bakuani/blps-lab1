@@ -7,6 +7,7 @@ import ru.urasha.callmeani.blps.api.dto.common.IdNameResponse;
 import ru.urasha.callmeani.blps.api.dto.common.NameRequest;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.FeatureCategory;
+import ru.urasha.callmeani.blps.mapper.FeatureMapper;
 
 import ru.urasha.callmeani.blps.repository.FeatureCategoryRepository;
 import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
@@ -17,14 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FeatureCategoryServiceImpl implements FeatureCategoryService {
 
-    private final FeatureCategoryRepository FeatureCategoryRepository;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final FeatureCategoryRepository featureCategoryRepository;
+    private final FeatureMapper featureMapper;
 
     @Transactional(readOnly = true)
     public List<IdNameResponse> getFeatureCategories() {
-        return FeatureCategoryRepository.findAll().stream().map(featureMapper::toIdNameResponse).toList();
+        return featureCategoryRepository.findAll().stream().map(featureMapper::toIdNameResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -36,34 +35,27 @@ public class FeatureCategoryServiceImpl implements FeatureCategoryService {
     public IdNameResponse createFeatureCategory(NameRequest request) {
         FeatureCategory category = new FeatureCategory();
         category.setName(request.name());
-        return featureMapper.toIdNameResponse(FeatureCategoryRepository.save(category));
+        return featureMapper.toIdNameResponse(featureCategoryRepository.save(category));
     }
 
     @Transactional
     public IdNameResponse updateFeatureCategory(Long id, NameRequest request) {
         FeatureCategory category = getFeatureCategoryEntity(id);
         category.setName(request.name());
-        return featureMapper.toIdNameResponse(FeatureCategoryRepository.save(category));
+        return featureMapper.toIdNameResponse(featureCategoryRepository.save(category));
     }
 
     @Transactional
     public void deleteFeatureCategory(Long id) {
-        FeatureCategoryRepository.delete(getFeatureCategoryEntity(id));
+        featureCategoryRepository.delete(getFeatureCategoryEntity(id));
     }
 
     public FeatureCategory getFeatureCategoryEntity(Long id) {
-        return FeatureCategoryRepository.findById(id)
+        return featureCategoryRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Service category not found: " + id));
     }
 
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.FeatureCategory> findAll() {
-        return FeatureCategoryRepository.findAll();
+    public List<FeatureCategory> findAll() {
+        return featureCategoryRepository.findAll();
     }
 }
-
-
-
-
-
-
-

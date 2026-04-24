@@ -18,6 +18,10 @@ import ru.urasha.callmeani.blps.domain.entity.SubscriberFeature;
 import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
 import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
+import ru.urasha.callmeani.blps.mapper.BillingMapper;
+import ru.urasha.callmeani.blps.mapper.FeatureMapper;
+import ru.urasha.callmeani.blps.mapper.NotificationMapper;
+import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
 
 import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
 import ru.urasha.callmeani.blps.service.feature.AdditionalFeatureService;
@@ -27,6 +31,7 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberFeatureService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
@@ -42,11 +47,10 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
     private final FeatureCategoryService featureCategoryService;
     private final BillingService billingService;
     private final NotificationService notificationService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
-    private final ru.urasha.callmeani.blps.mapper.BillingMapper billingMapper;
-    private final ru.urasha.callmeani.blps.mapper.NotificationMapper notificationMapper;
+    private final FeatureMapper featureMapper;
+    private final SubscriberMapper subscriberMapper;
+    private final BillingMapper billingMapper;
+    private final NotificationMapper notificationMapper;
 
     @Transactional(readOnly = true)
     public List<FeatureSummaryDto> findSubscriberFeatures(Long subscriberId, Long categoryId, String query) {
@@ -72,7 +76,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
     @Transactional(readOnly = true)
     public FeatureDetailsResponse getFeatureDetails(Long featureId) {
-        AdditionalFeature feature = java.util.Optional.of(additionalFeatureService.getAdditionalFeatureEntity(featureId))
+        AdditionalFeature feature = Optional.of(additionalFeatureService.getAdditionalFeatureEntity(featureId))
             .orElseThrow(() -> new NotFoundException("Feature not found: " + featureId));
 
         return featureMapper.toFeatureDetailsResponse(feature);
@@ -80,13 +84,13 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
     @Transactional
     public DisableFeatureResponse disableFeature(Long subscriberId, Long featureId) {
-        Subscriber subscriber = java.util.Optional.of(subscriberService.getSubscriberEntity(subscriberId))
+        Subscriber subscriber = Optional.of(subscriberService.getSubscriberEntity(subscriberId))
             .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
 
-        SubscriberFeature SubscriberFeature = subscriberFeatureService.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
+        SubscriberFeature subscriberFeature = subscriberFeatureService.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
             .orElse(null);
 
-        if (SubscriberFeature == null) {
+        if (subscriberFeature == null) {
             NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.SERVICE_DISABLE_ERROR,
@@ -109,9 +113,9 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             "Запрос в биллинг на отключение услуги"
         );
 
-        SubscriberFeature.setStatus(SubscriberFeatureStatus.DISABLED);
-        SubscriberFeature.setDisabledAt(OffsetDateTime.now());
-        subscriberFeatureService.delete(SubscriberFeature);
+        subscriberFeature.setStatus(SubscriberFeatureStatus.DISABLED);
+        subscriberFeature.setDisabledAt(OffsetDateTime.now());
+        subscriberFeatureService.delete(subscriberFeature);
 
         NotificationEvent notification = notificationService.createNotification(
             subscriber,
@@ -129,12 +133,3 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
         );
     }
 }
-
-
-
-
-
-
-
-
-

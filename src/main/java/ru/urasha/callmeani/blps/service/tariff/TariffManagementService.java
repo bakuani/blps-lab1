@@ -16,6 +16,3 @@ public interface TariffManagementService {
     TariffDetailsResponse getTariffDetails(Long tariffId);
     ChangeTariffResponse changeTariff(Long subscriberId, ChangeTariffRequest request);
 }
-
-
-

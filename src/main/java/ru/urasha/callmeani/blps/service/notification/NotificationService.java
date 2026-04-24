@@ -7,5 +7,3 @@ import ru.urasha.callmeani.blps.domain.enums.NotificationType;
 public interface NotificationService {
     NotificationEvent createNotification(Subscriber subscriber, NotificationType type, String message, boolean success);
 }
-
-

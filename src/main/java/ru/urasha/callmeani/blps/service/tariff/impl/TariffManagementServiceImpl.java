@@ -7,32 +7,31 @@ import ru.urasha.callmeani.blps.api.dto.billing.BillingTransactionDto;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffRequest;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
 import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
-import ru.urasha.callmeani.blps.api.dto.notification.NotificationDto;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffInfoResponse;
-import ru.urasha.callmeani.blps.api.dto.tariff.TariffOptionDto;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffSummaryDto;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.BillingTransaction;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
-import ru.urasha.callmeani.blps.domain.entity.TariffCategory;
 import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
-
+import ru.urasha.callmeani.blps.mapper.BillingMapper;
+import ru.urasha.callmeani.blps.mapper.NotificationMapper;
+import ru.urasha.callmeani.blps.mapper.TariffMapper;
 
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.tariff.TariffCategoryService;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import ru.urasha.callmeani.blps.service.tariff.TariffManagementService;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
@@ -47,11 +46,9 @@ public class TariffManagementServiceImpl implements TariffManagementService {
     private final TariffCategoryService tariffCategoryService;
     private final BillingService billingService;
     private final NotificationService notificationService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
-    private final ru.urasha.callmeani.blps.mapper.BillingMapper billingMapper;
-    private final ru.urasha.callmeani.blps.mapper.NotificationMapper notificationMapper;
+    private final TariffMapper tariffMapper;
+    private final BillingMapper billingMapper;
+    private final NotificationMapper notificationMapper;
 
     @Transactional(readOnly = true)
     public TariffInfoResponse getSubscriberTariffInfo(Long subscriberId) {
@@ -97,7 +94,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
 
     @Transactional(readOnly = true)
     public TariffDetailsResponse getTariffDetails(Long tariffId) {
-        Tariff tariff = java.util.Optional.of(tariffService.getTariffEntity(tariffId))
+        Tariff tariff = Optional.of(tariffService.getTariffEntity(tariffId))
                 .orElseThrow(() -> new NotFoundException("Tariff not found: " + tariffId));
 
         return tariffMapper.toTariffDetailsResponse(tariff);
@@ -106,7 +103,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
     @Transactional
     public ChangeTariffResponse changeTariff(Long subscriberId, ChangeTariffRequest request) {
         Subscriber subscriber = getSubscriber(subscriberId);
-        Tariff targetTariff = java.util.Optional.of(tariffService.getTariffEntity(request.targetTariffId()))
+        Tariff targetTariff = Optional.of(tariffService.getTariffEntity(request.targetTariffId()))
                 .orElseThrow(() -> new NotFoundException("Tariff not found: " + request.targetTariffId()));
 
         Tariff currentTariff = subscriber.getCurrentTariff();
@@ -184,7 +181,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
     }
 
     private Subscriber getSubscriber(Long subscriberId) {
-        return java.util.Optional.of(subscriberService.getSubscriberEntity(subscriberId))
+        return Optional.of(subscriberService.getSubscriberEntity(subscriberId))
                 .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
     }
 
@@ -201,9 +198,3 @@ public class TariffManagementServiceImpl implements TariffManagementService {
         return options == null ? Collections.emptyMap() : options;
     }
 }
-
-
-
-
-
-

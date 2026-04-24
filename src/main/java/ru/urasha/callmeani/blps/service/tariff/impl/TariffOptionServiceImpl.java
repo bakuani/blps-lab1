@@ -8,6 +8,7 @@ import ru.urasha.callmeani.blps.api.dto.tariff.TariffOptionUpsertRequest;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.entity.TariffOption;
+import ru.urasha.callmeani.blps.mapper.TariffMapper;
 
 import ru.urasha.callmeani.blps.repository.TariffOptionRepository;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
@@ -21,9 +22,7 @@ public class TariffOptionServiceImpl implements TariffOptionService {
 
     private final TariffOptionRepository tariffOptionRepository;
     private final TariffService tariffService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final TariffMapper tariffMapper;
 
     @Transactional(readOnly = true)
     public List<TariffOptionResponse> getTariffOptions() {
@@ -66,12 +65,3 @@ public class TariffOptionServiceImpl implements TariffOptionService {
         return tariffService.getTariffEntity(id);
     }
 }
-
-
-
-
-
-
-
-
-

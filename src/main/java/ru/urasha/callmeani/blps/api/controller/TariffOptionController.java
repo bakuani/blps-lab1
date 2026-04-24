@@ -14,23 +14,23 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/tariff-options")
 @RequiredArgsConstructor
-public class TariffOptionManagementController {
+public class TariffOptionController {
 
-    private final TariffOptionService TariffOptionService;
+    private final TariffOptionService tariffOptionService;
 
     @GetMapping
     public List<TariffOptionResponse> getTariffOptions() {
-        return TariffOptionService.getTariffOptions();
+        return tariffOptionService.getTariffOptions();
     }
 
     @GetMapping("/{id}")
     public TariffOptionResponse getTariffOption(@PathVariable Long id) {
-        return TariffOptionService.getTariffOption(id);
+        return tariffOptionService.getTariffOption(id);
     }
 
     @PostMapping
     public ResponseEntity<TariffOptionResponse> createTariffOption(@Valid @RequestBody TariffOptionUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(TariffOptionService.createTariffOption(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(tariffOptionService.createTariffOption(request));
     }
 
     @PutMapping("/{id}")
@@ -38,12 +38,13 @@ public class TariffOptionManagementController {
         @PathVariable Long id,
         @Valid @RequestBody TariffOptionUpsertRequest request
     ) {
-        return TariffOptionService.updateTariffOption(id, request);
+        return tariffOptionService.updateTariffOption(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTariffOption(@PathVariable Long id) {
-        TariffOptionService.deleteTariffOption(id);
+        tariffOptionService.deleteTariffOption(id);
         return ResponseEntity.noContent().build();
     }
 }
+

@@ -10,6 +10,7 @@ import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
+import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
 
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
@@ -17,15 +18,11 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
 @Service
 @RequiredArgsConstructor
-// TODO: remove admin
 public class SubscriberServiceImpl implements SubscriberService {
 
-    // TODO: 1 сервис = 1 репозиторий
     private final SubscriberRepository subscriberRepository;
     private final TariffService tariffService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final SubscriberMapper subscriberMapper;
 
     @Transactional(readOnly = true)
     public Page<SubscriberResponse> getSubscribers(Pageable pageable) {
@@ -68,15 +65,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         return tariffService.getTariffEntity(id);
     }
 
-    public ru.urasha.callmeani.blps.domain.entity.Subscriber save(ru.urasha.callmeani.blps.domain.entity.Subscriber subscriber) {
+    public Subscriber save(Subscriber subscriber) {
         return subscriberRepository.save(subscriber);
     }
 }
-
-
-
-
-
-
-
-

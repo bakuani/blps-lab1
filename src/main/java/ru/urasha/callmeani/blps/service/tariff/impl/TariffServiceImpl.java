@@ -8,6 +8,7 @@ import ru.urasha.callmeani.blps.api.dto.tariff.TariffUpsertRequest;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.entity.TariffCategory;
+import ru.urasha.callmeani.blps.mapper.TariffMapper;
 
 import ru.urasha.callmeani.blps.service.tariff.TariffCategoryService;
 import ru.urasha.callmeani.blps.repository.TariffRepository;
@@ -21,9 +22,7 @@ public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
     private final TariffCategoryService tariffCategoryService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final TariffMapper tariffMapper;
 
     @Transactional(readOnly = true)
     public List<TariffResponse> getTariffs() {
@@ -66,17 +65,8 @@ public class TariffServiceImpl implements TariffService {
         return tariffCategoryService.getTariffCategoryEntity(id);
     }
 
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.Tariff> findAll() { return tariffRepository.findAll(); }
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.Tariff> findByCategoryId(Long categoryId) { return tariffRepository.findByCategoryId(categoryId); }
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.Tariff> findByNameContainingIgnoreCase(String query) { return tariffRepository.findByNameContainingIgnoreCase(query); }
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.Tariff> findByCategoryIdAndNameContainingIgnoreCase(Long categoryId, String query) { return tariffRepository.findByCategoryIdAndNameContainingIgnoreCase(categoryId, query); }
+    public List<Tariff> findAll() { return tariffRepository.findAll(); }
+    public List<Tariff> findByCategoryId(Long categoryId) { return tariffRepository.findByCategoryId(categoryId); }
+    public List<Tariff> findByNameContainingIgnoreCase(String query) { return tariffRepository.findByNameContainingIgnoreCase(query); }
+    public List<Tariff> findByCategoryIdAndNameContainingIgnoreCase(Long categoryId, String query) { return tariffRepository.findByCategoryIdAndNameContainingIgnoreCase(categoryId, query); }
 }
-
-
-
-
-
-
-
-
-

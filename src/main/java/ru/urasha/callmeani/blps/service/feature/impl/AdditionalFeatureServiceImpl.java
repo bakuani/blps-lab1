@@ -10,8 +10,6 @@ import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.FeatureCategory;
 
 import ru.urasha.callmeani.blps.mapper.FeatureMapper;
-import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
-import ru.urasha.callmeani.blps.mapper.TariffMapper;
 import ru.urasha.callmeani.blps.repository.AdditionalFeatureRepository;
 import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
 import ru.urasha.callmeani.blps.service.feature.AdditionalFeatureService;
@@ -22,15 +20,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdditionalFeatureServiceImpl implements AdditionalFeatureService {
 
-    private final AdditionalFeatureRepository AdditionalFeatureRepository;
+    private final AdditionalFeatureRepository additionalFeatureRepository;
     private final FeatureCategoryService featureCategoryService;
     private final FeatureMapper featureMapper;
-    private final SubscriberMapper subscriberMapper;
-    private final TariffMapper tariffMapper;
 
     @Transactional(readOnly = true)
     public List<AdditionalFeatureResponse> getFeatures() {
-        return AdditionalFeatureRepository.findAll().stream().map(featureMapper::toFeatureResponse).toList();
+        return additionalFeatureRepository.findAll().stream().map(featureMapper::toFeatureResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -44,7 +40,7 @@ public class AdditionalFeatureServiceImpl implements AdditionalFeatureService {
         AdditionalFeature feature = new AdditionalFeature();
         featureMapper.updateAdditionalFeature(feature, request);
         feature.setCategory(category);
-        return featureMapper.toFeatureResponse(AdditionalFeatureRepository.save(feature));
+        return featureMapper.toFeatureResponse(additionalFeatureRepository.save(feature));
     }
 
     @Transactional
@@ -53,29 +49,19 @@ public class AdditionalFeatureServiceImpl implements AdditionalFeatureService {
         FeatureCategory category = getFeatureCategoryEntity(request.categoryId());
         featureMapper.updateAdditionalFeature(feature, request);
         feature.setCategory(category);
-        return featureMapper.toFeatureResponse(AdditionalFeatureRepository.save(feature));
+        return featureMapper.toFeatureResponse(additionalFeatureRepository.save(feature));
     }
 
     @Transactional
     public void deleteFeature(Long id) {
-        AdditionalFeatureRepository.delete(getAdditionalFeatureEntity(id));
+        additionalFeatureRepository.delete(getAdditionalFeatureEntity(id));
     }
 
     public AdditionalFeature getAdditionalFeatureEntity(Long id) {
-        return AdditionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Feature not found: " + id));
+        return additionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Feature not found: " + id));
     }
 
     private FeatureCategory getFeatureCategoryEntity(Long id) {
         return featureCategoryService.getFeatureCategoryEntity(id);
     }
 }
-
-
-
-
-
-
-
-
-
-

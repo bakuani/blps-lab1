@@ -11,6 +11,8 @@ import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.SubscriberFeature;
+import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
+import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
 
 import ru.urasha.callmeani.blps.service.feature.AdditionalFeatureService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
@@ -18,21 +20,21 @@ import ru.urasha.callmeani.blps.repository.SubscriberFeatureRepository;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberFeatureService;
 
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
 
-    private final SubscriberFeatureRepository SubscriberFeatureRepository;
+    private final SubscriberFeatureRepository subscriberFeatureRepository;
     private final SubscriberService subscriberService;
     private final AdditionalFeatureService additionalFeatureService;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final SubscriberMapper subscriberMapper;
 
     @Transactional(readOnly = true)
     public Page<SubscriberFeatureResponse> getSubscriberFeatures(Pageable pageable) {
-        return SubscriberFeatureRepository.findAll(pageable).map(subscriberMapper::toSubscriberFeatureResponse);
+        return subscriberFeatureRepository.findAll(pageable).map(subscriberMapper::toSubscriberFeatureResponse);
     }
 
     @Transactional(readOnly = true)
@@ -44,34 +46,34 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
     public SubscriberFeatureResponse createSubscriberFeature(SubscriberFeatureUpsertRequest request) {
         Subscriber subscriber = getSubscriberEntity(request.subscriberId());
         AdditionalFeature feature = getFeatureEntity(request.featureId());
-        SubscriberFeature SubscriberFeature = new SubscriberFeature();
-        subscriberMapper.updateSubscriberFeature(SubscriberFeature, request);
-        SubscriberFeature.setSubscriber(subscriber);
-        SubscriberFeature.setService(feature);
-        if (SubscriberFeature.getConnectedAt() == null) {
-            SubscriberFeature.setConnectedAt(OffsetDateTime.now());
+        SubscriberFeature subscriberFeature = new SubscriberFeature();
+        subscriberMapper.updateSubscriberFeature(subscriberFeature, request);
+        subscriberFeature.setSubscriber(subscriber);
+        subscriberFeature.setService(feature);
+        if (subscriberFeature.getConnectedAt() == null) {
+            subscriberFeature.setConnectedAt(OffsetDateTime.now());
         }
-        return subscriberMapper.toSubscriberFeatureResponse(SubscriberFeatureRepository.save(SubscriberFeature));
+        return subscriberMapper.toSubscriberFeatureResponse(subscriberFeatureRepository.save(subscriberFeature));
     }
 
     @Transactional
     public SubscriberFeatureResponse updateSubscriberFeature(Long id, SubscriberFeatureUpsertRequest request) {
-        SubscriberFeature SubscriberFeature = getSubscriberFeatureEntity(id);
+        SubscriberFeature subscriberFeature = getSubscriberFeatureEntity(id);
         Subscriber subscriber = getSubscriberEntity(request.subscriberId());
         AdditionalFeature feature = getFeatureEntity(request.featureId());
-        subscriberMapper.updateSubscriberFeature(SubscriberFeature, request);
-        SubscriberFeature.setSubscriber(subscriber);
-        SubscriberFeature.setService(feature);
-        return subscriberMapper.toSubscriberFeatureResponse(SubscriberFeatureRepository.save(SubscriberFeature));
+        subscriberMapper.updateSubscriberFeature(subscriberFeature, request);
+        subscriberFeature.setSubscriber(subscriber);
+        subscriberFeature.setService(feature);
+        return subscriberMapper.toSubscriberFeatureResponse(subscriberFeatureRepository.save(subscriberFeature));
     }
 
     @Transactional
     public void deleteSubscriberFeature(Long id) {
-        SubscriberFeatureRepository.delete(getSubscriberFeatureEntity(id));
+        subscriberFeatureRepository.delete(getSubscriberFeatureEntity(id));
     }
 
     public SubscriberFeature getSubscriberFeatureEntity(Long id) {
-        return SubscriberFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber feature not found: " + id));
+        return subscriberFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber feature not found: " + id));
     }
 
     private Subscriber getSubscriberEntity(Long id) {
@@ -82,23 +84,15 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
         return additionalFeatureService.getAdditionalFeatureEntity(id);
     }
 
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.SubscriberFeature> findBySubscriberIdAndStatus(Long subscriberId, ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus status) {
-        return SubscriberFeatureRepository.findBySubscriberIdAndStatus(subscriberId, status);
+    public List<SubscriberFeature> findBySubscriberIdAndStatus(Long subscriberId, SubscriberFeatureStatus status) {
+        return subscriberFeatureRepository.findBySubscriberIdAndStatus(subscriberId, status);
     }
 
-    public java.util.Optional<ru.urasha.callmeani.blps.domain.entity.SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus status) {
-        return SubscriberFeatureRepository.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, status);
+    public Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status) {
+        return subscriberFeatureRepository.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, status);
     }
 
-    public void delete(ru.urasha.callmeani.blps.domain.entity.SubscriberFeature feature) {
-        SubscriberFeatureRepository.delete(feature);
+    public void delete(SubscriberFeature feature) {
+        subscriberFeatureRepository.delete(feature);
     }
 }
-
-
-
-
-
-
-
-

@@ -14,33 +14,34 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 @RestController
 @RequestMapping("/api/v1/admin/subscribers")
 @RequiredArgsConstructor
-public class SubscriberManagementController {
+public class SubscriberController {
 
-    private final SubscriberService SubscriberService;
+    private final SubscriberService subscriberService;
 
     @GetMapping
     public Page<SubscriberResponse> getSubscribers(Pageable pageable) {
-        return SubscriberService.getSubscribers(pageable);
+        return subscriberService.getSubscribers(pageable);
     }
 
     @GetMapping("/{id}")
     public SubscriberResponse getSubscriber(@PathVariable Long id) {
-        return SubscriberService.getSubscriber(id);
+        return subscriberService.getSubscriber(id);
     }
 
     @PostMapping
     public ResponseEntity<SubscriberResponse> createSubscriber(@Valid @RequestBody SubscriberUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(SubscriberService.createSubscriber(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(subscriberService.createSubscriber(request));
     }
 
     @PutMapping("/{id}")
     public SubscriberResponse updateSubscriber(@PathVariable Long id, @Valid @RequestBody SubscriberUpsertRequest request) {
-        return SubscriberService.updateSubscriber(id, request);
+        return subscriberService.updateSubscriber(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscriber(@PathVariable Long id) {
-        SubscriberService.deleteSubscriber(id);
+        subscriberService.deleteSubscriber(id);
         return ResponseEntity.noContent().build();
     }
 }
+

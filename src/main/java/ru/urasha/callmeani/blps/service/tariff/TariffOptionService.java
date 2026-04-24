@@ -2,6 +2,7 @@ package ru.urasha.callmeani.blps.service.tariff;
 
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffOptionResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffOptionUpsertRequest;
+import ru.urasha.callmeani.blps.domain.entity.TariffOption;
 
 import java.util.List;
 
@@ -11,11 +12,5 @@ public interface TariffOptionService {
     TariffOptionResponse createTariffOption(TariffOptionUpsertRequest request);
     TariffOptionResponse updateTariffOption(Long id, TariffOptionUpsertRequest request);
     void deleteTariffOption(Long id);
-    ru.urasha.callmeani.blps.domain.entity.TariffOption getTariffOptionEntity(Long id);
+    TariffOption getTariffOptionEntity(Long id);
 }
-
-
-
-
-
-

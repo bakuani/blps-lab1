@@ -7,6 +7,7 @@ import ru.urasha.callmeani.blps.api.dto.common.IdNameResponse;
 import ru.urasha.callmeani.blps.api.dto.common.NameRequest;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.TariffCategory;
+import ru.urasha.callmeani.blps.mapper.TariffMapper;
 
 import ru.urasha.callmeani.blps.repository.TariffCategoryRepository;
 import ru.urasha.callmeani.blps.service.tariff.TariffCategoryService;
@@ -18,9 +19,7 @@ import java.util.List;
 public class TariffCategoryServiceImpl implements TariffCategoryService {
 
     private final TariffCategoryRepository tariffCategoryRepository;
-    private final ru.urasha.callmeani.blps.mapper.FeatureMapper featureMapper;
-    private final ru.urasha.callmeani.blps.mapper.SubscriberMapper subscriberMapper;
-    private final ru.urasha.callmeani.blps.mapper.TariffMapper tariffMapper;
+    private final TariffMapper tariffMapper;
 
     @Transactional(readOnly = true)
     public List<IdNameResponse> getTariffCategories() {
@@ -56,14 +55,7 @@ public class TariffCategoryServiceImpl implements TariffCategoryService {
             .orElseThrow(() -> new NotFoundException("Tariff category not found: " + id));
     }
 
-    public java.util.List<ru.urasha.callmeani.blps.domain.entity.TariffCategory> findAll() {
+    public List<TariffCategory> findAll() {
         return tariffCategoryRepository.findAll();
     }
 }
-
-
-
-
-
-
-

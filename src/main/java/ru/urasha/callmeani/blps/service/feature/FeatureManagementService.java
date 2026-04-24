@@ -13,9 +13,3 @@ public interface FeatureManagementService {
     FeatureDetailsResponse getFeatureDetails(Long featureId);
     DisableFeatureResponse disableFeature(Long subscriberId, Long featureId);
 }
-
-
-
-
-
-

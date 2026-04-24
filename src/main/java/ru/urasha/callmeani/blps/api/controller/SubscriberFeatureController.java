@@ -14,25 +14,25 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberFeatureService;
 @RestController
 @RequestMapping("/api/v1/admin/subscriber-features")
 @RequiredArgsConstructor
-public class SubscriberFeatureManagementController {
+public class SubscriberFeatureController {
 
-    private final SubscriberFeatureService SubscriberFeatureService;
+    private final SubscriberFeatureService subscriberFeatureService;
 
     @GetMapping
     public Page<SubscriberFeatureResponse> getSubscriberFeatures(Pageable pageable) {
-        return SubscriberFeatureService.getSubscriberFeatures(pageable);
+        return subscriberFeatureService.getSubscriberFeatures(pageable);
     }
 
     @GetMapping("/{id}")
     public SubscriberFeatureResponse getSubscriberFeature(@PathVariable Long id) {
-        return SubscriberFeatureService.getSubscriberFeature(id);
+        return subscriberFeatureService.getSubscriberFeature(id);
     }
 
     @PostMapping
     public ResponseEntity<SubscriberFeatureResponse> createSubscriberFeature(
         @Valid @RequestBody SubscriberFeatureUpsertRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(SubscriberFeatureService.createSubscriberFeature(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(subscriberFeatureService.createSubscriberFeature(request));
     }
 
     @PutMapping("/{id}")
@@ -40,12 +40,13 @@ public class SubscriberFeatureManagementController {
         @PathVariable Long id,
         @Valid @RequestBody SubscriberFeatureUpsertRequest request
     ) {
-        return SubscriberFeatureService.updateSubscriberFeature(id, request);
+        return subscriberFeatureService.updateSubscriberFeature(id, request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscriberFeature(@PathVariable Long id) {
-        SubscriberFeatureService.deleteSubscriberFeature(id);
+        subscriberFeatureService.deleteSubscriberFeature(id);
         return ResponseEntity.noContent().build();
     }
 }
+
