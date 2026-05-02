@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/feature-categories")
+@RequestMapping("/api/v1/feature-categories")
 @RequiredArgsConstructor
 public class FeatureCategoryController {
 

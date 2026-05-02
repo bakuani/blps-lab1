@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberFeatureUpsertReques
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberFeatureService;
 
 @RestController
-@RequestMapping("/api/v1/admin/subscriber-features")
+@RequestMapping("/api/v1/subscriber-features")
 @RequiredArgsConstructor
 public class SubscriberFeatureController {
 

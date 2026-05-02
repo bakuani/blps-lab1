@@ -6,7 +6,7 @@ servers:
 - url: http://localhost:8080
   description: Generated server url
 paths:
-  /api/v1/Management/tariffs/{id}:
+  /api/v1/tariff-catalog/{id}:
     get:
       tags:
       - Management-data-controller
@@ -63,7 +63,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/tariff-options/{id}:
+  /api/v1/tariff-options/{id}:
     get:
       tags:
       - Management-data-controller
@@ -120,7 +120,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/tariff-categories/{id}:
+  /api/v1/tariff-categories/{id}:
     get:
       tags:
       - Management-data-controller
@@ -177,7 +177,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/subscribers/{id}:
+  /api/v1/subscribers/{id}:
     get:
       tags:
       - Management-data-controller
@@ -234,7 +234,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/subscriber-features/{id}:
+  /api/v1/subscriber-features/{id}:
     get:
       tags:
       - Management-data-controller
@@ -291,7 +291,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/features/{id}:
+  /api/v1/additional-features/{id}:
     get:
       tags:
       - Management-data-controller
@@ -348,7 +348,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/Management/feature-categories/{id}:
+  /api/v1/feature-categories/{id}:
     get:
       tags:
       - Management-data-controller
@@ -455,7 +455,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/DisableFeatureResponse"
-  /api/v1/Management/tariffs:
+  /api/v1/tariff-catalog:
     get:
       tags:
       - Management-data-controller
@@ -486,7 +486,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TariffResponse"
-  /api/v1/Management/tariff-options:
+  /api/v1/tariff-options:
     get:
       tags:
       - Management-data-controller
@@ -517,7 +517,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TariffOptionResponse"
-  /api/v1/Management/tariff-categories:
+  /api/v1/tariff-categories:
     get:
       tags:
       - Management-data-controller
@@ -548,7 +548,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/IdNameResponse"
-  /api/v1/Management/subscribers:
+  /api/v1/subscribers:
     get:
       tags:
       - Management-data-controller
@@ -579,7 +579,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SubscriberResponse"
-  /api/v1/Management/subscriber-features:
+  /api/v1/subscriber-features:
     get:
       tags:
       - Management-data-controller
@@ -610,7 +610,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SubscriberFeatureResponse"
-  /api/v1/Management/features:
+  /api/v1/additional-features:
     get:
       tags:
       - Management-data-controller
@@ -641,7 +641,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AdditionalFeatureResponse"
-  /api/v1/Management/feature-categories:
+  /api/v1/feature-categories:
     get:
       tags:
       - Management-data-controller

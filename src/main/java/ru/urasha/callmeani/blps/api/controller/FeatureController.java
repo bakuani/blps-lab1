@@ -1,6 +1,7 @@
 package ru.urasha.callmeani.blps.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ public class FeatureController {
     private final FeatureManagementService featureManagementService;
 
     @GetMapping("/subscribers/{subscriberId}/features")
+    @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
     public List<FeatureSummaryDto> findSubscriberFeatures(
         @PathVariable Long subscriberId,
         @RequestParam(required = false) Long categoryId,
@@ -42,6 +44,7 @@ public class FeatureController {
     }
 
     @PostMapping("/subscribers/{subscriberId}/features/{featureId}/disable")
+    @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
     public DisableFeatureResponse disableFeature(@PathVariable Long subscriberId, @PathVariable Long featureId) {
         return featureManagementService.disableFeature(subscriberId, featureId);
     }

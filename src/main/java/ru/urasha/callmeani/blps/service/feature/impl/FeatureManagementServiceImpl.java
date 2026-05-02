@@ -1,12 +1,12 @@
 package ru.urasha.callmeani.blps.service.feature.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urasha.callmeani.blps.api.dto.billing.BillingTransactionDto;
-import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
+import org.springframework.transaction.support.TransactionTemplate;
 import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
-import ru.urasha.callmeani.blps.api.dto.notification.NotificationDto;
+import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
@@ -22,20 +22,18 @@ import ru.urasha.callmeani.blps.mapper.BillingMapper;
 import ru.urasha.callmeani.blps.mapper.FeatureMapper;
 import ru.urasha.callmeani.blps.mapper.NotificationMapper;
 import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
-
-import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
+import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.feature.AdditionalFeatureService;
-import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
+import ru.urasha.callmeani.blps.service.feature.FeatureCategoryService;
+import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
+import ru.urasha.callmeani.blps.service.notification.NotificationService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberFeatureService;
+import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-
-import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
-import ru.urasha.callmeani.blps.service.billing.BillingService;
-import ru.urasha.callmeani.blps.service.notification.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -51,15 +49,17 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
     private final SubscriberMapper subscriberMapper;
     private final BillingMapper billingMapper;
     private final NotificationMapper notificationMapper;
+    @Qualifier("businessTransactionTemplate")
+    private final TransactionTemplate businessTransactionTemplate;
 
     @Transactional(readOnly = true)
     public List<FeatureSummaryDto> findSubscriberFeatures(Long subscriberId, Long categoryId, String query) {
-        List<SubscriberFeature> services = subscriberFeatureService.findBySubscriberIdAndStatus(
+        List<SubscriberFeature> features = subscriberFeatureService.findBySubscriberIdAndStatus(
             subscriberId,
             SubscriberFeatureStatus.ACTIVE
         );
 
-        return services.stream()
+        return features.stream()
             .filter(item -> categoryId == null || item.getService().getCategory().getId().equals(categoryId))
             .filter(item -> query == null || query.isBlank() || item.getService().getName().toLowerCase().contains(query.toLowerCase()))
             .map(subscriberMapper::toFeatureSummaryDto)
@@ -82,19 +82,23 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
         return featureMapper.toFeatureDetailsResponse(feature);
     }
 
-    @Transactional
     public DisableFeatureResponse disableFeature(Long subscriberId, Long featureId) {
+        return businessTransactionTemplate.execute(status -> doDisableFeature(subscriberId, featureId));
+    }
+
+    private DisableFeatureResponse doDisableFeature(Long subscriberId, Long featureId) {
         Subscriber subscriber = Optional.of(subscriberService.getSubscriberEntity(subscriberId))
             .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
 
-        SubscriberFeature subscriberFeature = subscriberFeatureService.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
+        SubscriberFeature subscriberFeature = subscriberFeatureService
+            .findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
             .orElse(null);
 
         if (subscriberFeature == null) {
             NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.SERVICE_DISABLE_ERROR,
-                "Услуга не подключена или уже отключена.",
+                "Feature is not connected or already disabled.",
                 false
             );
             return new DisableFeatureResponse(
@@ -110,17 +114,17 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             subscriber,
             BillingTransactionType.SERVICE_DISABLE,
             BigDecimal.ZERO,
-            "Запрос в биллинг на отключение услуги"
+            "Billing request for feature disable operation"
         );
 
         subscriberFeature.setStatus(SubscriberFeatureStatus.DISABLED);
         subscriberFeature.setDisabledAt(OffsetDateTime.now());
-        subscriberFeatureService.delete(subscriberFeature);
+        subscriberFeatureService.save(subscriberFeature);
 
         NotificationEvent notification = notificationService.createNotification(
             subscriber,
             NotificationType.SERVICE_DISABLED,
-            "Услуга успешно отключена.",
+            "Feature disabled successfully.",
             true
         );
 

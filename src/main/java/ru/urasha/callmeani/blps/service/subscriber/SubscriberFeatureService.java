@@ -20,4 +20,5 @@ public interface SubscriberFeatureService {
     List<SubscriberFeature> findBySubscriberIdAndStatus(Long subscriberId, SubscriberFeatureStatus status);
     Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status);
     void delete(SubscriberFeature feature);
+    SubscriberFeature save(SubscriberFeature feature);
 }

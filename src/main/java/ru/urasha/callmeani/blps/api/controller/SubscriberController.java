@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
 @RestController
-@RequestMapping("/api/v1/admin/subscribers")
+@RequestMapping("/api/v1/subscribers")
 @RequiredArgsConstructor
 public class SubscriberController {
 

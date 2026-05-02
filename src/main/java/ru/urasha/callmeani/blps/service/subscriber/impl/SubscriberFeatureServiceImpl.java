@@ -95,4 +95,8 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
     public void delete(SubscriberFeature feature) {
         subscriberFeatureRepository.delete(feature);
     }
+
+    public SubscriberFeature save(SubscriberFeature feature) {
+        return subscriberFeatureRepository.save(feature);
+    }
 }

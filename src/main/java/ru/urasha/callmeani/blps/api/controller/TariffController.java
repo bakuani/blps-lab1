@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,7 @@ public class TariffController {
     private final TariffService tariffService;
 
     @GetMapping("/subscribers/{subscriberId}/tariff")
+    @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
     public TariffInfoResponse getSubscriberTariffInfo(@PathVariable Long subscriberId) {
         return tariffManagementService.getSubscriberTariffInfo(subscriberId);
     }
@@ -58,6 +60,7 @@ public class TariffController {
     }
 
     @PostMapping("/subscribers/{subscriberId}/tariff/change")
+    @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
     public ChangeTariffResponse changeTariff(
         @PathVariable Long subscriberId,
         @Valid @RequestBody ChangeTariffRequest request
@@ -65,27 +68,27 @@ public class TariffController {
         return tariffManagementService.changeTariff(subscriberId, request);
     }
 
-    @GetMapping("/admin/tariffs")
+    @GetMapping("/tariff-catalog")
     public List<TariffResponse> getAdminTariffs() {
         return tariffService.getTariffs();
     }
 
-    @GetMapping("/admin/tariffs/{id}")
+    @GetMapping("/tariff-catalog/{id}")
     public TariffResponse getAdminTariff(@PathVariable Long id) {
         return tariffService.getTariff(id);
     }
 
-    @PostMapping("/admin/tariffs")
+    @PostMapping("/tariff-catalog")
     public ResponseEntity<TariffResponse> createAdminTariff(@Valid @RequestBody TariffUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tariffService.createTariff(request));
     }
 
-    @PutMapping("/admin/tariffs/{id}")
+    @PutMapping("/tariff-catalog/{id}")
     public TariffResponse updateAdminTariff(@PathVariable Long id, @Valid @RequestBody TariffUpsertRequest request) {
         return tariffService.updateTariff(id, request);
     }
 
-    @DeleteMapping("/admin/tariffs/{id}")
+    @DeleteMapping("/tariff-catalog/{id}")
     public ResponseEntity<Void> deleteAdminTariff(@PathVariable Long id) {
         tariffService.deleteTariff(id);
         return ResponseEntity.noContent().build();

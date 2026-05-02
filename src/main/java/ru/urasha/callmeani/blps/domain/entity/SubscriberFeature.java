@@ -19,7 +19,7 @@ import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "subscriber_service")
+@Table(name = "subscriber_feature")
 @Getter
 @Setter
 @NoArgsConstructor

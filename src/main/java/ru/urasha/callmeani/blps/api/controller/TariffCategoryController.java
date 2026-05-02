@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.service.tariff.TariffCategoryService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/tariff-categories")
+@RequestMapping("/api/v1/tariff-categories")
 @RequiredArgsConstructor
 public class TariffCategoryController {
 

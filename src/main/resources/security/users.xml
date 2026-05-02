@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user username="subscriber1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy" subscriberId="1">
+        <roles>
+            <role>SUBSCRIBER</role>
+        </roles>
+    </user>
+    <user username="operator1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy">
+        <roles>
+            <role>OPERATOR</role>
+        </roles>
+    </user>
+    <user username="admin1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy">
+        <roles>
+            <role>ADMIN</role>
+        </roles>
+    </user>
+</users>

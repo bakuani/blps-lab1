@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.service.tariff.TariffOptionService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/tariff-options")
+@RequestMapping("/api/v1/tariff-options")
 @RequiredArgsConstructor
 public class TariffOptionController {
 

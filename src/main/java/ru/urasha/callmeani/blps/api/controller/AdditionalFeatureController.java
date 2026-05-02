@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.service.feature.AdditionalFeatureService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/features")
+@RequestMapping("/api/v1/additional-features")
 @RequiredArgsConstructor
 public class AdditionalFeatureController {
 
