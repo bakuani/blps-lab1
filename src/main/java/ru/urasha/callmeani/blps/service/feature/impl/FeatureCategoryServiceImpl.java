@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.common.IdNameResponse;
 import ru.urasha.callmeani.blps.api.dto.common.NameRequest;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
+import ru.urasha.callmeani.blps.api.exception.FeatureCategoryNotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.FeatureCategory;
 import ru.urasha.callmeani.blps.mapper.FeatureMapper;
 
@@ -52,7 +52,7 @@ public class FeatureCategoryServiceImpl implements FeatureCategoryService {
 
     public FeatureCategory getFeatureCategoryEntity(Long id) {
         return featureCategoryRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Service category not found: " + id));
+            .orElseThrow(() -> new FeatureCategoryNotFoundException(id));
     }
 
     public List<FeatureCategory> findAll() {

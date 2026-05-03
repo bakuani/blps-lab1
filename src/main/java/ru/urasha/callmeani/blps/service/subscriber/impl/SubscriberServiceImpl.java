@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberResponse;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
+import ru.urasha.callmeani.blps.api.exception.SubscriberNotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
@@ -58,7 +58,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     public Subscriber getSubscriberEntity(Long id) {
-        return subscriberRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber not found: " + id));
+        return subscriberRepository.findById(id).orElseThrow(() -> new SubscriberNotFoundException(id));
     }
 
     private Tariff getTariffEntity(Long id) {

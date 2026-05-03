@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.feature.AdditionalFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.AdditionalFeatureUpsertRequest;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
+import ru.urasha.callmeani.blps.api.exception.FeatureNotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.FeatureCategory;
 
@@ -58,7 +58,7 @@ public class AdditionalFeatureServiceImpl implements AdditionalFeatureService {
     }
 
     public AdditionalFeature getAdditionalFeatureEntity(Long id) {
-        return additionalFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Feature not found: " + id));
+        return additionalFeatureRepository.findById(id).orElseThrow(() -> new FeatureNotFoundException(id));
     }
 
     private FeatureCategory getFeatureCategoryEntity(Long id) {

@@ -1,8 +1,9 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.authorization;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
+import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import java.util.Set;
 
@@ -31,3 +32,4 @@ public class AccessGuard {
         return false;
     }
 }
+

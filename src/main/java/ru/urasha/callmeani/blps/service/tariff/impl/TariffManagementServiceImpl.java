@@ -12,7 +12,6 @@ import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffInfoResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffSummaryDto;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.BillingTransaction;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
@@ -35,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -98,8 +96,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
 
     @Transactional(readOnly = true)
     public TariffDetailsResponse getTariffDetails(Long tariffId) {
-        Tariff tariff = Optional.of(tariffService.getTariffEntity(tariffId))
-            .orElseThrow(() -> new NotFoundException("Tariff not found: " + tariffId));
+        Tariff tariff = tariffService.getTariffEntity(tariffId);
         return tariffMapper.toTariffDetailsResponse(tariff);
     }
 
@@ -109,8 +106,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
 
     private ChangeTariffResponse doChangeTariff(Long subscriberId, ChangeTariffRequest request) {
         Subscriber subscriber = getSubscriber(subscriberId);
-        Tariff targetTariff = Optional.of(tariffService.getTariffEntity(request.targetTariffId()))
-            .orElseThrow(() -> new NotFoundException("Tariff not found: " + request.targetTariffId()));
+        Tariff targetTariff = tariffService.getTariffEntity(request.targetTariffId());
 
         Tariff currentTariff = subscriber.getCurrentTariff();
         if (currentTariff != null && Objects.equals(currentTariff.getId(), targetTariff.getId())) {
@@ -195,8 +191,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
     }
 
     private Subscriber getSubscriber(Long subscriberId) {
-        return Optional.of(subscriberService.getSubscriberEntity(subscriberId))
-            .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
+        return subscriberService.getSubscriberEntity(subscriberId);
     }
 
     private BillingTransaction charge(Subscriber subscriber, BillingTransactionType type, BigDecimal amount, String description) {

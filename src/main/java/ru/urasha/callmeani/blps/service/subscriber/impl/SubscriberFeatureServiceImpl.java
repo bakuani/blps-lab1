@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberFeatureUpsertRequest;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
+import ru.urasha.callmeani.blps.api.exception.SubscriberFeatureNotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.SubscriberFeature;
@@ -73,7 +73,7 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
     }
 
     public SubscriberFeature getSubscriberFeatureEntity(Long id) {
-        return subscriberFeatureRepository.findById(id).orElseThrow(() -> new NotFoundException("Subscriber feature not found: " + id));
+        return subscriberFeatureRepository.findById(id).orElseThrow(() -> new SubscriberFeatureNotFoundException(id));
     }
 
     private Subscriber getSubscriberEntity(Long id) {

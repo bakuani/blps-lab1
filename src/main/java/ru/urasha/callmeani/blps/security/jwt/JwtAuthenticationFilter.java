@@ -1,10 +1,12 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,11 +16,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
+import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
@@ -27,21 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper;
 
-    public JwtAuthenticationFilter(
-        JwtService jwtService,
-        UserDetailsService userDetailsService,
-        ObjectMapper objectMapper
-    ) {
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-        this.objectMapper = objectMapper;
-    }
-
     @Override
     protected void doFilterInternal(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain
+            HttpServletRequest request,
+            @NotNull HttpServletResponse response,
+            @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -92,3 +86,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getOutputStream(), error);
     }
 }
+

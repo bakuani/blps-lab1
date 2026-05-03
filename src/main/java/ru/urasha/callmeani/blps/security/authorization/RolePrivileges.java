@@ -1,13 +1,14 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.authorization;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RolePrivileges {
-
-    private RolePrivileges() {
-    }
 
     public static Set<String> resolvePermissions(List<String> roles) {
         Set<String> permissions = new LinkedHashSet<>();
@@ -56,3 +57,4 @@ public final class RolePrivileges {
         return permissions;
     }
 }
+

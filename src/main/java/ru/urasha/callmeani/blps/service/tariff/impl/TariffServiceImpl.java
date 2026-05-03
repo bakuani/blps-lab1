@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffUpsertRequest;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
+import ru.urasha.callmeani.blps.api.exception.TariffNotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.entity.TariffCategory;
 import ru.urasha.callmeani.blps.mapper.TariffMapper;
@@ -58,7 +58,7 @@ public class TariffServiceImpl implements TariffService {
     }
 
     public Tariff getTariffEntity(Long id) {
-        return tariffRepository.findById(id).orElseThrow(() -> new NotFoundException("Tariff not found: " + id));
+        return tariffRepository.findById(id).orElseThrow(() -> new TariffNotFoundException(id));
     }
 
     private TariffCategory getTariffCategoryEntity(Long id) {

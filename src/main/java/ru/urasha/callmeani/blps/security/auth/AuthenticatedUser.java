@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.auth;
 
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,3 +22,4 @@ public class AuthenticatedUser extends User {
     }
 
 }
+

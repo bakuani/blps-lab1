@@ -1,5 +1,9 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.authorization;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Permissions {
 
     public static final String TARIFF_READ = "TARIFF_READ";
@@ -33,7 +37,5 @@ public final class Permissions {
     public static final String SUBSCRIBER_FEATURE_READ = "SUBSCRIBER_FEATURE_READ";
     public static final String SUBSCRIBER_FEATURE_WRITE = "SUBSCRIBER_FEATURE_WRITE";
     public static final String SUBSCRIBER_FEATURE_DELETE = "SUBSCRIBER_FEATURE_DELETE";
-
-    private Permissions() {
-    }
 }
+

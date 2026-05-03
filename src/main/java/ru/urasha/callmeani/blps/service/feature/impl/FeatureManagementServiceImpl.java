@@ -9,7 +9,6 @@ import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
 import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.BillingTransaction;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
@@ -33,7 +32,6 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -76,8 +74,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
     @Transactional(readOnly = true)
     public FeatureDetailsResponse getFeatureDetails(Long featureId) {
-        AdditionalFeature feature = Optional.of(additionalFeatureService.getAdditionalFeatureEntity(featureId))
-            .orElseThrow(() -> new NotFoundException("Feature not found: " + featureId));
+        AdditionalFeature feature = additionalFeatureService.getAdditionalFeatureEntity(featureId);
 
         return featureMapper.toFeatureDetailsResponse(feature);
     }
@@ -87,8 +84,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
     }
 
     private DisableFeatureResponse doDisableFeature(Long subscriberId, Long featureId) {
-        Subscriber subscriber = Optional.of(subscriberService.getSubscriberEntity(subscriberId))
-            .orElseThrow(() -> new NotFoundException("Subscriber not found: " + subscriberId));
+        Subscriber subscriber = subscriberService.getSubscriberEntity(subscriberId);
 
         SubscriberFeature subscriberFeature = subscriberFeatureService
             .findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)

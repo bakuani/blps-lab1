@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.auth;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.urasha.callmeani.blps.security.authorization.RolePrivileges;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
@@ -135,3 +136,4 @@ public class XmlUserDetailsService implements UserDetailsService {
     ) {
     }
 }
+

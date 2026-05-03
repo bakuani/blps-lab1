@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.security;
+package ru.urasha.callmeani.blps.security.jwt;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -100,7 +101,6 @@ public class JwtService {
             .getPayload();
     }
 
-    // TODO: ПЕРЕДЕЛАТЬ БЕЗ ЭТОГО КОСТЫЛЯ. ЧТОБЫ НЕ ПРИХОДИЛОСЬ ВОТ ТАК ИСКАТЬ СЕКРЕТ В 3-Х РАЗНЫХ МЕСТАХ
     private String resolveSecret(String configuredSecret) {
         if (configuredSecret != null && !configuredSecret.isBlank()) {
             return configuredSecret.trim();
@@ -118,3 +118,4 @@ public class JwtService {
         throw new IllegalStateException("JWT secret is not configured. Set JWT_SECRET in environment or .env.");
     }
 }
+
