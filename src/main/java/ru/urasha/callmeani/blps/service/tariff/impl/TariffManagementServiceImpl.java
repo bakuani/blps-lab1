@@ -30,7 +30,6 @@ import ru.urasha.callmeani.blps.service.tariff.TariffService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +51,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
 
     @Transactional(readOnly = true)
     public TariffInfoResponse getSubscriberTariffInfo(Long subscriberId) {
-        Subscriber subscriber = getSubscriber(subscriberId);
+        Subscriber subscriber = subscriberService.getSubscriberEntity(subscriberId);
         TariffSummaryDto currentTariff = subscriber.getCurrentTariff() != null
             ? tariffMapper.toTariffSummaryDto(subscriber.getCurrentTariff())
             : null;
@@ -96,8 +95,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
 
     @Transactional(readOnly = true)
     public TariffDetailsResponse getTariffDetails(Long tariffId) {
-        Tariff tariff = tariffService.getTariffEntity(tariffId);
-        return tariffMapper.toTariffDetailsResponse(tariff);
+        return tariffMapper.toTariffDetailsResponse(tariffService.getTariffEntity(tariffId));
     }
 
     public ChangeTariffResponse changeTariff(Long subscriberId, ChangeTariffRequest request) {
@@ -105,26 +103,25 @@ public class TariffManagementServiceImpl implements TariffManagementService {
     }
 
     private ChangeTariffResponse doChangeTariff(Long subscriberId, ChangeTariffRequest request) {
-        Subscriber subscriber = getSubscriber(subscriberId);
+        Subscriber subscriber = subscriberService.getSubscriberEntity(subscriberId);
+        Map<String, String> selectedOptions = request.options() == null ? Map.of() : request.options();
         Tariff targetTariff = tariffService.getTariffEntity(request.targetTariffId());
 
         Tariff currentTariff = subscriber.getCurrentTariff();
         if (currentTariff != null && Objects.equals(currentTariff.getId(), targetTariff.getId())) {
-            NotificationEvent notification = saveNotification(
+            NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.TARIFF_CHANGE_ERROR,
                 "Current tariff is already selected. Change request rejected.",
                 false
             );
-            return new ChangeTariffResponse(
-                false,
+            return buildFailureResponse(
                 "Current tariff is already selected",
-                tariffMapper.toTariffSummaryDto(currentTariff),
-                tariffMapper.toTariffSummaryDto(currentTariff),
-                safeOptions(request.options()),
-                subscriber.getBalance(),
-                List.of(),
-                notificationMapper.toNotificationDto(notification)
+                currentTariff,
+                currentTariff,
+                selectedOptions,
+                subscriber,
+                notification
             );
         }
 
@@ -133,21 +130,19 @@ public class TariffManagementServiceImpl implements TariffManagementService {
         BigDecimal total = switchFee.add(monthlyFee);
 
         if (subscriber.getBalance().compareTo(total) < 0) {
-            NotificationEvent notification = saveNotification(
+            NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.TARIFF_CHANGE_ERROR,
                 "Insufficient funds for tariff change.",
                 false
             );
-            return new ChangeTariffResponse(
-                false,
+            return buildFailureResponse(
                 "Insufficient funds",
-                currentTariff != null ? tariffMapper.toTariffSummaryDto(currentTariff) : null,
-                tariffMapper.toTariffSummaryDto(targetTariff),
-                safeOptions(request.options()),
-                subscriber.getBalance(),
-                List.of(),
-                notificationMapper.toNotificationDto(notification)
+                currentTariff,
+                targetTariff,
+                selectedOptions,
+                subscriber,
+                notification
             );
         }
 
@@ -171,27 +166,22 @@ public class TariffManagementServiceImpl implements TariffManagementService {
         subscriber.setCurrentTariff(targetTariff);
         subscriberService.save(subscriber);
 
-        NotificationEvent notification = saveNotification(
+        NotificationEvent notification = notificationService.createNotification(
             subscriber,
             NotificationType.TARIFF_CHANGED,
             "Tariff changed successfully.",
             true
         );
 
-        return new ChangeTariffResponse(
-            true,
+        return buildSuccessResponse(
             "Tariff changed successfully",
-            currentTariff != null ? tariffMapper.toTariffSummaryDto(currentTariff) : null,
-            tariffMapper.toTariffSummaryDto(targetTariff),
-            safeOptions(request.options()),
-            subscriber.getBalance(),
+            currentTariff,
+            targetTariff,
+            selectedOptions,
+            subscriber,
             transactions,
-            notificationMapper.toNotificationDto(notification)
+            notification
         );
-    }
-
-    private Subscriber getSubscriber(Long subscriberId) {
-        return subscriberService.getSubscriberEntity(subscriberId);
     }
 
     private BillingTransaction charge(Subscriber subscriber, BillingTransactionType type, BigDecimal amount, String description) {
@@ -199,11 +189,44 @@ public class TariffManagementServiceImpl implements TariffManagementService {
         return billingService.createTransaction(subscriber, type, amount, description);
     }
 
-    private NotificationEvent saveNotification(Subscriber subscriber, NotificationType type, String message, boolean success) {
-        return notificationService.createNotification(subscriber, type, message, success);
+    private ChangeTariffResponse buildFailureResponse(
+        String message,
+        Tariff previousTariff,
+        Tariff newTariff,
+        Map<String, String> selectedOptions,
+        Subscriber subscriber,
+        NotificationEvent notification
+    ) {
+        return new ChangeTariffResponse(
+            false,
+            message,
+            previousTariff != null ? tariffMapper.toTariffSummaryDto(previousTariff) : null,
+            newTariff != null ? tariffMapper.toTariffSummaryDto(newTariff) : null,
+            selectedOptions,
+            subscriber.getBalance(),
+            List.of(),
+            notificationMapper.toNotificationDto(notification)
+        );
     }
 
-    private Map<String, String> safeOptions(Map<String, String> options) {
-        return options == null ? Collections.emptyMap() : options;
+    private ChangeTariffResponse buildSuccessResponse(
+        String message,
+        Tariff previousTariff,
+        Tariff newTariff,
+        Map<String, String> selectedOptions,
+        Subscriber subscriber,
+        List<BillingTransactionDto> transactions,
+        NotificationEvent notification
+    ) {
+        return new ChangeTariffResponse(
+            true,
+            message,
+            previousTariff != null ? tariffMapper.toTariffSummaryDto(previousTariff) : null,
+            newTariff != null ? tariffMapper.toTariffSummaryDto(newTariff) : null,
+            selectedOptions,
+            subscriber.getBalance(),
+            transactions,
+            notificationMapper.toNotificationDto(notification)
+        );
     }
 }

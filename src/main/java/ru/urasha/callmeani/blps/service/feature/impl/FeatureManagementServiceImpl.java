@@ -9,7 +9,6 @@ import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
 import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
-import ru.urasha.callmeani.blps.domain.entity.AdditionalFeature;
 import ru.urasha.callmeani.blps.domain.entity.BillingTransaction;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
@@ -32,6 +31,7 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +52,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
     @Transactional(readOnly = true)
     public List<FeatureSummaryDto> findSubscriberFeatures(Long subscriberId, Long categoryId, String query) {
+        String normalizedQuery = query == null ? null : query.trim().toLowerCase(Locale.ROOT);
         List<SubscriberFeature> features = subscriberFeatureService.findBySubscriberIdAndStatus(
             subscriberId,
             SubscriberFeatureStatus.ACTIVE
@@ -59,7 +60,8 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
         return features.stream()
             .filter(item -> categoryId == null || item.getFeature().getCategory().getId().equals(categoryId))
-            .filter(item -> query == null || query.isBlank() || item.getFeature().getName().toLowerCase().contains(query.toLowerCase()))
+            .filter(item -> normalizedQuery == null || normalizedQuery.isBlank()
+                || item.getFeature().getName().toLowerCase(Locale.ROOT).contains(normalizedQuery))
             .map(subscriberMapper::toFeatureSummaryDto)
             .toList();
     }
@@ -74,9 +76,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
 
     @Transactional(readOnly = true)
     public FeatureDetailsResponse getFeatureDetails(Long featureId) {
-        AdditionalFeature feature = additionalFeatureService.getAdditionalFeatureEntity(featureId);
-
-        return featureMapper.toFeatureDetailsResponse(feature);
+        return featureMapper.toFeatureDetailsResponse(additionalFeatureService.getAdditionalFeatureEntity(featureId));
     }
 
     public DisableFeatureResponse disableFeature(Long subscriberId, Long featureId) {
@@ -97,12 +97,10 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
                 "Feature is not connected or already disabled.",
                 false
             );
-            return new DisableFeatureResponse(
-                false,
+            return buildDisableFailureResponse(
                 "Feature is not active for subscriber",
                 featureId,
-                List.of(),
-                notificationMapper.toNotificationDto(notification)
+                notification
             );
         }
 
@@ -124,11 +122,39 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             true
         );
 
-        return new DisableFeatureResponse(
-            true,
+        return buildDisableSuccessResponse(
             "Feature disabled successfully",
             featureId,
-            List.of(billingMapper.toBillingTransactionDto(disableCall)),
+            disableCall,
+            notification
+        );
+    }
+
+    private DisableFeatureResponse buildDisableFailureResponse(
+        String message,
+        Long featureId,
+        NotificationEvent notification
+    ) {
+        return new DisableFeatureResponse(
+            false,
+            message,
+            featureId,
+            List.of(),
+            notificationMapper.toNotificationDto(notification)
+        );
+    }
+
+    private DisableFeatureResponse buildDisableSuccessResponse(
+        String message,
+        Long featureId,
+        BillingTransaction billingTransaction,
+        NotificationEvent notification
+    ) {
+        return new DisableFeatureResponse(
+            true,
+            message,
+            featureId,
+            List.of(billingMapper.toBillingTransactionDto(billingTransaction)),
             notificationMapper.toNotificationDto(notification)
         );
     }

@@ -1,4 +1,4 @@
-﻿{
+{
     "_type":  "export",
     "__export_format":  4,
     "__export_date":  "2026-05-03T10:59:01.539Z",
@@ -41,7 +41,7 @@
                           "name":  "Tariff flow"
                       },
                       {
-                          "_id":  "fld_service",
+                          "_id":  "fld_feature",
                           "_type":  "request_group",
                           "parentId":  "wrk_blps",
                           "name":  "Features flow"
@@ -125,9 +125,9 @@
                                       ]
                       },
                       {
-                          "_id":  "req_get_services",
+                          "_id":  "req_get_features",
                           "_type":  "request",
-                          "parentId":  "fld_service",
+                          "parentId":  "fld_feature",
                           "name":  "Get subscriber features",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features",
@@ -139,9 +139,9 @@
                                       ]
                       },
                       {
-                          "_id":  "req_get_service_categories",
+                          "_id":  "req_get_feature_categories",
                           "_type":  "request",
-                          "parentId":  "fld_service",
+                          "parentId":  "fld_feature",
                           "name":  "Get feature categories",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/features/categories",
@@ -153,9 +153,9 @@
                                       ]
                       },
                       {
-                          "_id":  "req_search_services",
+                          "_id":  "req_search_features",
                           "_type":  "request",
-                          "parentId":  "fld_service",
+                          "parentId":  "fld_feature",
                           "name":  "Search features",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features?categoryId={{ _.category_id }}\u0026query=music",
@@ -167,9 +167,9 @@
                                       ]
                       },
                       {
-                          "_id":  "req_service_details",
+                          "_id":  "req_feature_details",
                           "_type":  "request",
-                          "parentId":  "fld_service",
+                          "parentId":  "fld_feature",
                           "name":  "Get feature details",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/features/{{ _.feature_id }}",
@@ -181,9 +181,9 @@
                                       ]
                       },
                       {
-                          "_id":  "req_disable_service",
+                          "_id":  "req_disable_feature",
                           "_type":  "request",
-                          "parentId":  "fld_service",
+                          "parentId":  "fld_feature",
                           "name":  "Disable feature",
                           "method":  "POST",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable",
@@ -407,7 +407,7 @@
                           "url":  "{{ _.base_url }}/api/v1/additional-features",
                           "body":  {
                                        "mimeType":  "application/json",
-                                       "text":  "{\n  \"name\": \"MTS Music\",\n  \"description\": \"Music service subscription\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}"
+                                       "text":  "{\n  \"name\": \"MTS Music\",\n  \"description\": \"Music feature subscription\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}"
                                    },
                           "headers":  [
                                           {
