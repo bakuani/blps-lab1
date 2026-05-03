@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <users>
-    <user username="subscriber1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy" subscriberId="1">
+    <user username="subscriber1" passwordHash="$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG" subscriberId="1">
         <roles>
             <role>SUBSCRIBER</role>
         </roles>
     </user>
-    <user username="operator1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy">
+    <user username="operator1" passwordHash="$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG">
         <roles>
             <role>OPERATOR</role>
         </roles>
     </user>
-    <user username="admin1" passwordHash="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy">
+    <user username="admin1" passwordHash="$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG">
         <roles>
             <role>ADMIN</role>
         </roles>
