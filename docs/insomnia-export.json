@@ -1,266 +1,650 @@
-{
-  "_type": "export",
-  "__export_format": 4,
-  "__export_date": "2026-03-25T12:00:00.000Z",
-  "__export_source": "insomnia.desktop.app:v2023.5.8",
-  "resources": [
-    {
-      "_id": "wrk_blps",
-      "_type": "workspace",
-      "name": "BLPS MTS",
-      "description": "REST API for tariff and services management"
-    },
-    {
-      "_id": "env_blps",
-      "_type": "environment",
-      "parentId": "wrk_blps",
-      "name": "Base Environment",
-      "data": {
-        "base_url": "http://localhost:8080",
-        "subscriber_id": 1,
-        "tariff_id": 2,
-        "feature_id": 1,
-        "category_id": 1
-      }
-    },
-    {
-      "_id": "fld_tariff",
-      "_type": "request_group",
-      "parentId": "wrk_blps",
-      "name": "Tariff flow"
-    },
-    {
-      "_id": "fld_service",
-      "_type": "request_group",
-      "parentId": "wrk_blps",
-      "name": "Services flow"
-    },
-    {
-      "_id": "req_get_tariff_info",
-      "_type": "request",
-      "parentId": "fld_tariff",
-      "name": "Get subscriber tariff info",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff"
-    },
-    {
-      "_id": "req_get_tariff_categories",
-      "_type": "request",
-      "parentId": "fld_tariff",
-      "name": "Get tariff categories",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/tariffs/categories"
-    },
-    {
-      "_id": "req_search_tariffs",
-      "_type": "request",
-      "parentId": "fld_tariff",
-      "name": "Search tariffs",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/tariffs?categoryId={{ _.category_id }}&query=мой"
-    },
-    {
-      "_id": "req_tariff_details",
-      "_type": "request",
-      "parentId": "fld_tariff",
-      "name": "Get tariff details",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/tariffs/{{ _.tariff_id }}"
-    },
-    {
-      "_id": "req_change_tariff",
-      "_type": "request",
-      "parentId": "fld_tariff",
-      "name": "Change tariff",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"targetTariffId\": {{ _.tariff_id }},\n  \"options\": {\n    \"minutes\": \"+200\",\n    \"internet\": \"+20GB\"\n  }\n}"
-      },
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ]
-    },
-    {
-      "_id": "req_get_services",
-      "_type": "request",
-      "parentId": "fld_service",
-      "name": "Get subscriber services",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features"
-    },
-    {
-      "_id": "req_get_service_categories",
-      "_type": "request",
-      "parentId": "fld_service",
-      "name": "Get service categories",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/features/categories"
-    },
-    {
-      "_id": "req_search_services",
-      "_type": "request",
-      "parentId": "fld_service",
-      "name": "Search services",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features?categoryId={{ _.category_id }}&query=music"
-    },
-    {
-      "_id": "req_service_details",
-      "_type": "request",
-      "parentId": "fld_service",
-      "name": "Get service details",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/features/{{ _.feature_id }}"
-    },
-    {
-      "_id": "req_disable_service",
-      "_type": "request",
-      "parentId": "fld_service",
-      "name": "Disable service",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable"
-    },
-    {
-      "_id": "fld_Management_data_init",
-      "_type": "request_group",
-      "parentId": "wrk_blps",
-      "name": "Management - Test Data Init"
-    },
-    {
-      "_id": "req_Management_tariff_cat_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "1. Create Base Tariff Category",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-categories",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Базовые\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_tariff_cat_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "2. Create Premium Tariff Category",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-categories",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Премиум\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_tariff_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "3. Create Smart Tariff",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-catalog",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Smart\",\n  \"description\": \"Базовый тариф для звонков и интернета\",\n  \"monthlyFee\": 650.00,\n  \"switchFee\": 100.00,\n  \"customizable\": false,\n  \"pdfUrl\": \"https://mts.ru/tariffs/smart.pdf\",\n  \"categoryId\": 1\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_tariff_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "4. Create My Tariff",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-catalog",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Мой Тариф\",\n  \"description\": \"Кастомизируемый тариф\",\n  \"monthlyFee\": 900.00,\n  \"switchFee\": 0.00,\n  \"customizable\": true,\n  \"pdfUrl\": \"https://mts.ru/tariffs/my-tariff.pdf\",\n  \"categoryId\": 2\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_tariff_opt_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "5. Create Tariff Option Minutes",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-options",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Пакет минут +200\",\n  \"description\": \"Дополнительные 200 минут\",\n  \"price\": 150.00,\n  \"tariffId\": 2\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_tariff_opt_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "6. Create Tariff Option Traffic",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/tariff-options",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Интернет +20 ГБ\",\n  \"description\": \"Дополнительный интернет-пакет\",\n  \"price\": 220.00,\n  \"tariffId\": 2\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_svc_cat_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "7. Create Safety Service Category",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/feature-categories",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Безопасность\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_svc_cat_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "8. Create Entertainment Service Category",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/feature-categories",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Развлечения\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_svc_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "9. Create Blocker Service",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/additional-features",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"Блокировка спама\",\n  \"description\": \"Фильтрация нежелательных звонков\",\n  \"monthlyFee\": 99.00,\n  \"categoryId\": 1\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_svc_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "10. Create Music Service",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/additional-features",
-      "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"МТС Music\",\n  \"description\": \"Подписка на музыкальный сервис\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_sub_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "11. Create Subscriber",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscribers",
-      "body": { "mimeType": "application/json", "text": "{\n  \"phone\": \"+79990000000\",\n  \"fullName\": \"Тестовый Абонент\",\n  \"balance\": 3000.00,\n  \"currentTariffId\": 1\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_sub_svc_1",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "12. Connect Blocker to Subscriber",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscriber-features",
-      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"featureId\": 1,\n  \"status\": \"ACTIVE\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    },
-    {
-      "_id": "req_Management_sub_svc_2",
-      "_type": "request",
-      "parentId": "fld_Management_data_init",
-      "name": "13. Connect Music to Subscriber",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/subscriber-features",
-      "body": { "mimeType": "application/json", "text": "{\n  \"subscriberId\": 1,\n  \"featureId\": 2,\n  \"status\": \"ACTIVE\"\n}" },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }]
-    }
-  ]
+﻿{
+    "_type":  "export",
+    "__export_format":  4,
+    "__export_date":  "2026-05-03T10:59:01.539Z",
+    "__export_source":  "insomnia.desktop.app:v2023.5.8",
+    "resources":  [
+                      {
+                          "_id":  "wrk_blps",
+                          "_type":  "workspace",
+                          "name":  "BLPS MTS",
+                          "description":  "REST API for tariff and feature management"
+                      },
+                      {
+                          "_id":  "env_blps",
+                          "_type":  "environment",
+                          "parentId":  "wrk_blps",
+                          "name":  "Base Environment",
+                          "data":  {
+                                       "base_url":  "http://localhost:8180",
+                                       "subscriber_id":  1,
+                                       "tariff_id":  2,
+                                       "feature_id":  1,
+                                       "category_id":  1,
+                                       "other_subscriber_id":  2,
+                                       "admin_username":  "admin1",
+                                       "admin_password":  "password",
+                                       "operator_username":  "operator1",
+                                       "operator_password":  "password",
+                                       "subscriber_username":  "subscriber1",
+                                       "subscriber_password":  "password",
+                                       "active_token":  "",
+                                       "admin_token":  "",
+                                       "operator_token":  "",
+                                       "subscriber_token":  ""
+                                   }
+                      },
+                      {
+                          "_id":  "fld_tariff",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Tariff flow"
+                      },
+                      {
+                          "_id":  "fld_service",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Features flow"
+                      },
+                      {
+                          "_id":  "req_get_tariff_info",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Get subscriber tariff info",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_get_tariff_categories",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Get tariff categories",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/tariffs/categories",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_search_tariffs",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Search tariffs",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/tariffs?categoryId={{ _.category_id }}\u0026query=smart",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_tariff_details",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Get tariff details",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/tariffs/{{ _.tariff_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_change_tariff",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Change tariff",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"targetTariffId\": {{ _.tariff_id }},\n  \"options\": {\n    \"minutes\": \"+200\",\n    \"internet\": \"+20GB\"\n  }\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_get_services",
+                          "_type":  "request",
+                          "parentId":  "fld_service",
+                          "name":  "Get subscriber features",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_get_service_categories",
+                          "_type":  "request",
+                          "parentId":  "fld_service",
+                          "name":  "Get feature categories",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/features/categories",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_search_services",
+                          "_type":  "request",
+                          "parentId":  "fld_service",
+                          "name":  "Search features",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features?categoryId={{ _.category_id }}\u0026query=music",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_service_details",
+                          "_type":  "request",
+                          "parentId":  "fld_service",
+                          "name":  "Get feature details",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/features/{{ _.feature_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_disable_service",
+                          "_type":  "request",
+                          "parentId":  "fld_service",
+                          "name":  "Disable feature",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "fld_Management_data_init",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Management - Test Data Init"
+                      },
+                      {
+                          "_id":  "req_Management_tariff_cat_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "1. Create Base Tariff Category",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-categories",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Base\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_tariff_cat_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "2. Create Premium Tariff Category",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-categories",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Premium\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_tariff_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "3. Create Smart Tariff",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-catalog",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Smart\",\n  \"description\": \"Base tariff for calls and internet\",\n  \"monthlyFee\": 650.00,\n  \"switchFee\": 100.00,\n  \"customizable\": false,\n  \"pdfUrl\": \"https://mts.ru/tariffs/smart.pdf\",\n  \"categoryId\": 1\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_tariff_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "4. Create My Tariff",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-catalog",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"My Tariff\",\n  \"description\": \"Customizable tariff\",\n  \"monthlyFee\": 900.00,\n  \"switchFee\": 0.00,\n  \"customizable\": true,\n  \"pdfUrl\": \"https://mts.ru/tariffs/my-tariff.pdf\",\n  \"categoryId\": 2\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_tariff_opt_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "5. Create Tariff Option Minutes",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-options",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Minutes +200\",\n  \"description\": \"Additional 200 minutes\",\n  \"price\": 150.00,\n  \"tariffId\": 2\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_tariff_opt_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "6. Create Tariff Option Traffic",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-options",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Internet +20 GB\",\n  \"description\": \"Additional internet package\",\n  \"price\": 220.00,\n  \"tariffId\": 2\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_svc_cat_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "7. Create Safety Feature Category",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/feature-categories",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Safety\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_svc_cat_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "8. Create Entertainment Feature Category",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/feature-categories",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Entertainment\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_svc_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "9. Create Blocker Feature",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/additional-features",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"Spam Blocker\",\n  \"description\": \"Filtering unwanted calls\",\n  \"monthlyFee\": 99.00,\n  \"categoryId\": 1\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_svc_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "10. Create Music Feature",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/additional-features",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"MTS Music\",\n  \"description\": \"Music service subscription\",\n  \"monthlyFee\": 169.00,\n  \"categoryId\": 2\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_sub_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "11. Create Subscriber",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"phone\": \"+79990000000\",\n  \"fullName\": \"Test Subscriber\",\n  \"balance\": 3000.00,\n  \"currentTariffId\": 1\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_sub_svc_1",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "12. Connect Blocker to Subscriber",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscriber-features",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"subscriberId\": 1,\n  \"featureId\": 1,\n  \"status\": \"ACTIVE\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_Management_sub_svc_2",
+                          "_type":  "request",
+                          "parentId":  "fld_Management_data_init",
+                          "name":  "13. Connect Music to Subscriber",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscriber-features",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"subscriberId\": 1,\n  \"featureId\": 2,\n  \"status\": \"ACTIVE\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "fld_auth",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Auth"
+                      },
+                      {
+                          "_id":  "fld_role_checks",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Role checks (Lab2)"
+                      },
+                      {
+                          "_id":  "req_auth_login_admin",
+                          "_type":  "request",
+                          "parentId":  "fld_auth",
+                          "name":  "Login as ADMIN",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/auth/login",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"username\": \"{{ _.admin_username }}\",\n  \"password\": \"{{ _.admin_password }}\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_auth_login_operator",
+                          "_type":  "request",
+                          "parentId":  "fld_auth",
+                          "name":  "Login as OPERATOR",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/auth/login",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"username\": \"{{ _.operator_username }}\",\n  \"password\": \"{{ _.operator_password }}\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_auth_login_subscriber",
+                          "_type":  "request",
+                          "parentId":  "fld_auth",
+                          "name":  "Login as SUBSCRIBER",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/auth/login",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"username\": \"{{ _.subscriber_username }}\",\n  \"password\": \"{{ _.subscriber_password }}\"\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_role_no_token_401",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "No token -\u003e tariffs (expect 401)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/tariffs"
+                      },
+                      {
+                          "_id":  "req_role_subscriber_own_200",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "SUBSCRIBER own tariff info (expect 200)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.subscriber_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_role_subscriber_other_403",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "SUBSCRIBER other tariff info (expect 403)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.other_subscriber_id }}/tariff",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.subscriber_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_role_operator_any_200",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "OPERATOR any tariff info (expect 200/404)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.other_subscriber_id }}/tariff",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.operator_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_role_subscriber_admin_forbidden",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "SUBSCRIBER create tariff-catalog (expect 403)",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-catalog",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"RoleCheck Tariff\",\n  \"description\": \"Should be forbidden for subscriber\",\n  \"monthlyFee\": 500.0,\n  \"switchFee\": 50.0,\n  \"customizable\": false,\n  \"pdfUrl\": \"https://mts.ru/tariffs/role-check.pdf\",\n  \"categoryId\": {{ _.category_id }}\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.subscriber_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_role_admin_create_allowed",
+                          "_type":  "request",
+                          "parentId":  "fld_role_checks",
+                          "name":  "ADMIN create tariff-catalog (expect 201)",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/tariff-catalog",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"name\": \"RoleCheck Tariff Admin\",\n  \"description\": \"Should be allowed for admin\",\n  \"monthlyFee\": 500.0,\n  \"switchFee\": 50.0,\n  \"customizable\": false,\n  \"pdfUrl\": \"https://mts.ru/tariffs/role-check-admin.pdf\",\n  \"categoryId\": {{ _.category_id }}\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      }
+                  ]
 }
-
