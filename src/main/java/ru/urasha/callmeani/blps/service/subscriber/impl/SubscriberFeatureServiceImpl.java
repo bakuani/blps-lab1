@@ -49,7 +49,7 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
         SubscriberFeature subscriberFeature = new SubscriberFeature();
         subscriberMapper.updateSubscriberFeature(subscriberFeature, request);
         subscriberFeature.setSubscriber(subscriber);
-        subscriberFeature.setService(feature);
+        subscriberFeature.setFeature(feature);
         if (subscriberFeature.getConnectedAt() == null) {
             subscriberFeature.setConnectedAt(OffsetDateTime.now());
         }
@@ -63,7 +63,7 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
         AdditionalFeature feature = getFeatureEntity(request.featureId());
         subscriberMapper.updateSubscriberFeature(subscriberFeature, request);
         subscriberFeature.setSubscriber(subscriber);
-        subscriberFeature.setService(feature);
+        subscriberFeature.setFeature(feature);
         return subscriberMapper.toSubscriberFeatureResponse(subscriberFeatureRepository.save(subscriberFeature));
     }
 
@@ -88,8 +88,8 @@ public class SubscriberFeatureServiceImpl implements SubscriberFeatureService {
         return subscriberFeatureRepository.findBySubscriberIdAndStatus(subscriberId, status);
     }
 
-    public Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status) {
-        return subscriberFeatureRepository.findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, status);
+    public Optional<SubscriberFeature> findBySubscriberIdAndFeatureIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status) {
+        return subscriberFeatureRepository.findBySubscriberIdAndFeatureIdAndStatus(subscriberId, featureId, status);
     }
 
     public void delete(SubscriberFeature feature) {

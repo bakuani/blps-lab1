@@ -18,7 +18,7 @@ public interface SubscriberFeatureService {
     void deleteSubscriberFeature(Long id);
     SubscriberFeature getSubscriberFeatureEntity(Long id);
     List<SubscriberFeature> findBySubscriberIdAndStatus(Long subscriberId, SubscriberFeatureStatus status);
-    Optional<SubscriberFeature> findBySubscriberIdAndServiceIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status);
+    Optional<SubscriberFeature> findBySubscriberIdAndFeatureIdAndStatus(Long subscriberId, Long featureId, SubscriberFeatureStatus status);
     void delete(SubscriberFeature feature);
     SubscriberFeature save(SubscriberFeature feature);
 }

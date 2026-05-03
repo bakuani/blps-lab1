@@ -34,8 +34,8 @@ public class SubscriberFeature {
     private Subscriber subscriber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "service_id", nullable = false)
-    private AdditionalFeature service;
+    @JoinColumn(name = "feature_id", nullable = false)
+    private AdditionalFeature feature;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

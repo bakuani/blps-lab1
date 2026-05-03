@@ -58,8 +58,8 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
         );
 
         return features.stream()
-            .filter(item -> categoryId == null || item.getService().getCategory().getId().equals(categoryId))
-            .filter(item -> query == null || query.isBlank() || item.getService().getName().toLowerCase().contains(query.toLowerCase()))
+            .filter(item -> categoryId == null || item.getFeature().getCategory().getId().equals(categoryId))
+            .filter(item -> query == null || query.isBlank() || item.getFeature().getName().toLowerCase().contains(query.toLowerCase()))
             .map(subscriberMapper::toFeatureSummaryDto)
             .toList();
     }
@@ -87,7 +87,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
         Subscriber subscriber = subscriberService.getSubscriberEntity(subscriberId);
 
         SubscriberFeature subscriberFeature = subscriberFeatureService
-            .findBySubscriberIdAndServiceIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
+            .findBySubscriberIdAndFeatureIdAndStatus(subscriberId, featureId, SubscriberFeatureStatus.ACTIVE)
             .orElse(null);
 
         if (subscriberFeature == null) {
