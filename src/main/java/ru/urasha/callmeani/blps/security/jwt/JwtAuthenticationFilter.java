@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import java.io.IOException;
@@ -49,14 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 if (!jwtService.isTokenValid(token, userDetails)) {
-                    writeUnauthorized(response, "Invalid JWT token");
+                    writeUnauthorized(response, ApiMessages.JWT_INVALID_TOKEN);
                     return;
                 }
 
                 if (userDetails instanceof AuthenticatedUser user) {
                     Long tokenSubscriberId = jwtService.extractSubscriberId(token);
                     if (tokenSubscriberId != null && !tokenSubscriberId.equals(user.getSubscriberId())) {
-                        writeUnauthorized(response, "Invalid JWT claims");
+                        writeUnauthorized(response, ApiMessages.JWT_INVALID_CLAIMS);
                         return;
                     }
                 }
@@ -72,7 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
-            writeUnauthorized(response, "Invalid JWT token");
+            writeUnauthorized(response, ApiMessages.JWT_INVALID_TOKEN);
         }
     }
 
@@ -86,4 +87,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getOutputStream(), error);
     }
 }
-

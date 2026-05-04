@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -27,7 +28,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     ) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        ApiErrorResponse payload = new ApiErrorResponse(OffsetDateTime.now(), "Unauthorized");
+        ApiErrorResponse payload = new ApiErrorResponse(OffsetDateTime.now(), ApiMessages.UNAUTHORIZED);
         objectMapper.writeValue(response.getOutputStream(), payload);
     }
 }

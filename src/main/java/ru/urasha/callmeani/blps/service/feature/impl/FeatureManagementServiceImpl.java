@@ -9,6 +9,7 @@ import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
 import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.BillingTransaction;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
@@ -94,11 +95,11 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.SERVICE_DISABLE_ERROR,
-                "Feature is not connected or already disabled.",
+                ApiMessages.FEATURE_NOT_ACTIVE_NOTIFICATION,
                 false
             );
             return buildDisableFailureResponse(
-                "Feature is not active for subscriber",
+                ApiMessages.FEATURE_NOT_ACTIVE_RESPONSE,
                 featureId,
                 notification
             );
@@ -108,7 +109,7 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
             subscriber,
             BillingTransactionType.SERVICE_DISABLE,
             BigDecimal.ZERO,
-            "Billing request for feature disable operation"
+            ApiMessages.FEATURE_DISABLE_BILLING_DESCRIPTION
         );
 
         subscriberFeature.setStatus(SubscriberFeatureStatus.DISABLED);
@@ -118,12 +119,12 @@ public class FeatureManagementServiceImpl implements FeatureManagementService {
         NotificationEvent notification = notificationService.createNotification(
             subscriber,
             NotificationType.SERVICE_DISABLED,
-            "Feature disabled successfully.",
+            ApiMessages.FEATURE_DISABLED_NOTIFICATION,
             true
         );
 
         return buildDisableSuccessResponse(
-            "Feature disabled successfully",
+            ApiMessages.FEATURE_DISABLED_RESPONSE,
             featureId,
             disableCall,
             notification

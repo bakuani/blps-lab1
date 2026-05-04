@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 
 import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
@@ -44,34 +45,34 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Malformed JSON request");
+        return build(HttpStatus.BAD_REQUEST, ApiMessages.MALFORMED_JSON_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        String message = "Invalid value for parameter: " + ex.getName();
+        String message = ApiMessages.INVALID_PARAMETER_PREFIX + ex.getName();
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        return build(HttpStatus.CONFLICT, "Data integrity violation");
+        return build(HttpStatus.CONFLICT, ApiMessages.DATA_INTEGRITY_VIOLATION);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthentication(AuthenticationException ex) {
-        return build(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        return build(HttpStatus.UNAUTHORIZED, ApiMessages.INVALID_CREDENTIALS);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        return build(HttpStatus.FORBIDDEN, "Forbidden");
+        return build(HttpStatus.FORBIDDEN, ApiMessages.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleAny(Exception ex) {
         log.error("Unhandled exception", ex);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, ApiMessages.INTERNAL_SERVER_ERROR);
     }
 
     private String formatFieldError(FieldError error) {

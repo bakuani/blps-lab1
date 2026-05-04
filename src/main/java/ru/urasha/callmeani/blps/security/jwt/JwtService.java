@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import javax.crypto.SecretKey;
@@ -115,7 +116,6 @@ public class JwtService {
         if (dotenvSecret != null && !dotenvSecret.isBlank()) {
             return dotenvSecret.trim();
         }
-        throw new IllegalStateException("JWT secret is not configured. Set JWT_SECRET in environment or .env.");
+        throw new IllegalStateException(ApiMessages.JWT_SECRET_NOT_CONFIGURED);
     }
 }
-

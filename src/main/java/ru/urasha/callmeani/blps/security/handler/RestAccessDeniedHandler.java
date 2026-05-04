@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -27,8 +28,7 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
     ) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        ApiErrorResponse payload = new ApiErrorResponse(OffsetDateTime.now(), "Forbidden");
+        ApiErrorResponse payload = new ApiErrorResponse(OffsetDateTime.now(), ApiMessages.FORBIDDEN);
         objectMapper.writeValue(response.getOutputStream(), payload);
     }
 }
-

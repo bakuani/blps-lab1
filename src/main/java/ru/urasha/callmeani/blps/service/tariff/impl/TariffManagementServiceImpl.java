@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import ru.urasha.callmeani.blps.api.dto.billing.BillingTransactionDto;
 import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
+import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffRequest;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffDetailsResponse;
@@ -112,11 +113,11 @@ public class TariffManagementServiceImpl implements TariffManagementService {
             NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.TARIFF_CHANGE_ERROR,
-                "Current tariff is already selected. Change request rejected.",
+                ApiMessages.TARIFF_ALREADY_SELECTED_NOTIFICATION,
                 false
             );
             return buildFailureResponse(
-                "Current tariff is already selected",
+                ApiMessages.TARIFF_ALREADY_SELECTED_RESPONSE,
                 currentTariff,
                 currentTariff,
                 selectedOptions,
@@ -133,11 +134,11 @@ public class TariffManagementServiceImpl implements TariffManagementService {
             NotificationEvent notification = notificationService.createNotification(
                 subscriber,
                 NotificationType.TARIFF_CHANGE_ERROR,
-                "Insufficient funds for tariff change.",
+                ApiMessages.TARIFF_INSUFFICIENT_FUNDS_NOTIFICATION,
                 false
             );
             return buildFailureResponse(
-                "Insufficient funds",
+                ApiMessages.TARIFF_INSUFFICIENT_FUNDS_RESPONSE,
                 currentTariff,
                 targetTariff,
                 selectedOptions,
@@ -152,7 +153,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
                 subscriber,
                 BillingTransactionType.TARIFF_SWITCH_FEE,
                 switchFee,
-                "Tariff switch fee"
+                ApiMessages.TARIFF_SWITCH_FEE_DESCRIPTION
             )));
         }
 
@@ -160,7 +161,7 @@ public class TariffManagementServiceImpl implements TariffManagementService {
             subscriber,
             BillingTransactionType.MONTHLY_TARIFF_FEE,
             monthlyFee,
-            "Monthly fee for target tariff"
+            ApiMessages.TARIFF_MONTHLY_FEE_DESCRIPTION
         )));
 
         subscriber.setCurrentTariff(targetTariff);
@@ -169,12 +170,12 @@ public class TariffManagementServiceImpl implements TariffManagementService {
         NotificationEvent notification = notificationService.createNotification(
             subscriber,
             NotificationType.TARIFF_CHANGED,
-            "Tariff changed successfully.",
+            ApiMessages.TARIFF_CHANGED_NOTIFICATION,
             true
         );
 
         return buildSuccessResponse(
-            "Tariff changed successfully",
+            ApiMessages.TARIFF_CHANGED_RESPONSE,
             currentTariff,
             targetTariff,
             selectedOptions,
