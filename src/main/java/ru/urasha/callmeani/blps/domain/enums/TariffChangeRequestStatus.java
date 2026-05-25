@@ -5,5 +5,6 @@ public enum TariffChangeRequestStatus {
     PROCESSING,
     SUCCESS,
     REJECTED,
-    FAILED
+    FAILED,
+    RETRY
 }

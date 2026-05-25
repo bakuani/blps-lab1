@@ -7,6 +7,8 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import ru.urasha.callmeani.blps.api.dto.billing.MonthlyFeeChargeRequestStatusResponse;
 import ru.urasha.callmeani.blps.api.exception.MonthlyFeeChargeRequestNotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
@@ -41,6 +43,8 @@ public class MonthlyFeeChargeAsyncService {
     private final NotificationService notificationService;
     private final MonthlyFeeChargeRequestRepository monthlyFeeChargeRequestRepository;
     private final JmsTemplate jmsTemplate;
+    @Qualifier("businessTransactionTemplate")
+    private final TransactionTemplate businessTransactionTemplate;
 
     @Value("${app.jms.monthly-fee-queue}")
     private String monthlyFeeQueue;
@@ -103,7 +107,6 @@ public class MonthlyFeeChargeAsyncService {
             .toList();
     }
 
-    @Transactional
     @JmsListener(destination = "${app.jms.monthly-fee-queue}", concurrency = "2")
     public void processMonthlyFeeCharge(MonthlyFeeChargeRequestedMessage message) {
         MonthlyFeeChargeRequest request = monthlyFeeChargeRequestRepository.findById(message.requestId()).orElse(null);
@@ -121,58 +124,64 @@ public class MonthlyFeeChargeAsyncService {
         monthlyFeeChargeRequestRepository.save(request);
 
         try {
-            Subscriber subscriber = subscriberService.getSubscriberEntity(request.getSubscriberId());
-            Tariff tariff = subscriber.getCurrentTariff();
-            if (tariff == null) {
-                rejectRequest(
-                    request,
-                    ApiMessages.MONTHLY_FEE_MISSING_TARIFF_NOTIFICATION_PREFIX + request.getBillingPeriod(),
-                    subscriber
+            businessTransactionTemplate.executeWithoutResult(status -> {
+                Subscriber subscriber = subscriberService.getSubscriberEntity(request.getSubscriberId());
+                Tariff tariff = subscriber.getCurrentTariff();
+                if (tariff == null) {
+                    rejectRequest(
+                        request,
+                        ApiMessages.MONTHLY_FEE_MISSING_TARIFF_NOTIFICATION_PREFIX + request.getBillingPeriod(),
+                        subscriber
+                    );
+                    return;
+                }
+
+                BigDecimal monthlyFee = tariff.getMonthlyFee();
+                String billingDescription = ApiMessages.MONTHLY_FEE_CHARGE_DESCRIPTION_PREFIX + request.getBillingPeriod();
+
+                if (billingTransactionRepository.existsBySubscriberIdAndTypeAndDescription(
+                    subscriber.getId(), BillingTransactionType.MONTHLY_TARIFF_FEE, billingDescription
+                )) {
+                    request.setStatus(TariffChangeRequestStatus.SUCCESS);
+                    request.setUpdatedAt(OffsetDateTime.now());
+                    monthlyFeeChargeRequestRepository.save(request);
+                    return;
+                }
+
+                if (subscriber.getBalance().compareTo(monthlyFee) < 0) {
+                    notificationService.createNotification(
+                        subscriber,
+                        NotificationType.MONTHLY_FEE_ERROR,
+                        ApiMessages.MONTHLY_FEE_INSUFFICIENT_FUNDS_NOTIFICATION_PREFIX + request.getBillingPeriod(),
+                        false
+                    );
+                    request.setStatus(TariffChangeRequestStatus.REJECTED);
+                    request.setErrorMessage(ApiMessages.TARIFF_INSUFFICIENT_FUNDS_RESPONSE);
+                    request.setUpdatedAt(OffsetDateTime.now());
+                    monthlyFeeChargeRequestRepository.save(request);
+                    return;
+                }
+
+                subscriber.setBalance(subscriber.getBalance().subtract(monthlyFee));
+                subscriberService.save(subscriber);
+                billingService.createTransaction(subscriber, BillingTransactionType.MONTHLY_TARIFF_FEE, monthlyFee, billingDescription);
+                notificationService.createNotification(
+                    subscriber,
+                    NotificationType.MONTHLY_FEE_CHARGED,
+                    ApiMessages.MONTHLY_FEE_CHARGED_NOTIFICATION_PREFIX + request.getBillingPeriod(),
+                    true
                 );
-                return;
-            }
-
-            BigDecimal monthlyFee = tariff.getMonthlyFee();
-            String billingDescription = ApiMessages.MONTHLY_FEE_CHARGE_DESCRIPTION_PREFIX + request.getBillingPeriod();
-
-            if (billingTransactionRepository.existsBySubscriberIdAndTypeAndDescription(
-                subscriber.getId(), BillingTransactionType.MONTHLY_TARIFF_FEE, billingDescription
-            )) {
                 request.setStatus(TariffChangeRequestStatus.SUCCESS);
                 request.setUpdatedAt(OffsetDateTime.now());
                 monthlyFeeChargeRequestRepository.save(request);
-                return;
-            }
-
-            if (subscriber.getBalance().compareTo(monthlyFee) < 0) {
-                notificationService.createNotification(
-                    subscriber,
-                    NotificationType.MONTHLY_FEE_ERROR,
-                    ApiMessages.MONTHLY_FEE_INSUFFICIENT_FUNDS_NOTIFICATION_PREFIX + request.getBillingPeriod(),
-                    false
-                );
-                request.setStatus(TariffChangeRequestStatus.REJECTED);
-                request.setErrorMessage(ApiMessages.TARIFF_INSUFFICIENT_FUNDS_RESPONSE);
-                request.setUpdatedAt(OffsetDateTime.now());
-                monthlyFeeChargeRequestRepository.save(request);
-                return;
-            }
-
-            subscriber.setBalance(subscriber.getBalance().subtract(monthlyFee));
-            subscriberService.save(subscriber);
-            billingService.createTransaction(subscriber, BillingTransactionType.MONTHLY_TARIFF_FEE, monthlyFee, billingDescription);
-            notificationService.createNotification(
-                subscriber,
-                NotificationType.MONTHLY_FEE_CHARGED,
-                ApiMessages.MONTHLY_FEE_CHARGED_NOTIFICATION_PREFIX + request.getBillingPeriod(),
-                true
-            );
-            request.setStatus(TariffChangeRequestStatus.SUCCESS);
-            request.setUpdatedAt(OffsetDateTime.now());
-            monthlyFeeChargeRequestRepository.save(request);
+            });
         } catch (RuntimeException ex) {
             log.error("Monthly fee charge request {} failed", request.getId(), ex);
-            request.setStatus(TariffChangeRequestStatus.FAILED);
+            if (ex instanceof ru.urasha.callmeani.blps.api.exception.NotFoundException) {
+                request.setStatus(TariffChangeRequestStatus.REJECTED);
+            } else {
+                request.setStatus(request.getAttemptCount() < 3 ? TariffChangeRequestStatus.RETRY : TariffChangeRequestStatus.FAILED);
+            }
             request.setErrorMessage(ex.getMessage());
             request.setUpdatedAt(OffsetDateTime.now());
             monthlyFeeChargeRequestRepository.save(request);

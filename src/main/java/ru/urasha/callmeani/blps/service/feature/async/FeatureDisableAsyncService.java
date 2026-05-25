@@ -72,7 +72,6 @@ public class FeatureDisableAsyncService {
         );
     }
 
-    @Transactional
     @JmsListener(destination = "${app.jms.feature-disable-queue}")
     public void processFeatureDisable(FeatureDisableRequestedMessage message) {
         FeatureDisableRequest request = featureDisableRequestRepository.findById(message.requestId())
@@ -102,7 +101,7 @@ public class FeatureDisableAsyncService {
             request.setErrorMessage(response.success() ? null : response.message());
         } catch (RuntimeException ex) {
             log.error("Feature disable request {} failed", request.getId(), ex);
-            request.setStatus(resolveFailureStatus(ex));
+            request.setStatus(resolveFailureStatus(ex, request.getAttemptCount()));
             request.setErrorMessage(ex.getMessage());
         } finally {
             request.setUpdatedAt(OffsetDateTime.now());
@@ -110,10 +109,10 @@ public class FeatureDisableAsyncService {
         }
     }
 
-    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex) {
+    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex, int attemptCount) {
         if (ex instanceof NotFoundException) {
             return TariffChangeRequestStatus.REJECTED;
         }
-        return TariffChangeRequestStatus.FAILED;
+        return attemptCount < 3 ? TariffChangeRequestStatus.RETRY : TariffChangeRequestStatus.FAILED;
     }
 }

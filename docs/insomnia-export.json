@@ -710,6 +710,35 @@
                                               "value":  "Bearer {{ _.active_token }}"
                                           }
                                       ]
+                      },
+                      {
+                          "_id":  "fld_retry_tests",
+                          "parentId":  "wrk_blps",
+                          "_type":  "request_group",
+                          "name":  "Testing Retry Logic"
+                      },
+                      {
+                          "_id":  "req_dev_seed_retry",
+                          "parentId":  "fld_retry_tests",
+                          "_type":  "request",
+                          "name":  "1. Simulate Stuck Request (For Retry)",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/dev/simulate-stuck-request",
+                          "headers":  []
+                      },
+                      {
+                          "_id":  "req_dev_check_seeded_retry",
+                          "parentId":  "fld_retry_tests",
+                          "_type":  "request",
+                          "name":  "2. Check Stuck Request Status",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/1/feature-disable-requests/{{ _.feature_disable_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
                       }
                   ]
 }

@@ -75,7 +75,6 @@ public class TariffChangeAsyncService {
         );
     }
 
-    @Transactional
     @JmsListener(destination = "${app.jms.tariff-change-queue}")
     public void processTariffChange(TariffChangeRequestedMessage message) {
         TariffChangeRequest request = tariffChangeRequestRepository.findById(message.requestId())
@@ -108,7 +107,7 @@ public class TariffChangeAsyncService {
             request.setErrorMessage(response.success() ? null : response.message());
         } catch (RuntimeException ex) {
             log.error("Tariff change request {} failed", request.getId(), ex);
-            request.setStatus(resolveFailureStatus(ex));
+            request.setStatus(resolveFailureStatus(ex, request.getAttemptCount()));
             request.setErrorMessage(ex.getMessage());
         } finally {
             request.setUpdatedAt(OffsetDateTime.now());
@@ -116,10 +115,10 @@ public class TariffChangeAsyncService {
         }
     }
 
-    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex) {
+    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex, int attemptCount) {
         if (ex instanceof NotFoundException) {
             return TariffChangeRequestStatus.REJECTED;
         }
-        return TariffChangeRequestStatus.FAILED;
+        return attemptCount < 3 ? TariffChangeRequestStatus.RETRY : TariffChangeRequestStatus.FAILED;
     }
 }
