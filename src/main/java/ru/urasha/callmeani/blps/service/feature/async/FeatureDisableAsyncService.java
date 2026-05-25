@@ -11,6 +11,7 @@ import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableRequestStatusResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableSubmissionResponse;
 import ru.urasha.callmeani.blps.api.exception.FeatureDisableRequestNotFoundException;
+import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.FeatureDisableRequest;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
@@ -101,12 +102,18 @@ public class FeatureDisableAsyncService {
             request.setErrorMessage(response.success() ? null : response.message());
         } catch (RuntimeException ex) {
             log.error("Feature disable request {} failed", request.getId(), ex);
-            request.setStatus(TariffChangeRequestStatus.FAILED);
+            request.setStatus(resolveFailureStatus(ex));
             request.setErrorMessage(ex.getMessage());
-            throw ex;
         } finally {
             request.setUpdatedAt(OffsetDateTime.now());
             featureDisableRequestRepository.save(request);
         }
+    }
+
+    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex) {
+        if (ex instanceof NotFoundException) {
+            return TariffChangeRequestStatus.REJECTED;
+        }
+        return TariffChangeRequestStatus.FAILED;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffRequest;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
+import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffChangeRequestStatusResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffChangeSubmissionResponse;
 import ru.urasha.callmeani.blps.api.exception.TariffChangeRequestNotFoundException;
@@ -107,12 +108,18 @@ public class TariffChangeAsyncService {
             request.setErrorMessage(response.success() ? null : response.message());
         } catch (RuntimeException ex) {
             log.error("Tariff change request {} failed", request.getId(), ex);
-            request.setStatus(TariffChangeRequestStatus.FAILED);
+            request.setStatus(resolveFailureStatus(ex));
             request.setErrorMessage(ex.getMessage());
-            throw ex;
         } finally {
             request.setUpdatedAt(OffsetDateTime.now());
             tariffChangeRequestRepository.save(request);
         }
+    }
+
+    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex) {
+        if (ex instanceof NotFoundException) {
+            return TariffChangeRequestStatus.REJECTED;
+        }
+        return TariffChangeRequestStatus.FAILED;
     }
 }
