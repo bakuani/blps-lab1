@@ -38,4 +38,9 @@ public final class ApiMessages {
     public static final String FEATURE_DISABLED_RESPONSE = "Feature disabled successfully";
     public static final String FEATURE_DISABLE_REQUEST_ACCEPTED = "Feature disable request accepted for async processing";
     public static final String FEATURE_DISABLE_REJECTED_BY_EIS = "Feature disable rejected by external EIS validation";
+
+    public static final String MONTHLY_FEE_CHARGE_DESCRIPTION_PREFIX = "Scheduled monthly fee for period ";
+    public static final String MONTHLY_FEE_CHARGED_NOTIFICATION_PREFIX = "Monthly tariff fee charged for period ";
+    public static final String MONTHLY_FEE_INSUFFICIENT_FUNDS_NOTIFICATION_PREFIX = "Monthly fee charge failed due to insufficient funds for period ";
+    public static final String MONTHLY_FEE_MISSING_TARIFF_NOTIFICATION_PREFIX = "Monthly fee charge skipped: subscriber has no active tariff for period ";
 }

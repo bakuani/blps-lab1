@@ -33,7 +33,8 @@
                                        "admin_token":  "",
                                        "operator_token":  "",
                                        "subscriber_token":  "",
-                                       "feature_disable_request_id":  1
+                                       "feature_disable_request_id":  1,
+                                       "monthly_fee_request_id":  1
                                    }
                       },
                       {
@@ -669,6 +670,40 @@
                           "name":  "Get feature disable request status (async poll)",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/feature-disable-requests/{{ _.feature_disable_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "fld_billing",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Billing cycle flow"
+                      },
+                      {
+                          "_id":  "req_monthly_fee_recent",
+                          "_type":  "request",
+                          "parentId":  "fld_billing",
+                          "name":  "Get recent monthly fee requests",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_monthly_fee_status",
+                          "_type":  "request",
+                          "parentId":  "fld_billing",
+                          "name":  "Get monthly fee request status",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests/{{ _.monthly_fee_request_id }}",
                           "headers":  [
                                           {
                                               "name":  "Authorization",
