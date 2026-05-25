@@ -1,4 +1,4 @@
-{
+﻿{
     "_type":  "export",
     "__export_format":  4,
     "__export_date":  "2026-05-03T10:59:01.539Z",
@@ -16,9 +16,10 @@
                           "parentId":  "wrk_blps",
                           "name":  "Base Environment",
                           "data":  {
-                                       "base_url":  "http://localhost:8180",
+                                       "base_url":  "http://localhost:8080",
                                        "subscriber_id":  1,
                                        "tariff_id":  2,
+                                       "tariff_change_request_id":  1,
                                        "feature_id":  1,
                                        "category_id":  1,
                                        "other_subscriber_id":  2,
@@ -106,7 +107,7 @@
                           "_id":  "req_change_tariff",
                           "_type":  "request",
                           "parentId":  "fld_tariff",
-                          "name":  "Change tariff",
+                          "name":  "Change tariff (async submit)",
                           "method":  "POST",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
                           "body":  {
@@ -118,6 +119,20 @@
                                               "name":  "Content-Type",
                                               "value":  "application/json"
                                           },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_change_tariff_status",
+                          "_type":  "request",
+                          "parentId":  "fld_tariff",
+                          "name":  "Get tariff change request status (async poll)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff-change-requests/{{ _.tariff_change_request_id }}",
+                          "headers":  [
                                           {
                                               "name":  "Authorization",
                                               "value":  "Bearer {{ _.active_token }}"

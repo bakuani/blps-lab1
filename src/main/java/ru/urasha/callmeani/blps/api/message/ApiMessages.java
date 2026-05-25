@@ -28,6 +28,8 @@ public final class ApiMessages {
     public static final String TARIFF_MONTHLY_FEE_DESCRIPTION = "Monthly fee for target tariff";
     public static final String TARIFF_CHANGED_NOTIFICATION = "Tariff changed successfully.";
     public static final String TARIFF_CHANGED_RESPONSE = "Tariff changed successfully";
+    public static final String TARIFF_CHANGE_REQUEST_ACCEPTED = "Tariff change request accepted for async processing";
+    public static final String TARIFF_CHANGE_REJECTED_BY_EIS = "Tariff change rejected by external EIS validation";
 
     public static final String FEATURE_NOT_ACTIVE_NOTIFICATION = "Feature is not connected or already disabled.";
     public static final String FEATURE_NOT_ACTIVE_RESPONSE = "Feature is not active for subscriber";

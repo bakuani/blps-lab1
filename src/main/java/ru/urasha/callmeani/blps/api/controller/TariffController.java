@@ -15,13 +15,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffRequest;
-import ru.urasha.callmeani.blps.api.dto.tariff.ChangeTariffResponse;
 import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
+import ru.urasha.callmeani.blps.api.dto.tariff.TariffChangeRequestStatusResponse;
+import ru.urasha.callmeani.blps.api.dto.tariff.TariffChangeSubmissionResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffInfoResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffSummaryDto;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffUpsertRequest;
+import ru.urasha.callmeani.blps.service.tariff.async.TariffChangeAsyncService;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.tariff.TariffManagementService;
 
@@ -33,6 +35,7 @@ import java.util.List;
 public class TariffController {
 
     private final TariffManagementService tariffManagementService;
+    private final TariffChangeAsyncService tariffChangeAsyncService;
     private final TariffService tariffService;
 
     @GetMapping("/subscribers/{subscriberId}/tariff")
@@ -61,11 +64,21 @@ public class TariffController {
 
     @PostMapping("/subscribers/{subscriberId}/tariff/change")
     @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
-    public ChangeTariffResponse changeTariff(
+    public ResponseEntity<TariffChangeSubmissionResponse> changeTariff(
         @PathVariable Long subscriberId,
         @Valid @RequestBody ChangeTariffRequest request
     ) {
-        return tariffManagementService.changeTariff(subscriberId, request);
+        TariffChangeSubmissionResponse response = tariffChangeAsyncService.submitTariffChange(subscriberId, request);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    @GetMapping("/subscribers/{subscriberId}/tariff-change-requests/{requestId}")
+    @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
+    public TariffChangeRequestStatusResponse getTariffChangeStatus(
+        @PathVariable Long subscriberId,
+        @PathVariable Long requestId
+    ) {
+        return tariffChangeAsyncService.getStatus(subscriberId, requestId);
     }
 
     @GetMapping("/tariff-catalog")
