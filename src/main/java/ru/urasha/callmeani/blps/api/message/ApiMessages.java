@@ -36,4 +36,6 @@ public final class ApiMessages {
     public static final String FEATURE_DISABLE_BILLING_DESCRIPTION = "Billing request for feature disable operation";
     public static final String FEATURE_DISABLED_NOTIFICATION = "Feature disabled successfully.";
     public static final String FEATURE_DISABLED_RESPONSE = "Feature disabled successfully";
+    public static final String FEATURE_DISABLE_REQUEST_ACCEPTED = "Feature disable request accepted for async processing";
+    public static final String FEATURE_DISABLE_REJECTED_BY_EIS = "Feature disable rejected by external EIS validation";
 }

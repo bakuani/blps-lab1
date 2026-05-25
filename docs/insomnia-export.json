@@ -32,7 +32,8 @@
                                        "active_token":  "",
                                        "admin_token":  "",
                                        "operator_token":  "",
-                                       "subscriber_token":  ""
+                                       "subscriber_token":  "",
+                                       "feature_disable_request_id":  1
                                    }
                       },
                       {
@@ -199,7 +200,7 @@
                           "_id":  "req_disable_feature",
                           "_type":  "request",
                           "parentId":  "fld_feature",
-                          "name":  "Disable feature",
+                          "name":  "Disable feature (async submit)",
                           "method":  "POST",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable",
                           "headers":  [
@@ -658,6 +659,20 @@
                                           {
                                               "name":  "Authorization",
                                               "value":  "Bearer {{ _.admin_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_disable_feature_status",
+                          "_type":  "request",
+                          "parentId":  "fld_feature",
+                          "name":  "Get feature disable request status (async poll)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/feature-disable-requests/{{ _.feature_disable_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
                                           }
                                       ]
                       }
