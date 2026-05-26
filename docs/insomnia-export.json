@@ -16,7 +16,7 @@
                           "parentId":  "wrk_blps",
                           "name":  "Base Environment",
                           "data":  {
-                                       "base_url":  "http://localhost:8080",
+                                       "base_url":  "http://localhost:8180",
                                        "subscriber_id":  1,
                                        "tariff_id":  2,
                                        "tariff_change_request_id":  1,

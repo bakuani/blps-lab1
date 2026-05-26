@@ -38,3 +38,5 @@ out/
 ### VS Code ###
 .vscode/
 wildfly/
+blps_pg_data/
+blps_pg_data/**
