@@ -712,6 +712,104 @@
                                       ]
                       },
                       {
+                          "_id":  "fld_eis_dolibarr_tests",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Lab3 - EIS Dolibarr JCA Tests"
+                      },
+                      {
+                          "_id":  "req_eis_test_tariff_submit",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "1) TariffChangeRequested submit (expect 202)",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
+                          "body":  {
+                                       "mimeType":  "application/json",
+                                       "text":  "{\n  \"targetTariffId\": {{ _.tariff_id }},\n  \"options\": {\n    \"minutes\": \"+200\",\n    \"internet\": \"+20GB\"\n  }\n}"
+                                   },
+                          "headers":  [
+                                          {
+                                              "name":  "Content-Type",
+                                              "value":  "application/json"
+                                          },
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_eis_test_tariff_status",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "2) TariffChangeRequested status poll (expect terminal status)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff-change-requests/{{ _.tariff_change_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_eis_test_feature_submit",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "3) FeatureDisableRequested submit (expect 202)",
+                          "method":  "POST",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_eis_test_feature_status",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "4) FeatureDisableRequested status poll (expect terminal status)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/feature-disable-requests/{{ _.feature_disable_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_eis_test_monthly_recent",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "5) MonthlyFeeChargeRequested list (expect non-empty when scheduler fired)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_eis_test_monthly_status",
+                          "_type":  "request",
+                          "parentId":  "fld_eis_dolibarr_tests",
+                          "name":  "6) MonthlyFeeChargeRequested status (expect terminal status)",
+                          "method":  "GET",
+                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests/{{ _.monthly_fee_request_id }}",
+                          "headers":  [
+                                          {
+                                              "name":  "Authorization",
+                                              "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
                           "_id":  "fld_retry_tests",
                           "parentId":  "wrk_blps",
                           "_type":  "request_group",

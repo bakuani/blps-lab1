@@ -23,6 +23,9 @@ import ru.urasha.callmeani.blps.repository.BillingTransactionRepository;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
+import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
+import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
+import ru.urasha.callmeani.blps.service.eis.EisOperationType;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
@@ -30,6 +33,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -42,6 +46,7 @@ public class MonthlyFeeChargeAsyncService {
     private final BillingTransactionRepository billingTransactionRepository;
     private final NotificationService notificationService;
     private final MonthlyFeeChargeRequestRepository monthlyFeeChargeRequestRepository;
+    private final EisOperationAuditService eisOperationAuditService;
     private final JmsTemplate jmsTemplate;
     @Qualifier("businessTransactionTemplate")
     private final TransactionTemplate businessTransactionTemplate;
@@ -110,6 +115,7 @@ public class MonthlyFeeChargeAsyncService {
     @JmsListener(destination = "${app.jms.monthly-fee-queue}", concurrency = "2")
     public void processMonthlyFeeCharge(MonthlyFeeChargeRequestedMessage message) {
         MonthlyFeeChargeRequest request = monthlyFeeChargeRequestRepository.findById(message.requestId()).orElse(null);
+        AtomicReference<BigDecimal> operationAmount = new AtomicReference<>(BigDecimal.ZERO);
         if (request == null) {
             return;
         }
@@ -171,6 +177,7 @@ public class MonthlyFeeChargeAsyncService {
                     ApiMessages.MONTHLY_FEE_CHARGED_NOTIFICATION_PREFIX + request.getBillingPeriod(),
                     true
                 );
+                operationAmount.set(monthlyFee);
                 request.setStatus(TariffChangeRequestStatus.SUCCESS);
                 request.setUpdatedAt(OffsetDateTime.now());
                 monthlyFeeChargeRequestRepository.save(request);
@@ -185,6 +192,8 @@ public class MonthlyFeeChargeAsyncService {
             request.setErrorMessage(ex.getMessage());
             request.setUpdatedAt(OffsetDateTime.now());
             monthlyFeeChargeRequestRepository.save(request);
+        } finally {
+            publishEisResult(request, operationAmount.get());
         }
     }
 
@@ -194,5 +203,26 @@ public class MonthlyFeeChargeAsyncService {
         request.setErrorMessage(message);
         request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
+    }
+
+    private void publishEisResult(MonthlyFeeChargeRequest request, BigDecimal amount) {
+        if (!isTerminalStatus(request.getStatus())) {
+            return;
+        }
+        eisOperationAuditService.registerOperationResult(new EisOperationResult(
+            EisOperationType.MONTHLY_FEE_CHARGE_REQUESTED,
+            request.getId(),
+            request.getSubscriberId(),
+            amount,
+            request.getStatus(),
+            request.getErrorMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    private boolean isTerminalStatus(TariffChangeRequestStatus status) {
+        return status == TariffChangeRequestStatus.SUCCESS
+            || status == TariffChangeRequestStatus.REJECTED
+            || status == TariffChangeRequestStatus.FAILED;
     }
 }

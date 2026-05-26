@@ -17,10 +17,15 @@ import ru.urasha.callmeani.blps.domain.entity.FeatureDisableRequest;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.messaging.FeatureDisableRequestedMessage;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
+import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
+import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
+import ru.urasha.callmeani.blps.service.eis.EisOperationType;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -30,6 +35,7 @@ public class FeatureDisableAsyncService {
     private final FeatureDisableRequestRepository featureDisableRequestRepository;
     private final FeatureManagementService featureManagementService;
     private final EisValidationService eisValidationService;
+    private final EisOperationAuditService eisOperationAuditService;
     private final JmsTemplate jmsTemplate;
 
     @Value("${app.jms.feature-disable-queue}")
@@ -76,6 +82,7 @@ public class FeatureDisableAsyncService {
     public void processFeatureDisable(FeatureDisableRequestedMessage message) {
         FeatureDisableRequest request = featureDisableRequestRepository.findById(message.requestId())
             .orElseThrow(() -> new FeatureDisableRequestNotFoundException(message.requestId()));
+        BigDecimal operationAmount = BigDecimal.ZERO;
 
         if (request.getStatus() == TariffChangeRequestStatus.SUCCESS || request.getStatus() == TariffChangeRequestStatus.REJECTED) {
             return;
@@ -92,11 +99,13 @@ public class FeatureDisableAsyncService {
             request.setErrorMessage(ApiMessages.FEATURE_DISABLE_REJECTED_BY_EIS);
             request.setUpdatedAt(OffsetDateTime.now());
             featureDisableRequestRepository.save(request);
+            publishEisResult(request, operationAmount);
             return;
         }
 
         try {
             DisableFeatureResponse response = featureManagementService.disableFeature(request.getSubscriberId(), request.getFeatureId());
+            operationAmount = sumOperationAmount(response);
             request.setStatus(response.success() ? TariffChangeRequestStatus.SUCCESS : TariffChangeRequestStatus.REJECTED);
             request.setErrorMessage(response.success() ? null : response.message());
         } catch (RuntimeException ex) {
@@ -106,6 +115,7 @@ public class FeatureDisableAsyncService {
         } finally {
             request.setUpdatedAt(OffsetDateTime.now());
             featureDisableRequestRepository.save(request);
+            publishEisResult(request, operationAmount);
         }
     }
 
@@ -114,5 +124,34 @@ public class FeatureDisableAsyncService {
             return TariffChangeRequestStatus.REJECTED;
         }
         return attemptCount < 3 ? TariffChangeRequestStatus.RETRY : TariffChangeRequestStatus.FAILED;
+    }
+
+    private BigDecimal sumOperationAmount(DisableFeatureResponse response) {
+        return response.billingTransactions()
+            .stream()
+            .map(tx -> tx.amount())
+            .filter(Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private void publishEisResult(FeatureDisableRequest request, BigDecimal amount) {
+        if (!isTerminalStatus(request.getStatus())) {
+            return;
+        }
+        eisOperationAuditService.registerOperationResult(new EisOperationResult(
+            EisOperationType.FEATURE_DISABLE_REQUESTED,
+            request.getId(),
+            request.getSubscriberId(),
+            amount,
+            request.getStatus(),
+            request.getErrorMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    private boolean isTerminalStatus(TariffChangeRequestStatus status) {
+        return status == TariffChangeRequestStatus.SUCCESS
+            || status == TariffChangeRequestStatus.REJECTED
+            || status == TariffChangeRequestStatus.FAILED;
     }
 }
