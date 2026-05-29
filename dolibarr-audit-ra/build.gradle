@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api 'jakarta.resource:jakarta.resource-api:2.1.0'
+}
+

@@ -1,1 +1,2 @@
 rootProject.name = 'BLPS'
+include 'dolibarr-audit-ra'

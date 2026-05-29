@@ -1,34 +1,29 @@
 package ru.urasha.callmeani.blps.service.eis.impl;
 
-import jakarta.resource.ResourceException;
-import jakarta.resource.cci.Connection;
-import jakarta.resource.cci.ConnectionFactory;
-import jakarta.resource.cci.Interaction;
-import jakarta.resource.cci.InteractionSpec;
-import jakarta.resource.cci.MappedRecord;
-import jakarta.resource.cci.Record;
-import jakarta.resource.cci.RecordFactory;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnection;
+import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnectionFactory;
+import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrInteraction;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DolibarrOperationAuditJcaService implements EisOperationAuditService {
+
+    private final DolibarrConnectionFactory connectionFactory;
 
     @Value("${eis.dolibarr.audit.enabled:false}")
     private boolean auditEnabled;
-
-    @Value("${eis.dolibarr.audit.connection-factory-jndi:java:/eis/DolibarrConnectionFactory}")
-    private String connectionFactoryJndi;
 
     @Value("${eis.dolibarr.audit.interaction-name:dolibarr.audit.operation}")
     private String interactionName;
@@ -40,8 +35,8 @@ public class DolibarrOperationAuditJcaService implements EisOperationAuditServic
         }
 
         try {
-            sendViaJca(result);
-        } catch (NamingException | ResourceException | RuntimeException ex) {
+            sendViaLocalConnector(result);
+        } catch (RuntimeException ex) {
             log.warn(
                 "Dolibarr audit send failed for requestId={}, operationType={}: {}",
                 result.requestId(),
@@ -52,42 +47,37 @@ public class DolibarrOperationAuditJcaService implements EisOperationAuditServic
         }
     }
 
-    private void sendViaJca(EisOperationResult result) throws NamingException, ResourceException {
-        Object lookedUp = new InitialContext().lookup(connectionFactoryJndi);
-        if (!(lookedUp instanceof ConnectionFactory connectionFactory)) {
-            throw new IllegalStateException("JNDI object is not jakarta.resource.cci.ConnectionFactory: " + connectionFactoryJndi);
-        }
-
-        Connection connection = null;
-        Interaction interaction = null;
-        try {
-            connection = connectionFactory.getConnection();
-            interaction = connection.createInteraction();
-
-            RecordFactory recordFactory = connectionFactory.getRecordFactory();
-            MappedRecord<Object, Object> payload = recordFactory.createMappedRecord("dolibarr.operation.result");
-            fillPayload(payload, result);
-
-            InteractionSpec interactionSpec = new DolibarrInteractionSpec(interactionName, InteractionSpec.SYNC_SEND_RECEIVE);
-            Record output = interaction.execute(interactionSpec, payload);
-
-            if (output instanceof MappedRecord<?, ?> outputRecord) {
-                Object accepted = outputRecord.get("accepted");
-                if (accepted != null && !Boolean.parseBoolean(String.valueOf(accepted))) {
+    private void sendViaLocalConnector(EisOperationResult result) {
+        try (DolibarrConnection connection = connectionFactory.getConnection()) {
+            DolibarrInteraction interaction = connection.createInteraction();
+            try {
+                Map<String, Object> payload = buildPayload(result);
+                DolibarrInteraction.ExecutionResult executionResult = interaction.execute(interactionName, payload);
+                if (!executionResult.accepted()) {
                     log.warn(
-                        "Dolibarr rejected audit payload for requestId={}, reason={}",
+                        "Dolibarr audit response is negative for requestId={}, statusCode={}, endpoint={}, reason={}",
                         result.requestId(),
-                        outputRecord.get("error")
+                        executionResult.statusCode(),
+                        executionResult.endpoint(),
+                        executionResult.error()
                     );
+                    return;
                 }
+                log.info(
+                    "Dolibarr audit sent via local connector: requestId={}, operationType={}, statusCode={}, endpoint={}",
+                    result.requestId(),
+                    result.operationType(),
+                    executionResult.statusCode(),
+                    executionResult.endpoint()
+                );
+            } finally {
+                interaction.close();
             }
-        } finally {
-            closeInteraction(interaction);
-            closeConnection(connection);
         }
     }
 
-    private void fillPayload(MappedRecord<Object, Object> payload, EisOperationResult result) {
+    private Map<String, Object> buildPayload(EisOperationResult result) {
+        Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("operationType", result.operationType().externalCode());
         payload.put("requestId", result.requestId());
         payload.put("subscriberId", result.subscriberId());
@@ -95,6 +85,7 @@ public class DolibarrOperationAuditJcaService implements EisOperationAuditServic
         payload.put("status", result.status().name());
         payload.put("errorReason", result.errorReason());
         payload.put("processedAt", normalizeProcessedAt(result.processedAt()));
+        return payload;
     }
 
     private BigDecimal normalizeAmount(BigDecimal amount) {
@@ -103,57 +94,5 @@ public class DolibarrOperationAuditJcaService implements EisOperationAuditServic
 
     private String normalizeProcessedAt(OffsetDateTime processedAt) {
         return processedAt == null ? OffsetDateTime.now().toString() : processedAt.toString();
-    }
-
-    private void closeInteraction(Interaction interaction) {
-        if (interaction == null) {
-            return;
-        }
-        try {
-            interaction.close();
-        } catch (ResourceException ex) {
-            log.debug("Failed to close JCA interaction", ex);
-        }
-    }
-
-    private void closeConnection(Connection connection) {
-        if (connection == null) {
-            return;
-        }
-        try {
-            connection.close();
-        } catch (ResourceException ex) {
-            log.debug("Failed to close JCA connection", ex);
-        }
-    }
-
-    private static final class DolibarrInteractionSpec implements InteractionSpec {
-
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        private String functionName;
-        private int interactionVerb;
-
-        private DolibarrInteractionSpec(String functionName, int interactionVerb) {
-            this.functionName = functionName;
-            this.interactionVerb = interactionVerb;
-        }
-
-        public String getFunctionName() {
-            return functionName;
-        }
-
-        public void setFunctionName(String functionName) {
-            this.functionName = functionName;
-        }
-
-        public int getInteractionVerb() {
-            return interactionVerb;
-        }
-
-        public void setInteractionVerb(int interactionVerb) {
-            this.interactionVerb = interactionVerb;
-        }
     }
 }
