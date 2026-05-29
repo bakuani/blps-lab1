@@ -240,8 +240,8 @@ main() {
 
   echo "[seed] Tariffs..."
   local tariff_smart tariff_my
-  tariff_smart="$(ensure_tariff "Smart" "Base tariff for calls and internet" "650.00" "100.00" "false" "https://mts.ru/tariffs/smart.pdf" "$tariff_cat_base")"
-  tariff_my="$(ensure_tariff "My Tariff" "Customizable tariff" "900.00" "0.00" "true" "https://mts.ru/tariffs/my-tariff.pdf" "$tariff_cat_premium")"
+  tariff_smart="$(ensure_tariff "Smart" "Base tariff for calls and internet" "350.00" "100.00" "false" "https://mts.ru/tariffs/smart.pdf" "$tariff_cat_base")"
+  tariff_my="$(ensure_tariff "My Tariff" "Customizable tariff" "450.00" "0.00" "true" "https://mts.ru/tariffs/my-tariff.pdf" "$tariff_cat_premium")"
 
   echo "[seed] Tariff options..."
   local opt_minutes opt_internet
@@ -260,7 +260,7 @@ main() {
 
   echo "[seed] Subscriber..."
   local subscriber_id
-  subscriber_id="$(ensure_subscriber "+79990000000" "Test Subscriber" "3000.00" "$tariff_smart")"
+  subscriber_id="$(ensure_subscriber "+79990000000" "Test Subscriber" "300000.00" "$tariff_smart")"
 
   echo "[seed] Subscriber-feature links..."
   local sub_feat_blocker sub_feat_music
