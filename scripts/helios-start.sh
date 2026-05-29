@@ -31,11 +31,13 @@ export EIS_DOLIBARR_API_KEY="${EIS_DOLIBARR_API_KEY:-u2m9jlo8wHJB9j6pR1H8E60GUVq
 export EIS_DOLIBARR_FAIL_CLOSED="${EIS_DOLIBARR_FAIL_CLOSED:-true}"
 export EIS_DOLIBARR_CONNECT_TIMEOUT_MS="${EIS_DOLIBARR_CONNECT_TIMEOUT_MS:-3000}"
 export EIS_DOLIBARR_READ_TIMEOUT_MS="${EIS_DOLIBARR_READ_TIMEOUT_MS:-5000}"
+export EIS_DOLIBARR_SUBSCRIBER_SYNC_ENABLED="${EIS_DOLIBARR_SUBSCRIBER_SYNC_ENABLED:-false}"
 export EIS_DOLIBARR_AUDIT_ENABLED="${EIS_DOLIBARR_AUDIT_ENABLED:-true}"
 export EIS_DOLIBARR_AUDIT_INTERACTION="${EIS_DOLIBARR_AUDIT_INTERACTION:-status}"
 
 unset _JAVA_OPTIONS || true
-export JAVA_OPTS="${JAVA_OPTS:--Xms128m -Xmx512m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -Djava.net.preferIPv4Stack=true}"
+# Avoid Spring Boot trying to reconfigure JUL/LogManager inside WildFly.
+export JAVA_OPTS="${JAVA_OPTS:--Xms128m -Xmx512m -Xss256k -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -Djava.net.preferIPv4Stack=true -Dorg.springframework.boot.logging.LoggingSystem=none -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dcom.sun.faces.enableThreading=false -Dorg.jboss.weld.bootstrap.concurrentDeployment=false -Dorg.jboss.weld.bootstrap.preloaderThreadPoolSize=0 -Dorg.jboss.weld.executor.threadPoolSize=1}"
 
 echo "[helios-start] WILDFLY_HOME=$WILDFLY_HOME"
 echo "[helios-start] DB_URL=$DB_URL"
@@ -43,9 +45,11 @@ echo "[helios-start] PORT_OFFSET=$PORT_OFFSET"
 echo "[helios-start] RABBITMQ_HOST=$RABBITMQ_HOST"
 echo "[helios-start] RABBITMQ_PORT=$RABBITMQ_PORT"
 echo "[helios-start] EIS_DOLIBARR_FAIL_CLOSED=$EIS_DOLIBARR_FAIL_CLOSED"
+echo "[helios-start] EIS_DOLIBARR_SUBSCRIBER_SYNC_ENABLED=$EIS_DOLIBARR_SUBSCRIBER_SYNC_ENABLED"
 echo "[helios-start] EIS_DOLIBARR_AUDIT_ENABLED=$EIS_DOLIBARR_AUDIT_ENABLED"
 echo "[helios-start] EIS_DOLIBARR_AUDIT_INTERACTION=$EIS_DOLIBARR_AUDIT_INTERACTION"
 echo "[helios-start] EIS_DOLIBARR_URL=$EIS_DOLIBARR_URL"
+echo "[helios-start] JAVA_OPTS=$JAVA_OPTS"
 
 echo "[helios-start] Stopping previous WildFly processes"
 pkill -f 'wildfly/bin/standalone.sh' || true
