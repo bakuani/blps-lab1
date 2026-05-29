@@ -18,19 +18,20 @@ import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.messaging.FeatureDisableRequestedMessage;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
-import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
-import ru.urasha.callmeani.blps.service.eis.EisOperationType;
+import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
+import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FeatureDisableAsyncService {
+public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations {
 
     private final FeatureDisableRequestRepository featureDisableRequestRepository;
     private final FeatureManagementService featureManagementService;
@@ -41,6 +42,7 @@ public class FeatureDisableAsyncService {
     @Value("${app.jms.feature-disable-queue}")
     private String featureDisableQueue;
 
+    @Override
     @Transactional
     public FeatureDisableSubmissionResponse submitFeatureDisable(Long subscriberId, Long featureId) {
         FeatureDisableRequest request = new FeatureDisableRequest();
@@ -61,6 +63,7 @@ public class FeatureDisableAsyncService {
         );
     }
 
+    @Override
     @Transactional(readOnly = true)
     public FeatureDisableRequestStatusResponse getStatus(Long subscriberId, Long requestId) {
         FeatureDisableRequest request = featureDisableRequestRepository.findById(requestId)
@@ -76,6 +79,19 @@ public class FeatureDisableAsyncService {
             request.getAttemptCount(),
             request.getUpdatedAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+        List<FeatureDisableRequest> stuckRequests = featureDisableRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
+        for (FeatureDisableRequest request : stuckRequests) {
+            log.info("Retrying FeatureDisableRequest with id {}", request.getId());
+            jmsTemplate.convertAndSend(featureDisableQueue, new FeatureDisableRequestedMessage(request.getId()));
+            request.setUpdatedAt(OffsetDateTime.now());
+        }
+        featureDisableRequestRepository.saveAll(stuckRequests);
+        return stuckRequests.size();
     }
 
     @JmsListener(destination = "${app.jms.feature-disable-queue}")

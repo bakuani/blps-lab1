@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 
 public interface BillingService {
     BillingTransaction createTransaction(Subscriber subscriber, BillingTransactionType type, BigDecimal amount, String description);
+    boolean existsBySubscriberIdAndTypeAndDescription(Long subscriberId, BillingTransactionType type, String description);
 }
 
 

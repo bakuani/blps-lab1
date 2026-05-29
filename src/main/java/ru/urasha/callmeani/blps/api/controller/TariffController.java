@@ -23,7 +23,7 @@ import ru.urasha.callmeani.blps.api.dto.tariff.TariffInfoResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffResponse;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffSummaryDto;
 import ru.urasha.callmeani.blps.api.dto.tariff.TariffUpsertRequest;
-import ru.urasha.callmeani.blps.service.tariff.async.TariffChangeAsyncService;
+import ru.urasha.callmeani.blps.service.tariff.async.TariffChangeAsyncOperations;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.tariff.TariffManagementService;
 
@@ -35,7 +35,7 @@ import java.util.List;
 public class TariffController {
 
     private final TariffManagementService tariffManagementService;
-    private final TariffChangeAsyncService tariffChangeAsyncService;
+    private final TariffChangeAsyncOperations tariffChangeAsyncService;
     private final TariffService tariffService;
 
     @GetMapping("/subscribers/{subscriberId}/tariff")

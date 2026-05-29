@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.urasha.callmeani.blps.api.dto.billing.MonthlyFeeChargeRequestStatusResponse;
-import ru.urasha.callmeani.blps.service.billing.async.MonthlyFeeChargeAsyncService;
+import ru.urasha.callmeani.blps.service.billing.async.MonthlyFeeChargeAsyncOperations;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BillingController {
 
-    private final MonthlyFeeChargeAsyncService monthlyFeeChargeAsyncService;
+    private final MonthlyFeeChargeAsyncOperations monthlyFeeChargeAsyncService;
 
     @GetMapping("/subscribers/{subscriberId}/monthly-fee-requests/{requestId}")
     @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")
