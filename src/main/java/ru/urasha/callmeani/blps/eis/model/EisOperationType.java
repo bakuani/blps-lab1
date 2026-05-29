@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.service.eis;
+package ru.urasha.callmeani.blps.eis.model;
 
 public enum EisOperationType {
     TARIFF_CHANGE_REQUESTED("TariffChangeRequested"),

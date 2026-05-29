@@ -19,20 +19,21 @@ import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.messaging.TariffChangeRequestedMessage;
 import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
-import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
-import ru.urasha.callmeani.blps.service.eis.EisOperationType;
+import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
+import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.tariff.TariffManagementService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TariffChangeAsyncService {
+public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
 
     private final TariffChangeRequestRepository tariffChangeRequestRepository;
     private final TariffManagementService tariffManagementService;
@@ -43,6 +44,7 @@ public class TariffChangeAsyncService {
     @Value("${app.jms.tariff-change-queue}")
     private String tariffChangeQueue;
 
+    @Override
     @Transactional
     public TariffChangeSubmissionResponse submitTariffChange(Long subscriberId, ChangeTariffRequest request) {
         TariffChangeRequest requestEntity = new TariffChangeRequest();
@@ -64,6 +66,7 @@ public class TariffChangeAsyncService {
         );
     }
 
+    @Override
     @Transactional(readOnly = true)
     public TariffChangeRequestStatusResponse getStatus(Long subscriberId, Long requestId) {
         TariffChangeRequest request = tariffChangeRequestRepository.findById(requestId)
@@ -79,6 +82,19 @@ public class TariffChangeAsyncService {
             request.getAttemptCount(),
             request.getUpdatedAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+        List<TariffChangeRequest> stuckRequests = tariffChangeRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
+        for (TariffChangeRequest request : stuckRequests) {
+            log.info("Retrying TariffChangeRequest with id {}", request.getId());
+            jmsTemplate.convertAndSend(tariffChangeQueue, new TariffChangeRequestedMessage(request.getId()));
+            request.setUpdatedAt(OffsetDateTime.now());
+        }
+        tariffChangeRequestRepository.saveAll(stuckRequests);
+        return stuckRequests.size();
     }
 
     @JmsListener(destination = "${app.jms.tariff-change-queue}")

@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.service.eis;
+package ru.urasha.callmeani.blps.eis.model;
 
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 

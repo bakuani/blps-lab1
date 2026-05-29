@@ -30,6 +30,12 @@ public class BillingServiceImpl implements BillingService {
         
         return billingTransactionRepository.save(transaction);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsBySubscriberIdAndTypeAndDescription(Long subscriberId, BillingTransactionType type, String description) {
+        return billingTransactionRepository.existsBySubscriberIdAndTypeAndDescription(subscriberId, type, description);
+    }
 }
 
 

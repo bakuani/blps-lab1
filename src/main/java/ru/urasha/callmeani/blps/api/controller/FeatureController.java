@@ -15,7 +15,7 @@ import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableSubmissionResponse
 import ru.urasha.callmeani.blps.api.dto.common.IdNameDto;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDetailsResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
-import ru.urasha.callmeani.blps.service.feature.async.FeatureDisableAsyncService;
+import ru.urasha.callmeani.blps.service.feature.async.FeatureDisableAsyncOperations;
 import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
 public class FeatureController {
 
     private final FeatureManagementService featureManagementService;
-    private final FeatureDisableAsyncService featureDisableAsyncService;
+    private final FeatureDisableAsyncOperations featureDisableAsyncService;
 
     @GetMapping("/subscribers/{subscriberId}/features")
     @PreAuthorize("@accessGuard.canAccessSubscriber(authentication, #p0)")

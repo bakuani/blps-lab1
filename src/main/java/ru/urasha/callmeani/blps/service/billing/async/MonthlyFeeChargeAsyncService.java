@@ -19,13 +19,11 @@ import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.messaging.MonthlyFeeChargeRequestedMessage;
-import ru.urasha.callmeani.blps.repository.BillingTransactionRepository;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
-import ru.urasha.callmeani.blps.repository.SubscriberRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
-import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
-import ru.urasha.callmeani.blps.service.eis.EisOperationType;
+import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
+import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
@@ -38,12 +36,10 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MonthlyFeeChargeAsyncService {
+public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperations {
 
-    private final SubscriberRepository subscriberRepository;
     private final SubscriberService subscriberService;
     private final BillingService billingService;
-    private final BillingTransactionRepository billingTransactionRepository;
     private final NotificationService notificationService;
     private final MonthlyFeeChargeRequestRepository monthlyFeeChargeRequestRepository;
     private final EisOperationAuditService eisOperationAuditService;
@@ -57,10 +53,11 @@ public class MonthlyFeeChargeAsyncService {
     @Value("${app.scheduler.monthly-fee-cycle-pattern}")
     private String cyclePattern;
 
+    @Override
     @Transactional
     public int enqueueCurrentCycleCharges() {
         String billingPeriod = DateTimeFormatter.ofPattern(cyclePattern).format(OffsetDateTime.now());
-        List<Subscriber> subscribers = subscriberRepository.findByCurrentTariffIsNotNull();
+        List<Subscriber> subscribers = subscriberService.findWithCurrentTariff();
         int created = 0;
         for (Subscriber subscriber : subscribers) {
             if (monthlyFeeChargeRequestRepository.existsBySubscriberIdAndBillingPeriod(subscriber.getId(), billingPeriod)) {
@@ -80,6 +77,7 @@ public class MonthlyFeeChargeAsyncService {
         return created;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public MonthlyFeeChargeRequestStatusResponse getStatus(Long subscriberId, Long requestId) {
         MonthlyFeeChargeRequest request = monthlyFeeChargeRequestRepository.findById(requestId)
@@ -97,6 +95,7 @@ public class MonthlyFeeChargeAsyncService {
         );
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MonthlyFeeChargeRequestStatusResponse> getRecentStatuses(Long subscriberId) {
         return monthlyFeeChargeRequestRepository.findTop10BySubscriberIdOrderByCreatedAtDesc(subscriberId)
@@ -110,6 +109,19 @@ public class MonthlyFeeChargeAsyncService {
                 request.getUpdatedAt()
             ))
             .toList();
+    }
+
+    @Override
+    @Transactional
+    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+        List<MonthlyFeeChargeRequest> stuckRequests = monthlyFeeChargeRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
+        for (MonthlyFeeChargeRequest request : stuckRequests) {
+            log.info("Retrying MonthlyFeeChargeRequest with id {}", request.getId());
+            jmsTemplate.convertAndSend(monthlyFeeQueue, new MonthlyFeeChargeRequestedMessage(request.getId()));
+            request.setUpdatedAt(OffsetDateTime.now());
+        }
+        monthlyFeeChargeRequestRepository.saveAll(stuckRequests);
+        return stuckRequests.size();
     }
 
     @JmsListener(destination = "${app.jms.monthly-fee-queue}", concurrency = "2")
@@ -145,7 +157,7 @@ public class MonthlyFeeChargeAsyncService {
                 BigDecimal monthlyFee = tariff.getMonthlyFee();
                 String billingDescription = ApiMessages.MONTHLY_FEE_CHARGE_DESCRIPTION_PREFIX + request.getBillingPeriod();
 
-                if (billingTransactionRepository.existsBySubscriberIdAndTypeAndDescription(
+                if (billingService.existsBySubscriberIdAndTypeAndDescription(
                     subscriber.getId(), BillingTransactionType.MONTHLY_TARIFF_FEE, billingDescription
                 )) {
                     request.setStatus(TariffChangeRequestStatus.SUCCESS);

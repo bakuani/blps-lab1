@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MonthlyFeeChargeScheduler {
 
-    private final MonthlyFeeChargeAsyncService monthlyFeeChargeAsyncService;
+    private final MonthlyFeeChargeAsyncOperations monthlyFeeChargeAsyncService;
 
     @Scheduled(cron = "${app.scheduler.monthly-fee-cron}")
     public void scheduleMonthlyFeeCharges() {

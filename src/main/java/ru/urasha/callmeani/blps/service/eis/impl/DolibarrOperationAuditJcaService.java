@@ -8,7 +8,7 @@ import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnection;
 import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnectionFactory;
 import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrInteraction;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
-import ru.urasha.callmeani.blps.service.eis.EisOperationResult;
+import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

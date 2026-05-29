@@ -6,6 +6,8 @@ import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberResponse;
 import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 
+import java.util.List;
+
 public interface SubscriberService {
     Page<SubscriberResponse> getSubscribers(Pageable pageable);
     SubscriberResponse getSubscriber(Long id);
@@ -14,4 +16,5 @@ public interface SubscriberService {
     void deleteSubscriber(Long id);
     Subscriber getSubscriberEntity(Long id);
     Subscriber save(Subscriber subscriber);
+    List<Subscriber> findWithCurrentTariff();
 }

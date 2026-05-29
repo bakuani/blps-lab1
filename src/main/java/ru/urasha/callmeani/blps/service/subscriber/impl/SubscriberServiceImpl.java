@@ -16,6 +16,8 @@ import ru.urasha.callmeani.blps.repository.SubscriberRepository;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SubscriberServiceImpl implements SubscriberService {
@@ -67,5 +69,11 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     public Subscriber save(Subscriber subscriber) {
         return subscriberRepository.save(subscriber);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Subscriber> findWithCurrentTariff() {
+        return subscriberRepository.findByCurrentTariffIsNotNull();
     }
 }
