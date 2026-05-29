@@ -13,6 +13,7 @@ import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
 
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
+import ru.urasha.callmeani.blps.service.eis.impl.DolibarrSubscriberSyncService;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
@@ -23,6 +24,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     private final SubscriberRepository subscriberRepository;
     private final TariffService tariffService;
     private final SubscriberMapper subscriberMapper;
+    private final DolibarrSubscriberSyncService dolibarrSubscriberSyncService;
 
     @Transactional(readOnly = true)
     public Page<SubscriberResponse> getSubscribers(Pageable pageable) {
@@ -40,7 +42,9 @@ public class SubscriberServiceImpl implements SubscriberService {
         Subscriber subscriber = new Subscriber();
         subscriberMapper.updateSubscriber(subscriber, request);
         subscriber.setCurrentTariff(tariff);
-        return subscriberMapper.toSubscriberResponse(subscriberRepository.save(subscriber));
+        Subscriber saved = subscriberRepository.save(subscriber);
+        dolibarrSubscriberSyncService.syncSubscriber(saved);
+        return subscriberMapper.toSubscriberResponse(saved);
     }
 
     @Transactional
@@ -49,7 +53,9 @@ public class SubscriberServiceImpl implements SubscriberService {
         Tariff tariff = request.currentTariffId() == null ? null : getTariffEntity(request.currentTariffId());
         subscriberMapper.updateSubscriber(subscriber, request);
         subscriber.setCurrentTariff(tariff);
-        return subscriberMapper.toSubscriberResponse(subscriberRepository.save(subscriber));
+        Subscriber saved = subscriberRepository.save(subscriber);
+        dolibarrSubscriberSyncService.syncSubscriber(saved);
+        return subscriberMapper.toSubscriberResponse(saved);
     }
 
     @Transactional

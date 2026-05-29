@@ -21,6 +21,22 @@ ADMIN_PASSWORD="${ADMIN_PASSWORD:-password}"
 require_bin() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "[seed] Missing required binary: $1" >&2
+    if [[ "$1" == "jq" ]]; then
+      cat >&2 <<'EOF'
+[seed] Install jq and rerun with bash:
+  # Option A (if sudo is available)
+  sudo yum install -y epel-release && sudo yum install -y jq
+
+  # Option B (no sudo, user-local binary)
+  mkdir -p "$HOME/bin"
+  curl -fsSL -o "$HOME/bin/jq" https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+  chmod +x "$HOME/bin/jq"
+  export PATH="$HOME/bin:$PATH"
+
+  jq --version
+  bash seed-data.sh
+EOF
+    fi
     exit 1
   fi
 }
