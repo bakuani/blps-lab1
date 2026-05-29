@@ -34,7 +34,10 @@
                                        "operator_token":  "",
                                        "subscriber_token":  "",
                                        "feature_disable_request_id":  1,
-                                       "monthly_fee_request_id":  1
+                                       "monthly_fee_request_id":  1,
+                                       "dolibarr_base":  "http://localhost:8081",
+                                       "dolibarr_api_key":  "test_api_key",
+                                       "dolibarr_thirdparty_id":  1
                                    }
                       },
                       {
@@ -806,6 +809,54 @@
                                           {
                                               "name":  "Authorization",
                                               "value":  "Bearer {{ _.active_token }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "fld_dolibarr_diagnostics",
+                          "_type":  "request_group",
+                          "parentId":  "wrk_blps",
+                          "name":  "Dolibarr Diagnostics"
+                      },
+                      {
+                          "_id":  "req_dolibarr_status",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "1) Dolibarr status (expect 200)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/status",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_dolibarr_thirdparties",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "2) List thirdparties (expect 200)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/thirdparties?limit=10",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_dolibarr_unpaid_invoices",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "3) Unpaid invoices by thirdparty (expect 200)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/invoices?thirdparty_ids={{ _.dolibarr_thirdparty_id }}\u0026status=unpaid\u0026limit=10",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
                                           }
                                       ]
                       },

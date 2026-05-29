@@ -2,10 +2,16 @@
 set -eu
 
 WILDFLY_HOME="${WILDFLY_HOME:-wildfly}"
-DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:-$WILDFLY_HOME/standalone/deployments}"
+PORT_OFFSET="${PORT_OFFSET:-100}"
+JBOSS_CLI="$WILDFLY_HOME/bin/jboss-cli.sh"
 DEPLOY_TIMEOUT_SEC="${DEPLOY_TIMEOUT_SEC:-90}"
 TARGET_NAME="${TARGET_NAME:-ROOT.war}"
 SOURCE_WAR="${1:-}"
+
+default_controller_port=$((9990 + PORT_OFFSET))
+JBOSS_CLI_CONTROLLER="${JBOSS_CLI_CONTROLLER:-127.0.0.1:${default_controller_port}}"
+JBOSS_CLI_USER="${JBOSS_CLI_USER:-}"
+JBOSS_CLI_PASSWORD="${JBOSS_CLI_PASSWORD:-}"
 
 resolve_source_war() {
   if [ -n "$SOURCE_WAR" ]; then
@@ -40,51 +46,40 @@ resolve_source_war() {
 }
 
 SOURCE_WAR="$(resolve_source_war)"
+SOURCE_WAR_ABS="$(cd "$(dirname "$SOURCE_WAR")" && pwd)/$(basename "$SOURCE_WAR")"
 
-if [ ! -d "$DEPLOYMENTS_DIR" ]; then
-  echo "[deploy] ERROR: deployments dir not found: $DEPLOYMENTS_DIR" >&2
+if [ ! -x "$JBOSS_CLI" ]; then
+  echo "[deploy] ERROR: jboss-cli.sh not found or not executable: $JBOSS_CLI" >&2
+  echo "[deploy] Set WILDFLY_HOME to your WildFly root directory." >&2
   exit 1
 fi
 
-TARGET_WAR="$DEPLOYMENTS_DIR/$TARGET_NAME"
-
 echo "[deploy] WildFly home: $WILDFLY_HOME"
-echo "[deploy] Deployments dir: $DEPLOYMENTS_DIR"
-echo "[deploy] Source war: $SOURCE_WAR"
-echo "[deploy] Target war: $TARGET_WAR"
+echo "[deploy] CLI: $JBOSS_CLI"
+echo "[deploy] Controller: $JBOSS_CLI_CONTROLLER"
+echo "[deploy] Source war: $SOURCE_WAR_ABS"
+echo "[deploy] Target deployment name: $TARGET_NAME"
 
-rm -f "$DEPLOYMENTS_DIR/$TARGET_NAME.deployed" \
-      "$DEPLOYMENTS_DIR/$TARGET_NAME.failed" \
-      "$DEPLOYMENTS_DIR/$TARGET_NAME.isdeploying" \
-      "$DEPLOYMENTS_DIR/$TARGET_NAME.isundeploying" \
-      "$DEPLOYMENTS_DIR/$TARGET_NAME.dodeploy"
+CLI_COMMAND="deploy \"$SOURCE_WAR_ABS\" --name=$TARGET_NAME --runtime-name=$TARGET_NAME --force"
 
-cp "$SOURCE_WAR" "$TARGET_WAR"
-touch "$DEPLOYMENTS_DIR/$TARGET_NAME.dodeploy"
-
-echo "[deploy] Waiting for deployment markers (timeout: ${DEPLOY_TIMEOUT_SEC}s)..."
-start_epoch="$(date +%s)"
-deadline_epoch=$((start_epoch + DEPLOY_TIMEOUT_SEC))
-while :; do
-  now_epoch="$(date +%s)"
-  if [ "$now_epoch" -ge "$deadline_epoch" ]; then
-    break
-  fi
-
-  if [ -f "$DEPLOYMENTS_DIR/$TARGET_NAME.deployed" ]; then
-    echo "[deploy] SUCCESS: $TARGET_NAME deployed"
-    exit 0
-  fi
-
-  if [ -f "$DEPLOYMENTS_DIR/$TARGET_NAME.failed" ]; then
-    echo "[deploy] ERROR: deployment failed" >&2
-    cat "$DEPLOYMENTS_DIR/$TARGET_NAME.failed" >&2 || true
+if [ -n "$JBOSS_CLI_USER" ] || [ -n "$JBOSS_CLI_PASSWORD" ]; then
+  if [ -z "$JBOSS_CLI_USER" ] || [ -z "$JBOSS_CLI_PASSWORD" ]; then
+    echo "[deploy] ERROR: set both JBOSS_CLI_USER and JBOSS_CLI_PASSWORD, or neither." >&2
     exit 1
   fi
+  "$JBOSS_CLI" \
+    --connect \
+    --controller="$JBOSS_CLI_CONTROLLER" \
+    --user="$JBOSS_CLI_USER" \
+    --password="$JBOSS_CLI_PASSWORD" \
+    --command-timeout="$DEPLOY_TIMEOUT_SEC" \
+    --command="$CLI_COMMAND"
+else
+  "$JBOSS_CLI" \
+    --connect \
+    --controller="$JBOSS_CLI_CONTROLLER" \
+    --command-timeout="$DEPLOY_TIMEOUT_SEC" \
+    --command="$CLI_COMMAND"
+fi
 
-  sleep 2
-done
-
-echo "[deploy] ERROR: timed out waiting for deployment markers" >&2
-ls -la "$DEPLOYMENTS_DIR/$TARGET_NAME"* 2>/dev/null || true
-exit 1
+echo "[deploy] SUCCESS: deployed $TARGET_NAME via jboss-cli"

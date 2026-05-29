@@ -39,5 +39,46 @@ services:
       timeout: 5s
       retries: 20
 
+  dolibarr-db:
+    image: mariadb:11
+    container_name: blps-dolibarr-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DOLI_DB_NAME:-dolidb}
+      MARIADB_USER: ${DOLI_DB_USER:-dolibarr}
+      MARIADB_PASSWORD: ${DOLI_DB_PASSWORD:-dolibarr}
+      MARIADB_ROOT_PASSWORD: ${DOLI_DB_ROOT_PASSWORD:-root}
+    volumes:
+      - dolibarr_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u${DOLI_DB_USER:-dolibarr} -p${DOLI_DB_PASSWORD:-dolibarr} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  dolibarr:
+    image: dolibarr/dolibarr:latest
+    container_name: blps-dolibarr
+    restart: unless-stopped
+    depends_on:
+      dolibarr-db:
+        condition: service_healthy
+    environment:
+      DOLI_DB_HOST: dolibarr-db
+      DOLI_DB_NAME: ${DOLI_DB_NAME:-dolidb}
+      DOLI_DB_USER: ${DOLI_DB_USER:-dolibarr}
+      DOLI_DB_PASSWORD: ${DOLI_DB_PASSWORD:-dolibarr}
+      DOLI_ADMIN_LOGIN: ${DOLI_ADMIN_LOGIN:-admin}
+      DOLI_ADMIN_PASSWORD: ${DOLI_ADMIN_PASSWORD:-admin}
+      DOLI_URL_ROOT: http://127.0.0.1:8081
+    ports:
+      - "8081:80"
+    volumes:
+      - dolibarr_documents:/var/www/documents
+      - dolibarr_custom:/var/www/html/custom
+
 volumes:
   postgres_data:
+  dolibarr_db_data:
+  dolibarr_documents:
+  dolibarr_custom:
