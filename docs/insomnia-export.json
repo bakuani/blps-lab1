@@ -37,8 +37,9 @@
                                        "monthly_fee_request_id":  1,
                                        "dolibarr_base":  "http://localhost:8081",
                                        "dolibarr_api_key":  "test_api_key",
-                                       "dolibarr_thirdparty_id":  1
-                                   }
+                                       "dolibarr_thirdparty_id":  1,
+                                       "dolibarr_invoice_id":  1
+                                    }
                       },
                       {
                           "_id":  "fld_tariff",
@@ -853,6 +854,48 @@
                           "name":  "3) Unpaid invoices by thirdparty (expect 200)",
                           "method":  "GET",
                           "url":  "{{ _.dolibarr_base }}/api/index.php/invoices?thirdparty_ids={{ _.dolibarr_thirdparty_id }}\u0026status=unpaid\u0026limit=10",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_dolibarr_all_invoices",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "4) All invoices by thirdparty (expect 200)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/invoices?thirdparty_ids={{ _.dolibarr_thirdparty_id }}\u0026limit=20\u0026sortfield=t.rowid\u0026sortorder=DESC",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_dolibarr_mfc_ref_invoices",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "5) Monthly fee invoices by ref_ext (MFC-*)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/invoices?limit=20\u0026sortfield=t.rowid\u0026sortorder=DESC\u0026sqlfilters=%28t.ref_ext:like:%27MFC-%25%27%29",
+                          "headers":  [
+                                          {
+                                              "name":  "DOLAPIKEY",
+                                              "value":  "{{ _.dolibarr_api_key }}"
+                                          }
+                                      ]
+                      },
+                      {
+                          "_id":  "req_dolibarr_invoice_by_id",
+                          "_type":  "request",
+                          "parentId":  "fld_dolibarr_diagnostics",
+                          "name":  "6) Invoice by id (from monthly fee status)",
+                          "method":  "GET",
+                          "url":  "{{ _.dolibarr_base }}/api/index.php/invoices/{{ _.dolibarr_invoice_id }}",
                           "headers":  [
                                           {
                                               "name":  "DOLAPIKEY",

@@ -42,6 +42,15 @@ public class MonthlyFeeChargeRequest {
     @Column(nullable = false)
     private int attemptCount;
 
+    @Column
+    private Long dolibarrThirdPartyId;
+
+    @Column
+    private Long dolibarrInvoiceId;
+
+    @Column
+    private String dolibarrInvoiceRef;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 

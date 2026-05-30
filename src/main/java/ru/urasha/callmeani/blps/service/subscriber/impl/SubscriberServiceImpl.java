@@ -13,7 +13,7 @@ import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.mapper.SubscriberMapper;
 
 import ru.urasha.callmeani.blps.repository.SubscriberRepository;
-import ru.urasha.callmeani.blps.service.eis.impl.DolibarrSubscriberSyncService;
+import ru.urasha.callmeani.blps.service.eis.DolibarrSubscriberService;
 import ru.urasha.callmeani.blps.service.tariff.TariffService;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
@@ -26,7 +26,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     private final SubscriberRepository subscriberRepository;
     private final TariffService tariffService;
     private final SubscriberMapper subscriberMapper;
-    private final DolibarrSubscriberSyncService dolibarrSubscriberSyncService;
+    private final DolibarrSubscriberService dolibarrSubscriberSyncService;
 
     @Transactional(readOnly = true)
     public Page<SubscriberResponse> getSubscribers(Pageable pageable) {

@@ -10,6 +10,9 @@ public record MonthlyFeeChargeRequestStatusResponse(
     TariffChangeRequestStatus status,
     String errorMessage,
     int attemptCount,
+    Long dolibarrThirdPartyId,
+    Long dolibarrInvoiceId,
+    String dolibarrInvoiceRef,
     OffsetDateTime updatedAt
 ) {
 }

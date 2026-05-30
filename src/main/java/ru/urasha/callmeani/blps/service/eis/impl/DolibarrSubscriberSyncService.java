@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
+import ru.urasha.callmeani.blps.service.eis.DolibarrSubscriberService;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Objects;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DolibarrSubscriberSyncService {
+public class DolibarrSubscriberSyncService implements DolibarrSubscriberService {
 
     @Qualifier("dolibarrRestClient")
     private final RestClient dolibarrRestClient;
@@ -27,9 +28,18 @@ public class DolibarrSubscriberSyncService {
     @Value("${eis.dolibarr.subscriber-sync-enabled:false}")
     private boolean subscriberSyncEnabled;
 
+    @Override
     public void syncSubscriber(Subscriber subscriber) {
-        if (!subscriberSyncEnabled || subscriber == null) {
+        if (!subscriberSyncEnabled) {
             return;
+        }
+        ensureThirdPartyId(subscriber);
+    }
+
+    @Override
+    public Long ensureThirdPartyId(Subscriber subscriber) {
+        if (subscriber == null) {
+            return null;
         }
 
         String normalizedPhone = normalizePhone(subscriber.getPhone());
@@ -38,7 +48,7 @@ public class DolibarrSubscriberSyncService {
                 "Dolibarr subscriber sync skipped: subscriberId={}, reason=empty_phone",
                 subscriber.getId()
             );
-            return;
+            return null;
         }
 
         try {
@@ -50,7 +60,7 @@ public class DolibarrSubscriberSyncService {
                     "Dolibarr subscriber sync created: subscriberId={}, thirdPartyId={}, phone={}",
                     subscriber.getId(), createdId, normalizedPhone
                 );
-                return;
+                return createdId;
             }
 
             updateThirdParty(thirdPartyId, payload);
@@ -58,6 +68,7 @@ public class DolibarrSubscriberSyncService {
                 "Dolibarr subscriber sync updated: subscriberId={}, thirdPartyId={}, phone={}",
                 subscriber.getId(), thirdPartyId, normalizedPhone
             );
+            return thirdPartyId;
         } catch (RestClientResponseException ex) {
             log.warn(
                 "Dolibarr subscriber sync failed: subscriberId={}, reason=http_status_{}, body={}",
@@ -65,18 +76,21 @@ public class DolibarrSubscriberSyncService {
                 ex.getStatusCode().value(),
                 ex.getResponseBodyAsString()
             );
+            return null;
         } catch (RestClientException ex) {
             log.warn(
                 "Dolibarr subscriber sync failed: subscriberId={}, reason=network_error, message={}",
                 subscriber.getId(),
                 ex.getMessage()
             );
+            return null;
         } catch (RuntimeException ex) {
             log.warn(
                 "Dolibarr subscriber sync failed: subscriberId={}, reason=unexpected_error, message={}",
                 subscriber.getId(),
                 ex.getMessage()
             );
+            return null;
         }
     }
 

@@ -21,6 +21,7 @@ import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.messaging.MonthlyFeeChargeRequestedMessage;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
+import ru.urasha.callmeani.blps.service.eis.DolibarrInvoiceService;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
@@ -42,6 +43,7 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
     private final BillingService billingService;
     private final NotificationService notificationService;
     private final MonthlyFeeChargeRequestRepository monthlyFeeChargeRequestRepository;
+    private final DolibarrInvoiceService dolibarrInvoiceService;
     private final EisOperationAuditService eisOperationAuditService;
     private final JmsTemplate jmsTemplate;
     @Qualifier("businessTransactionTemplate")
@@ -91,6 +93,9 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
             request.getStatus(),
             request.getErrorMessage(),
             request.getAttemptCount(),
+            request.getDolibarrThirdPartyId(),
+            request.getDolibarrInvoiceId(),
+            request.getDolibarrInvoiceRef(),
             request.getUpdatedAt()
         );
     }
@@ -106,6 +111,9 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
                 request.getStatus(),
                 request.getErrorMessage(),
                 request.getAttemptCount(),
+                request.getDolibarrThirdPartyId(),
+                request.getDolibarrInvoiceId(),
+                request.getDolibarrInvoiceRef(),
                 request.getUpdatedAt()
             ))
             .toList();
@@ -166,6 +174,8 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
                     return;
                 }
 
+                ensureDolibarrInvoiceCreated(request, subscriber, monthlyFee);
+
                 if (subscriber.getBalance().compareTo(monthlyFee) < 0) {
                     notificationService.createNotification(
                         subscriber,
@@ -205,8 +215,28 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
             request.setUpdatedAt(OffsetDateTime.now());
             monthlyFeeChargeRequestRepository.save(request);
         } finally {
+            syncDolibarrInvoiceStatus(request);
             publishEisResult(request, operationAmount.get());
         }
+    }
+
+    private void ensureDolibarrInvoiceCreated(MonthlyFeeChargeRequest request, Subscriber subscriber, BigDecimal monthlyFee) {
+        if (request.getDolibarrInvoiceId() != null) {
+            return;
+        }
+
+        dolibarrInvoiceService.createUnpaidMonthlyFeeInvoice(
+            subscriber,
+            request.getId(),
+            request.getBillingPeriod(),
+            monthlyFee
+        ).ifPresent(reference -> {
+            request.setDolibarrThirdPartyId(reference.thirdPartyId());
+            request.setDolibarrInvoiceId(reference.invoiceId());
+            request.setDolibarrInvoiceRef(reference.externalRef());
+            request.setUpdatedAt(OffsetDateTime.now());
+            monthlyFeeChargeRequestRepository.save(request);
+        });
     }
 
     private void rejectRequest(MonthlyFeeChargeRequest request, String message, Subscriber subscriber) {
@@ -215,6 +245,32 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
         request.setErrorMessage(message);
         request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
+    }
+
+    private void syncDolibarrInvoiceStatus(MonthlyFeeChargeRequest request) {
+        if (!isTerminalStatus(request.getStatus())) {
+            return;
+        }
+
+        Long invoiceId = request.getDolibarrInvoiceId();
+        if (invoiceId == null) {
+            return;
+        }
+
+        if (request.getStatus() != TariffChangeRequestStatus.SUCCESS) {
+            return;
+        }
+
+        boolean changed = dolibarrInvoiceService.markInvoicePaid(invoiceId);
+
+        if (!changed) {
+            log.warn(
+                "Dolibarr invoice status sync failed: requestId={}, invoiceId={}, finalStatus={}",
+                request.getId(),
+                invoiceId,
+                request.getStatus()
+            );
+        }
     }
 
     private void publishEisResult(MonthlyFeeChargeRequest request, BigDecimal amount) {
