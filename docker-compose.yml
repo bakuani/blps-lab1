@@ -19,6 +19,39 @@ services:
       timeout: 3s
       retries: 20
 
+  camunda-db:
+    image: postgres:16-alpine
+    container_name: blps-camunda-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: process-engine
+      POSTGRES_USER: camunda
+      POSTGRES_PASSWORD: camunda
+    volumes:
+      - camunda_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camunda -d process-engine"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  camunda:
+    image: camunda/camunda-bpm-platform:run-7.24.0
+    container_name: blps-camunda
+    restart: unless-stopped
+    depends_on:
+      camunda-db:
+        condition: service_healthy
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_URL: jdbc:postgresql://camunda-db:5432/process-engine
+      DB_USERNAME: camunda
+      DB_PASSWORD: camunda
+      WAIT_FOR: camunda-db:5432
+      TZ: Europe/Moscow
+    ports:
+      - "127.0.0.1:8082:8080"
+
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: blps-rabbitmq
@@ -79,6 +112,7 @@ services:
 
 volumes:
   postgres_data:
+  camunda_db_data:
   dolibarr_db_data:
   dolibarr_documents:
   dolibarr_custom:

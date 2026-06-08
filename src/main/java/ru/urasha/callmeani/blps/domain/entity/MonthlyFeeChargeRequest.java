@@ -43,6 +43,9 @@ public class MonthlyFeeChargeRequest {
     private int attemptCount;
 
     @Column
+    private String processInstanceId;
+
+    @Column
     private Long dolibarrThirdPartyId;
 
     @Column

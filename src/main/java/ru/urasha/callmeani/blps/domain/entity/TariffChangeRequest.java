@@ -55,6 +55,9 @@ public class TariffChangeRequest {
     @Column(nullable = false)
     private int attemptCount;
 
+    @Column
+    private String processInstanceId;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 

@@ -2,31 +2,23 @@ package ru.urasha.callmeani.blps.service.feature.async;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jms.annotation.JmsListener;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urasha.callmeani.blps.api.dto.feature.DisableFeatureResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableRequestStatusResponse;
 import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableSubmissionResponse;
 import ru.urasha.callmeani.blps.api.exception.FeatureDisableRequestNotFoundException;
-import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.FeatureDisableRequest;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
-import ru.urasha.callmeani.blps.messaging.FeatureDisableRequestedMessage;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
-import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
-import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
-import ru.urasha.callmeani.blps.eis.model.EisOperationType;
-import ru.urasha.callmeani.blps.service.eis.EisValidationService;
-import ru.urasha.callmeani.blps.service.feature.FeatureManagementService;
+import ru.urasha.callmeani.blps.service.camunda.CamundaProcessConstants;
+import ru.urasha.callmeani.blps.service.camunda.CamundaRestClient;
+import ru.urasha.callmeani.blps.service.camunda.CamundaVariable;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -34,13 +26,7 @@ import java.util.Objects;
 public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations {
 
     private final FeatureDisableRequestRepository featureDisableRequestRepository;
-    private final FeatureManagementService featureManagementService;
-    private final EisValidationService eisValidationService;
-    private final EisOperationAuditService eisOperationAuditService;
-    private final JmsTemplate jmsTemplate;
-
-    @Value("${app.jms.feature-disable-queue}")
-    private String featureDisableQueue;
+    private final CamundaRestClient camundaRestClient;
 
     @Override
     @Transactional
@@ -54,7 +40,7 @@ public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations
         request.setUpdatedAt(OffsetDateTime.now());
 
         FeatureDisableRequest saved = featureDisableRequestRepository.save(request);
-        jmsTemplate.convertAndSend(featureDisableQueue, new FeatureDisableRequestedMessage(saved.getId()));
+        startProcess(saved);
 
         return new FeatureDisableSubmissionResponse(
             saved.getId(),
@@ -85,89 +71,38 @@ public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations
     @Transactional
     public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
         List<FeatureDisableRequest> stuckRequests = featureDisableRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
+        int restarted = 0;
         for (FeatureDisableRequest request : stuckRequests) {
-            log.info("Retrying FeatureDisableRequest with id {}", request.getId());
-            jmsTemplate.convertAndSend(featureDisableQueue, new FeatureDisableRequestedMessage(request.getId()));
-            request.setUpdatedAt(OffsetDateTime.now());
+            if (request.getProcessInstanceId() != null) {
+                continue;
+            }
+            log.info("Starting Camunda process for stuck FeatureDisableRequest with id {}", request.getId());
+            startProcess(request);
+            restarted++;
         }
-        featureDisableRequestRepository.saveAll(stuckRequests);
-        return stuckRequests.size();
+        return restarted;
     }
 
-    @JmsListener(destination = "${app.jms.feature-disable-queue}")
-    public void processFeatureDisable(FeatureDisableRequestedMessage message) {
-        FeatureDisableRequest request = featureDisableRequestRepository.findById(message.requestId())
-            .orElseThrow(() -> new FeatureDisableRequestNotFoundException(message.requestId()));
-        BigDecimal operationAmount = BigDecimal.ZERO;
-
-        if (request.getStatus() == TariffChangeRequestStatus.SUCCESS || request.getStatus() == TariffChangeRequestStatus.REJECTED) {
-            return;
-        }
-
-        request.setStatus(TariffChangeRequestStatus.PROCESSING);
-        request.setAttemptCount(request.getAttemptCount() + 1);
-        request.setErrorMessage(null);
+    private void startProcess(FeatureDisableRequest request) {
+        Map<String, CamundaVariable> variables = processVariables(request);
+        String processInstanceId = camundaRestClient.startProcess(
+            CamundaProcessConstants.FEATURE_DISABLE_PROCESS,
+            "feature-disable-" + request.getId(),
+            variables
+        );
+        request.setProcessInstanceId(processInstanceId);
         request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
-
-        if (!eisValidationService.allowFeatureDisable(request)) {
-            request.setStatus(TariffChangeRequestStatus.REJECTED);
-            request.setErrorMessage(ApiMessages.FEATURE_DISABLE_REJECTED_BY_EIS);
-            request.setUpdatedAt(OffsetDateTime.now());
-            featureDisableRequestRepository.save(request);
-            publishEisResult(request, operationAmount);
-            return;
-        }
-
-        try {
-            DisableFeatureResponse response = featureManagementService.disableFeature(request.getSubscriberId(), request.getFeatureId());
-            operationAmount = sumOperationAmount(response);
-            request.setStatus(response.success() ? TariffChangeRequestStatus.SUCCESS : TariffChangeRequestStatus.REJECTED);
-            request.setErrorMessage(response.success() ? null : response.message());
-        } catch (RuntimeException ex) {
-            log.error("Feature disable request {} failed", request.getId(), ex);
-            request.setStatus(resolveFailureStatus(ex, request.getAttemptCount()));
-            request.setErrorMessage(ex.getMessage());
-        } finally {
-            request.setUpdatedAt(OffsetDateTime.now());
-            featureDisableRequestRepository.save(request);
-            publishEisResult(request, operationAmount);
-        }
+        camundaRestClient.completeFirstTask(processInstanceId, variables);
     }
 
-    private TariffChangeRequestStatus resolveFailureStatus(RuntimeException ex, int attemptCount) {
-        if (ex instanceof NotFoundException) {
-            return TariffChangeRequestStatus.REJECTED;
-        }
-        return attemptCount < 3 ? TariffChangeRequestStatus.RETRY : TariffChangeRequestStatus.FAILED;
-    }
-
-    private BigDecimal sumOperationAmount(DisableFeatureResponse response) {
-        return response.billingTransactions()
-            .stream()
-            .map(tx -> tx.amount())
-            .filter(Objects::nonNull)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private void publishEisResult(FeatureDisableRequest request, BigDecimal amount) {
-        if (!isTerminalStatus(request.getStatus())) {
-            return;
-        }
-        eisOperationAuditService.registerOperationResult(new EisOperationResult(
-            EisOperationType.FEATURE_DISABLE_REQUESTED,
-            request.getId(),
-            request.getSubscriberId(),
-            amount,
-            request.getStatus(),
-            request.getErrorMessage(),
-            OffsetDateTime.now()
-        ));
-    }
-
-    private boolean isTerminalStatus(TariffChangeRequestStatus status) {
-        return status == TariffChangeRequestStatus.SUCCESS
-            || status == TariffChangeRequestStatus.REJECTED
-            || status == TariffChangeRequestStatus.FAILED;
+    private Map<String, CamundaVariable> processVariables(FeatureDisableRequest request) {
+        Map<String, CamundaVariable> variables = new LinkedHashMap<>();
+        variables.put("operationType", CamundaVariable.string(CamundaProcessConstants.OPERATION_FEATURE_DISABLE));
+        variables.put("requestId", CamundaVariable.longValue(request.getId()));
+        variables.put("subscriberId", CamundaVariable.longValue(request.getSubscriberId()));
+        variables.put("featureId", CamundaVariable.longValue(request.getFeatureId()));
+        variables.put("operationAmount", CamundaVariable.string("0"));
+        return variables;
     }
 }
