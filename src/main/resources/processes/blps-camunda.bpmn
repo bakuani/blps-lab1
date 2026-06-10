@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   targetNamespace="http://callmeani.urasha.ru/blps/camunda">
 
-  <bpmn:process id="TariffChangeProcess" name="Tariff change" isExecutable="true">
+  <bpmn:process id="TariffChangeProcess" name="Tariff change" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="Start_TariffChange" name="Start tariff change">
       <bpmn:outgoing>Flow_T_Start_Form</bpmn:outgoing>
     </bpmn:startEvent>
@@ -97,7 +100,7 @@
     <bpmn:sequenceFlow id="Flow_T_Audit_End" sourceRef="Task_AuditTariffChange" targetRef="End_TariffChange" />
   </bpmn:process>
 
-  <bpmn:process id="FeatureDisableProcess" name="Feature disable" isExecutable="true">
+  <bpmn:process id="FeatureDisableProcess" name="Feature disable" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="Start_FeatureDisable" name="Start feature disable">
       <bpmn:outgoing>Flow_F_Start_Form</bpmn:outgoing>
     </bpmn:startEvent>
@@ -164,7 +167,7 @@
     <bpmn:sequenceFlow id="Flow_F_Audit_End" sourceRef="Task_AuditFeatureDisable" targetRef="End_FeatureDisable" />
   </bpmn:process>
 
-  <bpmn:process id="MonthlyFeeCycleProcess" name="Monthly fee cycle" isExecutable="true">
+  <bpmn:process id="MonthlyFeeCycleProcess" name="Monthly fee cycle" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="Timer_MonthlyFeeCycle" name="Monthly fee timer">
       <bpmn:outgoing>Flow_MFC_Timer_CreateRequests</bpmn:outgoing>
       <bpmn:timerEventDefinition>
@@ -182,7 +185,7 @@
     <bpmn:sequenceFlow id="Flow_MFC_CreateRequests_End" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="End_MonthlyFeeCycle" />
   </bpmn:process>
 
-  <bpmn:process id="MonthlyFeeChargeProcess" name="Monthly fee charge" isExecutable="true">
+  <bpmn:process id="MonthlyFeeChargeProcess" name="Monthly fee charge" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="Start_MonthlyFeeCharge" name="Start monthly fee charge">
       <bpmn:outgoing>Flow_MF_Start_CreateInvoice</bpmn:outgoing>
     </bpmn:startEvent>
@@ -230,4 +233,251 @@
     <bpmn:sequenceFlow id="Flow_MF_Sync_Audit" sourceRef="Task_SyncDolibarrInvoice" targetRef="Task_AuditMonthlyFee" />
     <bpmn:sequenceFlow id="Flow_MF_Audit_End" sourceRef="Task_AuditMonthlyFee" targetRef="End_MonthlyFeeCharge" />
   </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_TariffChangeProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_TariffChangeProcess" bpmnElement="TariffChangeProcess">
+      <bpmndi:BPMNShape id="Start_TariffChange_di" bpmnElement="Start_TariffChange">
+        <dc:Bounds x="160" y="160" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_TariffChangeForm_di" bpmnElement="UserTask_TariffChangeForm">
+        <dc:Bounds x="240" y="130" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateTariffChange_di" bpmnElement="Task_ValidateTariffChange">
+        <dc:Bounds x="410" y="130" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CanChangeTariff_di" bpmnElement="Gateway_CanChangeTariff" isMarkerVisible="true">
+        <dc:Bounds x="580" y="145" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasSwitchFee_di" bpmnElement="Gateway_HasSwitchFee" isMarkerVisible="true">
+        <dc:Bounds x="700" y="145" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeSwitchFee_di" bpmnElement="Task_ChargeSwitchFee">
+        <dc:Bounds x="820" y="90" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffChargesMerge_di" bpmnElement="Gateway_TariffChargesMerge" isMarkerVisible="true">
+        <dc:Bounds x="1000" y="145" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeNewMonthlyFee_di" bpmnElement="Task_ChargeNewMonthlyFee">
+        <dc:Bounds x="1100" y="130" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSubscriberTariff_di" bpmnElement="Task_UpdateSubscriberTariff">
+        <dc:Bounds x="1300" y="130" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyTariffChange_di" bpmnElement="Task_NotifyTariffChange">
+        <dc:Bounds x="1490" y="130" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditTariffChange_di" bpmnElement="Task_AuditTariffChange">
+        <dc:Bounds x="1680" y="130" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_TariffChange_di" bpmnElement="End_TariffChange">
+        <dc:Bounds x="1870" y="152" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_T_Start_Form_di" bpmnElement="Flow_T_Start_Form">
+        <di:waypoint x="196" y="178" />
+        <di:waypoint x="240" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Form_Validate_di" bpmnElement="Flow_T_Form_Validate">
+        <di:waypoint x="360" y="170" />
+        <di:waypoint x="410" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Validate_CanChange_di" bpmnElement="Flow_T_Validate_CanChange">
+        <di:waypoint x="530" y="170" />
+        <di:waypoint x="580" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CanChange_Yes_di" bpmnElement="Flow_T_CanChange_Yes">
+        <di:waypoint x="630" y="170" />
+        <di:waypoint x="700" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CanChange_No_di" bpmnElement="Flow_T_CanChange_No">
+        <di:waypoint x="605" y="195" />
+        <di:waypoint x="605" y="280" />
+        <di:waypoint x="1750" y="280" />
+        <di:waypoint x="1750" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_Yes_di" bpmnElement="Flow_T_SwitchFee_Yes">
+        <di:waypoint x="725" y="145" />
+        <di:waypoint x="725" y="130" />
+        <di:waypoint x="820" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_No_di" bpmnElement="Flow_T_SwitchFee_No">
+        <di:waypoint x="750" y="170" />
+        <di:waypoint x="1000" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_Merge_di" bpmnElement="Flow_T_SwitchFee_Merge">
+        <di:waypoint x="950" y="130" />
+        <di:waypoint x="1025" y="130" />
+        <di:waypoint x="1025" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Merge_MonthlyFee_di" bpmnElement="Flow_T_Merge_MonthlyFee">
+        <di:waypoint x="1050" y="170" />
+        <di:waypoint x="1100" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Monthly_UpdateTariff_di" bpmnElement="Flow_T_Monthly_UpdateTariff">
+        <di:waypoint x="1250" y="170" />
+        <di:waypoint x="1300" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Update_Notify_di" bpmnElement="Flow_T_Update_Notify">
+        <di:waypoint x="1440" y="170" />
+        <di:waypoint x="1490" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Notify_Audit_di" bpmnElement="Flow_T_Notify_Audit">
+        <di:waypoint x="1630" y="170" />
+        <di:waypoint x="1680" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Audit_End_di" bpmnElement="Flow_T_Audit_End">
+        <di:waypoint x="1820" y="170" />
+        <di:waypoint x="1870" y="170" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_FeatureDisableProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_FeatureDisableProcess" bpmnElement="FeatureDisableProcess">
+      <bpmndi:BPMNShape id="Start_FeatureDisable_di" bpmnElement="Start_FeatureDisable">
+        <dc:Bounds x="160" y="520" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_FeatureDisableForm_di" bpmnElement="UserTask_FeatureDisableForm">
+        <dc:Bounds x="240" y="490" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateFeatureDisable_di" bpmnElement="Task_ValidateFeatureDisable">
+        <dc:Bounds x="410" y="490" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CanDisableFeature_di" bpmnElement="Gateway_CanDisableFeature" isMarkerVisible="true">
+        <dc:Bounds x="580" y="505" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DisableFeatureBilling_di" bpmnElement="Task_DisableFeatureBilling">
+        <dc:Bounds x="700" y="490" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSubscriberFeature_di" bpmnElement="Task_UpdateSubscriberFeature">
+        <dc:Bounds x="870" y="490" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyFeatureDisable_di" bpmnElement="Task_NotifyFeatureDisable">
+        <dc:Bounds x="1040" y="490" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditFeatureDisable_di" bpmnElement="Task_AuditFeatureDisable">
+        <dc:Bounds x="1210" y="490" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_FeatureDisable_di" bpmnElement="End_FeatureDisable">
+        <dc:Bounds x="1390" y="512" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_F_Start_Form_di" bpmnElement="Flow_F_Start_Form">
+        <di:waypoint x="196" y="538" />
+        <di:waypoint x="240" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Form_Validate_di" bpmnElement="Flow_F_Form_Validate">
+        <di:waypoint x="360" y="530" />
+        <di:waypoint x="410" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Validate_CanDisable_di" bpmnElement="Flow_F_Validate_CanDisable">
+        <di:waypoint x="530" y="530" />
+        <di:waypoint x="580" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_CanDisable_Yes_di" bpmnElement="Flow_F_CanDisable_Yes">
+        <di:waypoint x="630" y="530" />
+        <di:waypoint x="700" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_CanDisable_No_di" bpmnElement="Flow_F_CanDisable_No">
+        <di:waypoint x="605" y="555" />
+        <di:waypoint x="605" y="640" />
+        <di:waypoint x="1280" y="640" />
+        <di:waypoint x="1280" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Billing_Update_di" bpmnElement="Flow_F_Billing_Update">
+        <di:waypoint x="830" y="530" />
+        <di:waypoint x="870" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Update_Notify_di" bpmnElement="Flow_F_Update_Notify">
+        <di:waypoint x="1010" y="530" />
+        <di:waypoint x="1040" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Notify_Audit_di" bpmnElement="Flow_F_Notify_Audit">
+        <di:waypoint x="1180" y="530" />
+        <di:waypoint x="1210" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Audit_End_di" bpmnElement="Flow_F_Audit_End">
+        <di:waypoint x="1350" y="530" />
+        <di:waypoint x="1390" y="530" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeCycleProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MonthlyFeeCycleProcess" bpmnElement="MonthlyFeeCycleProcess">
+      <bpmndi:BPMNShape id="Timer_MonthlyFeeCycle_di" bpmnElement="Timer_MonthlyFeeCycle">
+        <dc:Bounds x="160" y="850" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateMonthlyFeeRequests_di" bpmnElement="Task_CreateMonthlyFeeRequests">
+        <dc:Bounds x="250" y="820" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_MonthlyFeeCycle_di" bpmnElement="End_MonthlyFeeCycle">
+        <dc:Bounds x="460" y="842" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_MFC_Timer_CreateRequests_di" bpmnElement="Flow_MFC_Timer_CreateRequests">
+        <di:waypoint x="196" y="868" />
+        <di:waypoint x="250" y="860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MFC_CreateRequests_End_di" bpmnElement="Flow_MFC_CreateRequests_End">
+        <di:waypoint x="400" y="860" />
+        <di:waypoint x="460" y="860" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeChargeProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MonthlyFeeChargeProcess" bpmnElement="MonthlyFeeChargeProcess">
+      <bpmndi:BPMNShape id="Start_MonthlyFeeCharge_di" bpmnElement="Start_MonthlyFeeCharge">
+        <dc:Bounds x="160" y="1050" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateDolibarrInvoice_di" bpmnElement="Task_CreateDolibarrInvoice">
+        <dc:Bounds x="250" y="1020" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeMonthlyFee_di" bpmnElement="Task_ChargeMonthlyFee">
+        <dc:Bounds x="440" y="1020" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MonthlyFeeSucceeded_di" bpmnElement="Gateway_MonthlyFeeSucceeded" isMarkerVisible="true">
+        <dc:Bounds x="620" y="1035" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SyncDolibarrInvoice_di" bpmnElement="Task_SyncDolibarrInvoice">
+        <dc:Bounds x="730" y="970" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditMonthlyFee_di" bpmnElement="Task_AuditMonthlyFee">
+        <dc:Bounds x="920" y="1020" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_MonthlyFeeCharge_di" bpmnElement="End_MonthlyFeeCharge">
+        <dc:Bounds x="1120" y="1042" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_MF_Start_CreateInvoice_di" bpmnElement="Flow_MF_Start_CreateInvoice">
+        <di:waypoint x="196" y="1068" />
+        <di:waypoint x="250" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_CreateInvoice_Charge_di" bpmnElement="Flow_MF_CreateInvoice_Charge">
+        <di:waypoint x="390" y="1060" />
+        <di:waypoint x="440" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Charge_Gateway_di" bpmnElement="Flow_MF_Charge_Gateway">
+        <di:waypoint x="580" y="1060" />
+        <di:waypoint x="620" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Success_SyncInvoice_di" bpmnElement="Flow_MF_Success_SyncInvoice">
+        <di:waypoint x="645" y="1035" />
+        <di:waypoint x="645" y="1010" />
+        <di:waypoint x="730" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Failed_Audit_di" bpmnElement="Flow_MF_Failed_Audit">
+        <di:waypoint x="645" y="1085" />
+        <di:waypoint x="645" y="1160" />
+        <di:waypoint x="990" y="1160" />
+        <di:waypoint x="990" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Sync_Audit_di" bpmnElement="Flow_MF_Sync_Audit">
+        <di:waypoint x="870" y="1010" />
+        <di:waypoint x="990" y="1010" />
+        <di:waypoint x="990" y="1020" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Audit_End_di" bpmnElement="Flow_MF_Audit_End">
+        <di:waypoint x="1060" y="1060" />
+        <di:waypoint x="1120" y="1060" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 </bpmn:definitions>

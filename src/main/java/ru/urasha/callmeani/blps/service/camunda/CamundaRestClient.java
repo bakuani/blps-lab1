@@ -1,7 +1,7 @@
 package ru.urasha.callmeani.blps.service.camunda;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,11 +10,18 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class CamundaRestClient {
 
     private final RestClient camundaRestClient;
     private final CamundaProperties properties;
+
+    public CamundaRestClient(
+        @Qualifier("camundaEngineRestClient") RestClient camundaRestClient,
+        CamundaProperties properties
+    ) {
+        this.camundaRestClient = camundaRestClient;
+        this.properties = properties;
+    }
 
     public String startProcess(String processDefinitionKey, String businessKey, Map<String, CamundaVariable> variables) {
         ProcessStartResponse response = camundaRestClient.post()
