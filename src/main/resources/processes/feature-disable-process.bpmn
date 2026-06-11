@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
+  <bpmn:process id="FeatureDisableProcess" name="Отключение услуги" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:laneSet id="LaneSet_FeatureDisable">
+      <bpmn:lane id="Lane_Feature_Db" name="База данных" />
+      <bpmn:lane id="Lane_Feature_App" name="Приложение">
+        <bpmn:flowNodeRef>Task_ValidateFeatureDisable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DisableFeatureBilling</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateSubscriberFeature</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyFeatureDisable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AuditFeatureDisable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_FeatureDisable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CanDisableFeature</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Feature_User" name="Пользователь">
+        <bpmn:flowNodeRef>UserTask_FeatureDisableForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_FeatureDisable</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_FeatureDisable" name="Начать отключение услуги">
+      <bpmn:outgoing>Flow_F_Start_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_FeatureDisableForm" name="Подтвердить отключение услуги" camunda:candidateGroups="SUBSCRIBER,OPERATOR,ADMIN">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="subscriberId" label="ID абонента" type="long" />
+          <camunda:formField id="featureId" label="ID услуги" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_F_Start_Form</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Form_Validate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ValidateFeatureDisable" name="Проверить отключение услуги" camunda:type="external" camunda:topic="validate-feature-disable">
+      <bpmn:incoming>Flow_F_Form_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Validate_CanDisable</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1homhug">
+        <bpmn:targetRef>DS_Feature_SubscriberFeature</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_009l9zg">
+        <bpmn:targetRef>DS_Feature_Request</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1hu26x3">
+        <bpmn:targetRef>DS_Feature_Subscriber</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_CanDisableFeature" name="Отключение разрешено?">
+      <bpmn:incoming>Flow_F_Validate_CanDisable</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_CanDisable_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_F_CanDisable_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_DisableFeatureBilling" name="Выполнить биллинг отключения" camunda:type="external" camunda:topic="disable-feature-billing">
+      <bpmn:incoming>Flow_F_CanDisable_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Billing_Update</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_UpdateSubscriberFeature" name="Обновить услугу абонента" camunda:type="external" camunda:topic="update-subscriber-feature">
+      <bpmn:incoming>Flow_F_Billing_Update</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Update_Notify</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_0wgy0i9">
+        <bpmn:targetRef>DS_Feature_SubscriberFeature</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="Task_NotifyFeatureDisable" name="Отправить уведомление" camunda:type="external" camunda:topic="send-notification">
+      <bpmn:incoming>Flow_F_Update_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Notify_Audit</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Task_AuditFeatureDisable" name="Записать аудит EIS" camunda:type="external" camunda:topic="publish-eis-audit">
+      <bpmn:incoming>Flow_F_Notify_Audit</bpmn:incoming>
+      <bpmn:incoming>Flow_F_CanDisable_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_F_Audit_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_FeatureDisable" name="Отключение услуги завершено">
+      <bpmn:incoming>Flow_F_Audit_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DS_Feature_Request" name="feature_disable_request" />
+    <bpmn:dataStoreReference id="DS_Feature_Subscriber" name="subscriber" />
+    <bpmn:dataStoreReference id="DS_Feature_SubscriberFeature" name="subscriber_feature" />
+    <bpmn:dataStoreReference id="DS_Feature_BillingTransaction" name="billing_transaction" />
+    <bpmn:dataStoreReference id="DS_Feature_NotificationEvent" name="notification_event" />
+    <bpmn:dataStoreReference id="DS_Feature_EisAudit" name="eis_audit" />
+    <bpmn:sequenceFlow id="Flow_F_Start_Form" sourceRef="Start_FeatureDisable" targetRef="UserTask_FeatureDisableForm" />
+    <bpmn:sequenceFlow id="Flow_F_Form_Validate" sourceRef="UserTask_FeatureDisableForm" targetRef="Task_ValidateFeatureDisable" />
+    <bpmn:sequenceFlow id="Flow_F_Validate_CanDisable" sourceRef="Task_ValidateFeatureDisable" targetRef="Gateway_CanDisableFeature" />
+    <bpmn:sequenceFlow id="Flow_F_CanDisable_Yes" name="Да" sourceRef="Gateway_CanDisableFeature" targetRef="Task_DisableFeatureBilling">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canDisableFeature}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_F_CanDisable_No" name="Нет" sourceRef="Gateway_CanDisableFeature" targetRef="Task_AuditFeatureDisable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!canDisableFeature}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_F_Billing_Update" sourceRef="Task_DisableFeatureBilling" targetRef="Task_UpdateSubscriberFeature" />
+    <bpmn:sequenceFlow id="Flow_F_Update_Notify" sourceRef="Task_UpdateSubscriberFeature" targetRef="Task_NotifyFeatureDisable" />
+    <bpmn:sequenceFlow id="Flow_F_Notify_Audit" sourceRef="Task_NotifyFeatureDisable" targetRef="Task_AuditFeatureDisable" />
+    <bpmn:sequenceFlow id="Flow_F_Audit_End" sourceRef="Task_AuditFeatureDisable" targetRef="End_FeatureDisable" />
+    <bpmn:association id="Assoc_F_Billing_Transaction" associationDirection="One" sourceRef="Task_DisableFeatureBilling" targetRef="DS_Feature_BillingTransaction" />
+    <bpmn:association id="Assoc_F_Notify_Event" associationDirection="One" sourceRef="Task_NotifyFeatureDisable" targetRef="DS_Feature_NotificationEvent" />
+    <bpmn:association id="Assoc_F_Audit_Eis" associationDirection="One" sourceRef="Task_AuditFeatureDisable" targetRef="DS_Feature_EisAudit" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_FeatureDisableProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_FeatureDisableProcess" bpmnElement="FeatureDisableProcess">
+      <bpmndi:BPMNShape id="Lane_Feature_Db_di" bpmnElement="Lane_Feature_Db" isHorizontal="true">
+        <dc:Bounds x="160" y="380" width="1420" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Feature_App_di" bpmnElement="Lane_Feature_App" isHorizontal="true">
+        <dc:Bounds x="160" y="200" width="1420" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Feature_User_di" bpmnElement="Lane_Feature_User" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="1420" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_FeatureDisable_di" bpmnElement="Start_FeatureDisable">
+        <dc:Bounds x="210" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="198" y="148" width="61" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_FeatureDisableForm_di" bpmnElement="UserTask_FeatureDisableForm">
+        <dc:Bounds x="290" y="90" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateFeatureDisable_di" bpmnElement="Task_ValidateFeatureDisable">
+        <dc:Bounds x="470" y="250" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CanDisableFeature_di" bpmnElement="Gateway_CanDisableFeature" isMarkerVisible="true">
+        <dc:Bounds x="650" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="638" y="236" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DisableFeatureBilling_di" bpmnElement="Task_DisableFeatureBilling">
+        <dc:Bounds x="760" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSubscriberFeature_di" bpmnElement="Task_UpdateSubscriberFeature">
+        <dc:Bounds x="940" y="250" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyFeatureDisable_di" bpmnElement="Task_NotifyFeatureDisable">
+        <dc:Bounds x="1130" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditFeatureDisable_di" bpmnElement="Task_AuditFeatureDisable">
+        <dc:Bounds x="1310" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_FeatureDisable_di" bpmnElement="End_FeatureDisable">
+        <dc:Bounds x="1500" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1486" y="308" width="64" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_NotificationEvent_di" bpmnElement="DS_Feature_NotificationEvent">
+        <dc:Bounds x="1175" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1157" y="500" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_EisAudit_di" bpmnElement="DS_Feature_EisAudit">
+        <dc:Bounds x="1355" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1358" y="500" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_BillingTransaction_di" bpmnElement="DS_Feature_BillingTransaction">
+        <dc:Bounds x="813" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="500" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_Subscriber_di" bpmnElement="DS_Feature_Subscriber">
+        <dc:Bounds x="615" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615" y="500" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_SubscriberFeature_di" bpmnElement="DS_Feature_SubscriberFeature">
+        <dc:Bounds x="990" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="973" y="500" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Feature_Request_di" bpmnElement="DS_Feature_Request">
+        <dc:Bounds x="467" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="449" y="500" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_F_Billing_Transaction_di" bpmnElement="Assoc_F_Billing_Transaction">
+        <di:waypoint x="835" y="330" />
+        <di:waypoint x="835" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Start_Form_di" bpmnElement="Flow_F_Start_Form">
+        <di:waypoint x="246" y="130" />
+        <di:waypoint x="290" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Form_Validate_di" bpmnElement="Flow_F_Form_Validate">
+        <di:waypoint x="420" y="130" />
+        <di:waypoint x="445" y="130" />
+        <di:waypoint x="445" y="290" />
+        <di:waypoint x="470" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Validate_CanDisable_di" bpmnElement="Flow_F_Validate_CanDisable">
+        <di:waypoint x="600" y="290" />
+        <di:waypoint x="650" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_CanDisable_Yes_di" bpmnElement="Flow_F_CanDisable_Yes">
+        <di:waypoint x="700" y="290" />
+        <di:waypoint x="760" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="723" y="265" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_CanDisable_No_di" bpmnElement="Flow_F_CanDisable_No">
+        <di:waypoint x="675" y="315" />
+        <di:waypoint x="675" y="355" />
+        <di:waypoint x="1360" y="355" />
+        <di:waypoint x="1360" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="321" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Billing_Update_di" bpmnElement="Flow_F_Billing_Update">
+        <di:waypoint x="900" y="290" />
+        <di:waypoint x="940" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Update_Notify_di" bpmnElement="Flow_F_Update_Notify">
+        <di:waypoint x="1090" y="290" />
+        <di:waypoint x="1130" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Notify_Audit_di" bpmnElement="Flow_F_Notify_Audit">
+        <di:waypoint x="1270" y="290" />
+        <di:waypoint x="1310" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_F_Audit_End_di" bpmnElement="Flow_F_Audit_End">
+        <di:waypoint x="1450" y="290" />
+        <di:waypoint x="1500" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_F_Notify_Event_di" bpmnElement="Assoc_F_Notify_Event">
+        <di:waypoint x="1200" y="330" />
+        <di:waypoint x="1200" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_F_Audit_Eis_di" bpmnElement="Assoc_F_Audit_Eis">
+        <di:waypoint x="1380" y="330" />
+        <di:waypoint x="1380" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1homhug_di" bpmnElement="DataOutputAssociation_1homhug">
+        <di:waypoint x="550" y="330" />
+        <di:waypoint x="550" y="540" />
+        <di:waypoint x="940" y="540" />
+        <di:waypoint x="940" y="475" />
+        <di:waypoint x="990" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0wgy0i9_di" bpmnElement="DataOutputAssociation_0wgy0i9">
+        <di:waypoint x="1015" y="330" />
+        <di:waypoint x="1015" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_009l9zg_di" bpmnElement="DataOutputAssociation_009l9zg">
+        <di:waypoint x="490" y="330" />
+        <di:waypoint x="490" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1hu26x3_di" bpmnElement="DataOutputAssociation_1hu26x3">
+        <di:waypoint x="580" y="330" />
+        <di:waypoint x="640" y="450" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

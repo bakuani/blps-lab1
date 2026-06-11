@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  targetNamespace="http://callmeani.urasha.ru/blps/camunda">
+
+  <bpmn:process id="MonthlyFeeCycleProcess" name="Цикл абонентской платы" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:laneSet id="LaneSet_MonthlyFeeCycle">
+      <bpmn:lane id="Lane_MFC_Timer" name="Планировщик Camunda">
+        <bpmn:flowNodeRef>Timer_MonthlyFeeCycle</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MFC_App" name="Приложение">
+        <bpmn:flowNodeRef>Task_CreateMonthlyFeeRequests</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_MonthlyFeeCycle</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MFC_Db" name="База данных" />
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Timer_MonthlyFeeCycle" name="Таймер списаний">
+      <bpmn:outgoing>Flow_MFC_Timer_CreateRequests</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT30S</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_CreateMonthlyFeeRequests" name="Создать заявки на списание" camunda:type="external" camunda:topic="create-monthly-fee-requests">
+      <bpmn:incoming>Flow_MFC_Timer_CreateRequests</bpmn:incoming>
+      <bpmn:outgoing>Flow_MFC_CreateRequests_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="End_MonthlyFeeCycle" name="Заявки созданы">
+      <bpmn:incoming>Flow_MFC_CreateRequests_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:dataStoreReference id="DS_MFC_Subscriber" name="subscriber" />
+    <bpmn:dataStoreReference id="DS_MFC_Request" name="monthly_fee_charge_request" />
+
+    <bpmn:sequenceFlow id="Flow_MFC_Timer_CreateRequests" sourceRef="Timer_MonthlyFeeCycle" targetRef="Task_CreateMonthlyFeeRequests" />
+    <bpmn:sequenceFlow id="Flow_MFC_CreateRequests_End" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="End_MonthlyFeeCycle" />
+
+    <bpmn:association id="Assoc_MFC_Create_Subscriber" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="DS_MFC_Subscriber" associationDirection="One" />
+    <bpmn:association id="Assoc_MFC_Create_Request" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="DS_MFC_Request" associationDirection="One" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeCycleProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MonthlyFeeCycleProcess" bpmnElement="MonthlyFeeCycleProcess">
+      <bpmndi:BPMNShape id="Lane_MFC_Timer_di" bpmnElement="Lane_MFC_Timer" isHorizontal="true">
+        <dc:Bounds x="100" y="60" width="580" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_MFC_App_di" bpmnElement="Lane_MFC_App" isHorizontal="true">
+        <dc:Bounds x="100" y="200" width="580" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_MFC_Db_di" bpmnElement="Lane_MFC_Db" isHorizontal="true">
+        <dc:Bounds x="100" y="380" width="580" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_MonthlyFeeCycle_di" bpmnElement="Timer_MonthlyFeeCycle">
+        <dc:Bounds x="150" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateMonthlyFeeRequests_di" bpmnElement="Task_CreateMonthlyFeeRequests">
+        <dc:Bounds x="250" y="250" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_MonthlyFeeCycle_di" bpmnElement="End_MonthlyFeeCycle">
+        <dc:Bounds x="470" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MFC_Subscriber_di" bpmnElement="DS_MFC_Subscriber">
+        <dc:Bounds x="260" y="450" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MFC_Request_di" bpmnElement="DS_MFC_Request">
+        <dc:Bounds x="360" y="450" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_MFC_Timer_CreateRequests_di" bpmnElement="Flow_MFC_Timer_CreateRequests">
+        <di:waypoint x="186" y="130" />
+        <di:waypoint x="220" y="130" />
+        <di:waypoint x="220" y="290" />
+        <di:waypoint x="250" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MFC_CreateRequests_End_di" bpmnElement="Flow_MFC_CreateRequests_End">
+        <di:waypoint x="410" y="290" />
+        <di:waypoint x="470" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MFC_Create_Subscriber_di" bpmnElement="Assoc_MFC_Create_Subscriber">
+        <di:waypoint x="300" y="330" />
+        <di:waypoint x="285" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MFC_Create_Request_di" bpmnElement="Assoc_MFC_Create_Request">
+        <di:waypoint x="360" y="330" />
+        <di:waypoint x="385" y="450" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

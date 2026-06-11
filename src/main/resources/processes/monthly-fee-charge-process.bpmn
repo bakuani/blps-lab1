@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
+  <bpmn:process id="MonthlyFeeChargeProcess" name="Списание абонентской платы" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:laneSet id="LaneSet_MonthlyFeeCharge">
+      <bpmn:lane id="Lane_MF_Db" name="База данных" />
+      <bpmn:lane id="Lane_MF_App" name="Обработка">
+        <bpmn:flowNodeRef>Task_CreateDolibarrInvoice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ChargeMonthlyFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AuditMonthlyFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SyncDolibarrInvoice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_MonthlyFeeCharge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MonthlyFeeSucceeded</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MF_Initiator" name="Приложение">
+        <bpmn:flowNodeRef>Start_MonthlyFeeCharge</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_MonthlyFeeCharge" name="Начать списание">
+      <bpmn:outgoing>Flow_MF_Start_CreateInvoice</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_CreateDolibarrInvoice" name="Создать счет Dolibarr" camunda:type="external" camunda:topic="create-dolibarr-invoice">
+      <bpmn:incoming>Flow_MF_Start_CreateInvoice</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_CreateInvoice_Charge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ChargeMonthlyFee" name="Списать абонентскую плату" camunda:type="external" camunda:topic="charge-monthly-fee">
+      <bpmn:incoming>Flow_MF_CreateInvoice_Charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_Charge_Gateway</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1ohntua">
+        <bpmn:targetRef>DS_MF_Request</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_MonthlyFeeSucceeded" name="Списание успешно?">
+      <bpmn:incoming>Flow_MF_Charge_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_Success_SyncInvoice</bpmn:outgoing>
+      <bpmn:outgoing>Flow_MF_Failed_Audit</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_SyncDolibarrInvoice" name="Синхронизировать счет Dolibarr" camunda:type="external" camunda:topic="sync-dolibarr-invoice">
+      <bpmn:incoming>Flow_MF_Success_SyncInvoice</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_Sync_Audit</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_AuditMonthlyFee" name="Записать аудит EIS" camunda:type="external" camunda:topic="publish-eis-audit">
+      <bpmn:incoming>Flow_MF_Sync_Audit</bpmn:incoming>
+      <bpmn:incoming>Flow_MF_Failed_Audit</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_Audit_End</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_180n54d">
+        <bpmn:targetRef>DS_MF_EisAudit</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_MonthlyFeeCharge" name="Списание завершено">
+      <bpmn:incoming>Flow_MF_Audit_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DS_MF_Request" name="monthly_fee_charge_request" />
+    <bpmn:dataStoreReference id="DS_MF_DolibarrInvoice" name="dolibarr_invoice" />
+    <bpmn:dataStoreReference id="DS_MF_Subscriber" name="subscriber" />
+    <bpmn:dataStoreReference id="DS_MF_BillingTransaction" name="billing_transaction" />
+    <bpmn:dataStoreReference id="DS_MF_NotificationEvent" name="notification_event" />
+    <bpmn:dataStoreReference id="DS_MF_EisAudit" name="eis_audit" />
+    <bpmn:sequenceFlow id="Flow_MF_Start_CreateInvoice" sourceRef="Start_MonthlyFeeCharge" targetRef="Task_CreateDolibarrInvoice" />
+    <bpmn:sequenceFlow id="Flow_MF_CreateInvoice_Charge" sourceRef="Task_CreateDolibarrInvoice" targetRef="Task_ChargeMonthlyFee" />
+    <bpmn:sequenceFlow id="Flow_MF_Charge_Gateway" sourceRef="Task_ChargeMonthlyFee" targetRef="Gateway_MonthlyFeeSucceeded" />
+    <bpmn:sequenceFlow id="Flow_MF_Success_SyncInvoice" name="Да" sourceRef="Gateway_MonthlyFeeSucceeded" targetRef="Task_SyncDolibarrInvoice">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${monthlyFeeSucceeded}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_MF_Failed_Audit" name="Нет" sourceRef="Gateway_MonthlyFeeSucceeded" targetRef="Task_AuditMonthlyFee">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!monthlyFeeSucceeded}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_MF_Sync_Audit" sourceRef="Task_SyncDolibarrInvoice" targetRef="Task_AuditMonthlyFee" />
+    <bpmn:sequenceFlow id="Flow_MF_Audit_End" sourceRef="Task_AuditMonthlyFee" targetRef="End_MonthlyFeeCharge" />
+    <bpmn:association id="Assoc_MF_CreateInvoice_Request" associationDirection="One" sourceRef="Task_CreateDolibarrInvoice" targetRef="DS_MF_Request" />
+    <bpmn:association id="Assoc_MF_CreateInvoice_Dolibarr" associationDirection="One" sourceRef="Task_CreateDolibarrInvoice" targetRef="DS_MF_DolibarrInvoice" />
+    <bpmn:association id="Assoc_MF_Charge_Subscriber" associationDirection="One" sourceRef="Task_ChargeMonthlyFee" targetRef="DS_MF_Subscriber" />
+    <bpmn:association id="Assoc_MF_Charge_Billing" associationDirection="One" sourceRef="Task_ChargeMonthlyFee" targetRef="DS_MF_BillingTransaction" />
+    <bpmn:association id="Assoc_MF_Charge_Notification" associationDirection="One" sourceRef="Task_ChargeMonthlyFee" targetRef="DS_MF_NotificationEvent" />
+    <bpmn:association id="Assoc_MF_Sync_Dolibarr" associationDirection="One" sourceRef="Task_SyncDolibarrInvoice" targetRef="DS_MF_DolibarrInvoice" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeChargeProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MonthlyFeeChargeProcess" bpmnElement="MonthlyFeeChargeProcess">
+      <bpmndi:BPMNShape id="Lane_MF_Db_di" bpmnElement="Lane_MF_Db" isHorizontal="true">
+        <dc:Bounds x="160" y="380" width="1180" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_MF_App_di" bpmnElement="Lane_MF_App" isHorizontal="true">
+        <dc:Bounds x="160" y="180" width="1180" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_MF_Initiator_di" bpmnElement="Lane_MF_Initiator" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="1180" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_MonthlyFeeCharge_di" bpmnElement="Start_MonthlyFeeCharge">
+        <dc:Bounds x="210" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="185" y="148" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateDolibarrInvoice_di" bpmnElement="Task_CreateDolibarrInvoice">
+        <dc:Bounds x="310" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeMonthlyFee_di" bpmnElement="Task_ChargeMonthlyFee">
+        <dc:Bounds x="500" y="250" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MonthlyFeeSucceeded_di" bpmnElement="Gateway_MonthlyFeeSucceeded" isMarkerVisible="true">
+        <dc:Bounds x="690" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="689" y="227.5" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditMonthlyFee_di" bpmnElement="Task_AuditMonthlyFee">
+        <dc:Bounds x="1000" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_MonthlyFeeCharge_di" bpmnElement="End_MonthlyFeeCharge">
+        <dc:Bounds x="1200" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1190" y="308" width="57" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_Request_di" bpmnElement="DS_MF_Request">
+        <dc:Bounds x="320" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="303" y="500" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_DolibarrInvoice_di" bpmnElement="DS_MF_DolibarrInvoice">
+        <dc:Bounds x="440" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="426" y="513" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_Subscriber_di" bpmnElement="DS_MF_Subscriber">
+        <dc:Bounds x="515" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="515" y="495" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_BillingTransaction_di" bpmnElement="DS_MF_BillingTransaction">
+        <dc:Bounds x="615" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="596" y="485" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_NotificationEvent_di" bpmnElement="DS_MF_NotificationEvent">
+        <dc:Bounds x="715" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="697" y="485" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_MF_EisAudit_di" bpmnElement="DS_MF_EisAudit">
+        <dc:Bounds x="1105" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1108" y="495" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SyncDolibarrInvoice_di" bpmnElement="Task_SyncDolibarrInvoice">
+        <dc:Bounds x="800" y="250" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_MF_Charge_Subscriber_di" bpmnElement="Assoc_MF_Charge_Subscriber">
+        <di:waypoint x="565" y="330" />
+        <di:waypoint x="546" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MF_Charge_Billing_di" bpmnElement="Assoc_MF_Charge_Billing">
+        <di:waypoint x="608" y="330" />
+        <di:waypoint x="648" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MF_Charge_Notification_di" bpmnElement="Assoc_MF_Charge_Notification">
+        <di:waypoint x="619" y="330" />
+        <di:waypoint x="740" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MF_Sync_Dolibarr_di" bpmnElement="Assoc_MF_Sync_Dolibarr">
+        <di:waypoint x="875" y="330" />
+        <di:waypoint x="875" y="530" />
+        <di:waypoint x="465" y="530" />
+        <di:waypoint x="465" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Start_CreateInvoice_di" bpmnElement="Flow_MF_Start_CreateInvoice">
+        <di:waypoint x="246" y="130" />
+        <di:waypoint x="280" y="130" />
+        <di:waypoint x="280" y="290" />
+        <di:waypoint x="310" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_CreateInvoice_Charge_di" bpmnElement="Flow_MF_CreateInvoice_Charge">
+        <di:waypoint x="450" y="290" />
+        <di:waypoint x="500" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Charge_Gateway_di" bpmnElement="Flow_MF_Charge_Gateway">
+        <di:waypoint x="650" y="290" />
+        <di:waypoint x="690" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Success_SyncInvoice_di" bpmnElement="Flow_MF_Success_SyncInvoice">
+        <di:waypoint x="740" y="290" />
+        <di:waypoint x="800" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="742" y="273" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Failed_Audit_di" bpmnElement="Flow_MF_Failed_Audit">
+        <di:waypoint x="715" y="315" />
+        <di:waypoint x="715" y="355" />
+        <di:waypoint x="1070" y="355" />
+        <di:waypoint x="1070" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="330" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Sync_Audit_di" bpmnElement="Flow_MF_Sync_Audit">
+        <di:waypoint x="950" y="290" />
+        <di:waypoint x="1000" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Audit_End_di" bpmnElement="Flow_MF_Audit_End">
+        <di:waypoint x="1140" y="290" />
+        <di:waypoint x="1200" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MF_CreateInvoice_Request_di" bpmnElement="Assoc_MF_CreateInvoice_Request">
+        <di:waypoint x="360" y="330" />
+        <di:waypoint x="345" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_MF_CreateInvoice_Dolibarr_di" bpmnElement="Assoc_MF_CreateInvoice_Dolibarr">
+        <di:waypoint x="410" y="330" />
+        <di:waypoint x="465" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_180n54d_di" bpmnElement="DataOutputAssociation_180n54d">
+        <di:waypoint x="1129" y="330" />
+        <di:waypoint x="1129" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1ohntua_di" bpmnElement="DataOutputAssociation_1ohntua">
+        <di:waypoint x="538" y="330" />
+        <di:waypoint x="370" y="460" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

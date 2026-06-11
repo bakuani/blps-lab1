@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
+  <bpmn:process id="TariffChangeProcess" name="Смена тарифа" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:laneSet id="LaneSet_TariffChange">
+      <bpmn:lane id="Lane_Tariff_Db" name="База данных" />
+      <bpmn:lane id="Lane_Tariff_App" name="Приложение">
+        <bpmn:flowNodeRef>Task_ValidateTariffChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TariffChargesMerge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ChargeNewMonthlyFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateSubscriberTariff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyTariffChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AuditTariffChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ChargeSwitchFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_HasSwitchFee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_TariffChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CanChangeTariff</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Tariff_User" name="Пользователь">
+        <bpmn:flowNodeRef>UserTask_TariffChangeForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_TariffChange</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_TariffChange" name="Начать смену тарифа">
+      <bpmn:outgoing>Flow_T_Start_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_TariffChangeForm" name="Подтвердить смену тарифа" camunda:candidateGroups="SUBSCRIBER,OPERATOR,ADMIN">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="subscriberId" label="ID абонента" type="long" />
+          <camunda:formField id="targetTariffId" label="ID нового тарифа" type="long" />
+          <camunda:formField id="options" label="Опции тарифа" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Start_Form</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Form_Validate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ValidateTariffChange" name="Проверить смену тарифа" camunda:type="external" camunda:topic="validate-tariff-change">
+      <bpmn:incoming>Flow_T_Form_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Validate_CanChange</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_00pv7k7">
+        <bpmn:targetRef>DS_Tariff_Subscriber</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_CanChangeTariff" name="Смена разрешена?">
+      <bpmn:incoming>Flow_T_Validate_CanChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_CanChange_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_T_CanChange_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_HasSwitchFee" name="Есть плата за смену?">
+      <bpmn:incoming>Flow_T_CanChange_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_SwitchFee_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_T_SwitchFee_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ChargeSwitchFee" name="Списать плату за смену" camunda:type="external" camunda:topic="charge-switch-fee">
+      <bpmn:incoming>Flow_T_SwitchFee_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_SwitchFee_Merge</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_0905iez">
+        <bpmn:targetRef>DS_Tariff_Subscriber</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_TariffChargesMerge">
+      <bpmn:incoming>Flow_T_SwitchFee_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_T_SwitchFee_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Merge_MonthlyFee</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ChargeNewMonthlyFee" name="Списать абонентскую плату тарифа" camunda:type="external" camunda:topic="charge-new-monthly-fee">
+      <bpmn:incoming>Flow_T_Merge_MonthlyFee</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Monthly_UpdateTariff</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_UpdateSubscriberTariff" name="Обновить тариф абонента" camunda:type="external" camunda:topic="update-subscriber-tariff">
+      <bpmn:incoming>Flow_T_Monthly_UpdateTariff</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Update_Notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="Task_NotifyTariffChange" name="Отправить уведомление" camunda:type="external" camunda:topic="send-notification">
+      <bpmn:incoming>Flow_T_Update_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Notify_Audit</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Task_AuditTariffChange" name="Записать аудит EIS" camunda:type="external" camunda:topic="publish-eis-audit">
+      <bpmn:incoming>Flow_T_Notify_Audit</bpmn:incoming>
+      <bpmn:incoming>Flow_T_CanChange_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Audit_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_TariffChange" name="Смена тарифа завершена">
+      <bpmn:incoming>Flow_T_Audit_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="DS_Tariff_Request" name="tariff_change_request" />
+    <bpmn:dataStoreReference id="DS_Tariff_Subscriber" name="subscriber" />
+    <bpmn:dataStoreReference id="DS_Tariff_Tariff" name="tariff" />
+    <bpmn:dataStoreReference id="DS_Tariff_BillingTransaction" name="billing_transaction" />
+    <bpmn:dataStoreReference id="DS_Tariff_NotificationEvent" name="notification_event" />
+    <bpmn:dataStoreReference id="DS_Tariff_EisAudit" name="eis_audit" />
+    <bpmn:sequenceFlow id="Flow_T_Start_Form" sourceRef="Start_TariffChange" targetRef="UserTask_TariffChangeForm" />
+    <bpmn:sequenceFlow id="Flow_T_Form_Validate" sourceRef="UserTask_TariffChangeForm" targetRef="Task_ValidateTariffChange" />
+    <bpmn:sequenceFlow id="Flow_T_Validate_CanChange" sourceRef="Task_ValidateTariffChange" targetRef="Gateway_CanChangeTariff" />
+    <bpmn:sequenceFlow id="Flow_T_CanChange_Yes" name="Да" sourceRef="Gateway_CanChangeTariff" targetRef="Gateway_HasSwitchFee">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canChangeTariff}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_T_CanChange_No" name="Нет" sourceRef="Gateway_CanChangeTariff" targetRef="Task_AuditTariffChange">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!canChangeTariff}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_T_SwitchFee_Yes" name="Да" sourceRef="Gateway_HasSwitchFee" targetRef="Task_ChargeSwitchFee">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasSwitchFee}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_T_SwitchFee_No" name="Нет" sourceRef="Gateway_HasSwitchFee" targetRef="Gateway_TariffChargesMerge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!hasSwitchFee}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_T_SwitchFee_Merge" sourceRef="Task_ChargeSwitchFee" targetRef="Gateway_TariffChargesMerge" />
+    <bpmn:sequenceFlow id="Flow_T_Merge_MonthlyFee" sourceRef="Gateway_TariffChargesMerge" targetRef="Task_ChargeNewMonthlyFee" />
+    <bpmn:sequenceFlow id="Flow_T_Monthly_UpdateTariff" sourceRef="Task_ChargeNewMonthlyFee" targetRef="Task_UpdateSubscriberTariff" />
+    <bpmn:sequenceFlow id="Flow_T_Update_Notify" sourceRef="Task_UpdateSubscriberTariff" targetRef="Task_NotifyTariffChange" />
+    <bpmn:sequenceFlow id="Flow_T_Notify_Audit" sourceRef="Task_NotifyTariffChange" targetRef="Task_AuditTariffChange" />
+    <bpmn:sequenceFlow id="Flow_T_Audit_End" sourceRef="Task_AuditTariffChange" targetRef="End_TariffChange" />
+    <bpmn:association id="Assoc_T_Validate_Request" associationDirection="One" sourceRef="Task_ValidateTariffChange" targetRef="DS_Tariff_Request" />
+    <bpmn:association id="Assoc_T_Validate_Tariff" associationDirection="One" sourceRef="Task_ValidateTariffChange" targetRef="DS_Tariff_Tariff" />
+    <bpmn:association id="Assoc_T_ChargeSwitch_Billing" associationDirection="One" sourceRef="Task_ChargeSwitchFee" targetRef="DS_Tariff_BillingTransaction" />
+    <bpmn:association id="Assoc_T_ChargeMonthly_Billing" associationDirection="One" sourceRef="Task_ChargeNewMonthlyFee" targetRef="DS_Tariff_BillingTransaction" />
+    <bpmn:association id="Assoc_T_Update_Subscriber" associationDirection="One" sourceRef="Task_UpdateSubscriberTariff" targetRef="DS_Tariff_Subscriber" />
+    <bpmn:association id="Assoc_T_Notify_Event" associationDirection="One" sourceRef="Task_NotifyTariffChange" targetRef="DS_Tariff_NotificationEvent" />
+    <bpmn:association id="Assoc_T_Audit_Eis" associationDirection="One" sourceRef="Task_AuditTariffChange" targetRef="DS_Tariff_EisAudit" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_TariffChangeProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_TariffChangeProcess" bpmnElement="TariffChangeProcess">
+      <bpmndi:BPMNShape id="Lane_Tariff_Db_di" bpmnElement="Lane_Tariff_Db" isHorizontal="true">
+        <dc:Bounds x="160" y="380" width="1860" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Tariff_App_di" bpmnElement="Lane_Tariff_App" isHorizontal="true">
+        <dc:Bounds x="160" y="190" width="1860" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Tariff_User_di" bpmnElement="Lane_Tariff_User" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="1860" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_TariffChange_di" bpmnElement="Start_TariffChange">
+        <dc:Bounds x="210" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="193" y="148" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_TariffChangeForm_di" bpmnElement="UserTask_TariffChangeForm">
+        <dc:Bounds x="290" y="90" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateTariffChange_di" bpmnElement="Task_ValidateTariffChange">
+        <dc:Bounds x="470" y="250" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CanChangeTariff_di" bpmnElement="Gateway_CanChangeTariff" isMarkerVisible="true">
+        <dc:Bounds x="650" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="643" y="227.5" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasSwitchFee_di" bpmnElement="Gateway_HasSwitchFee" isMarkerVisible="true">
+        <dc:Bounds x="770" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="760" y="315" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TariffChargesMerge_di" bpmnElement="Gateway_TariffChargesMerge" isMarkerVisible="true">
+        <dc:Bounds x="1080" y="265" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeNewMonthlyFee_di" bpmnElement="Task_ChargeNewMonthlyFee">
+        <dc:Bounds x="1180" y="250" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSubscriberTariff_di" bpmnElement="Task_UpdateSubscriberTariff">
+        <dc:Bounds x="1390" y="250" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyTariffChange_di" bpmnElement="Task_NotifyTariffChange">
+        <dc:Bounds x="1590" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AuditTariffChange_di" bpmnElement="Task_AuditTariffChange">
+        <dc:Bounds x="1780" y="250" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_TariffChange_di" bpmnElement="End_TariffChange">
+        <dc:Bounds x="1960" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1940" y="308" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_NotificationEvent_di" bpmnElement="DS_Tariff_NotificationEvent">
+        <dc:Bounds x="1635" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1617" y="500" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_EisAudit_di" bpmnElement="DS_Tariff_EisAudit">
+        <dc:Bounds x="1825" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1828" y="500" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_Request_di" bpmnElement="DS_Tariff_Request">
+        <dc:Bounds x="375" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="357" y="500" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_Tariff_di" bpmnElement="DS_Tariff_Tariff">
+        <dc:Bounds x="510" y="450" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="524" y="500" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_Subscriber_di" bpmnElement="DS_Tariff_Subscriber">
+        <dc:Bounds x="770" y="435" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="724" y="493" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DS_Tariff_BillingTransaction_di" bpmnElement="DS_Tariff_BillingTransaction">
+        <dc:Bounds x="1105" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1086" y="525" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ChargeSwitchFee_di" bpmnElement="Task_ChargeSwitchFee">
+        <dc:Bounds x="890" y="200" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_T_Validate_Request_di" bpmnElement="Assoc_T_Validate_Request">
+        <di:waypoint x="492" y="330" />
+        <di:waypoint x="414" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_Validate_Tariff_di" bpmnElement="Assoc_T_Validate_Tariff">
+        <di:waypoint x="535" y="330" />
+        <di:waypoint x="535" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_Update_Subscriber_di" bpmnElement="Assoc_T_Update_Subscriber">
+        <di:waypoint x="1465" y="330" />
+        <di:waypoint x="1465" y="550" />
+        <di:waypoint x="795" y="550" />
+        <di:waypoint x="795" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_ChargeMonthly_Billing_di" bpmnElement="Assoc_T_ChargeMonthly_Billing">
+        <di:waypoint x="1260" y="330" />
+        <di:waypoint x="1130" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_ChargeSwitch_Billing_di" bpmnElement="Assoc_T_ChargeSwitch_Billing">
+        <di:waypoint x="961" y="280" />
+        <di:waypoint x="1129" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Start_Form_di" bpmnElement="Flow_T_Start_Form">
+        <di:waypoint x="246" y="130" />
+        <di:waypoint x="290" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Form_Validate_di" bpmnElement="Flow_T_Form_Validate">
+        <di:waypoint x="420" y="130" />
+        <di:waypoint x="445" y="130" />
+        <di:waypoint x="445" y="290" />
+        <di:waypoint x="470" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Validate_CanChange_di" bpmnElement="Flow_T_Validate_CanChange">
+        <di:waypoint x="600" y="290" />
+        <di:waypoint x="650" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CanChange_Yes_di" bpmnElement="Flow_T_CanChange_Yes">
+        <di:waypoint x="700" y="290" />
+        <di:waypoint x="770" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="728" y="265" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_CanChange_No_di" bpmnElement="Flow_T_CanChange_No">
+        <di:waypoint x="675" y="315" />
+        <di:waypoint x="675" y="355" />
+        <di:waypoint x="1820" y="355" />
+        <di:waypoint x="1820" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="333" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_Yes_di" bpmnElement="Flow_T_SwitchFee_Yes">
+        <di:waypoint x="795" y="265" />
+        <di:waypoint x="795" y="240" />
+        <di:waypoint x="890" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="789" y="223" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_No_di" bpmnElement="Flow_T_SwitchFee_No">
+        <di:waypoint x="820" y="290" />
+        <di:waypoint x="1080" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="830" y="293" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_SwitchFee_Merge_di" bpmnElement="Flow_T_SwitchFee_Merge">
+        <di:waypoint x="1030" y="240" />
+        <di:waypoint x="1105" y="240" />
+        <di:waypoint x="1105" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Merge_MonthlyFee_di" bpmnElement="Flow_T_Merge_MonthlyFee">
+        <di:waypoint x="1130" y="290" />
+        <di:waypoint x="1180" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Monthly_UpdateTariff_di" bpmnElement="Flow_T_Monthly_UpdateTariff">
+        <di:waypoint x="1340" y="290" />
+        <di:waypoint x="1390" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Update_Notify_di" bpmnElement="Flow_T_Update_Notify">
+        <di:waypoint x="1540" y="290" />
+        <di:waypoint x="1590" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Notify_Audit_di" bpmnElement="Flow_T_Notify_Audit">
+        <di:waypoint x="1730" y="290" />
+        <di:waypoint x="1780" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Audit_End_di" bpmnElement="Flow_T_Audit_End">
+        <di:waypoint x="1920" y="290" />
+        <di:waypoint x="1960" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_Notify_Event_di" bpmnElement="Assoc_T_Notify_Event">
+        <di:waypoint x="1660" y="330" />
+        <di:waypoint x="1660" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_T_Audit_Eis_di" bpmnElement="Assoc_T_Audit_Eis">
+        <di:waypoint x="1850" y="330" />
+        <di:waypoint x="1850" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_00pv7k7_di" bpmnElement="DataOutputAssociation_00pv7k7">
+        <di:waypoint x="551" y="330" />
+        <di:waypoint x="640" y="450" />
+        <di:waypoint x="770" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0905iez_di" bpmnElement="DataOutputAssociation_0905iez">
+        <di:waypoint x="951" y="280" />
+        <di:waypoint x="900" y="440" />
+        <di:waypoint x="820" y="440" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
