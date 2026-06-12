@@ -39,7 +39,7 @@
                                        "dolibarr_api_key":  "test_api_key",
                                        "dolibarr_thirdparty_id":  1,
                                        "dolibarr_invoice_id":  1,
-                                       "camunda_base":  "http://127.0.0.1:8082/engine-rest",
+                                       "camunda_base":  "http://localhost:8082/engine-rest",
                                        "camunda_deployment_name":  "blps-camunda-processes",
                                        "camunda_process_instance_id":  "",
                                        "camunda_task_id":  "",
@@ -947,46 +947,10 @@
                           "name":  "Lab4 - Camunda BPMS Demo"
                       },
                       {
-                          "_id":  "req_camunda_version",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "1) Camunda engine version (expect 200)",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/version",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_deployments",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "2) Deployments (expect blps-camunda-processes)",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/deployment?name={{ _.camunda_deployment_name }}\u0026sortBy=deploymentTime\u0026sortOrder=desc",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_process_definitions",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "3) Process definitions (expect 4 BPMN processes)",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/process-definition?latestVersion=true\u0026sortBy=key\u0026sortOrder=asc",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_tariff_bpmn_xml",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "4) TariffChangeProcess BPMN XML",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/process-definition/key/TariffChangeProcess/xml",
-                          "headers":  []
-                      },
-                      {
                           "_id":  "req_camunda_submit_tariff_via_blps",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "5) BLPS submit tariff change -> starts TariffChangeProcess",
+                          "name":  "1) Submit tariff change",
                           "method":  "POST",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff/change",
                           "body":  {
@@ -1008,7 +972,7 @@
                           "_id":  "req_camunda_tariff_status_via_blps",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "6) BLPS tariff request status (copy requestId first)",
+                          "name":  "2) BLPS tariff status",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/tariff-change-requests/{{ _.tariff_change_request_id }}",
                           "headers":  [
@@ -1019,19 +983,10 @@
                                       ]
                       },
                       {
-                          "_id":  "req_camunda_tariff_active_by_business_key",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "7) Camunda active tariff instance by businessKey",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/process-instance?businessKey=tariff-change-{{ _.tariff_change_request_id }}",
-                          "headers":  []
-                      },
-                      {
                           "_id":  "req_camunda_tariff_history_by_business_key",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "8) Camunda tariff history by businessKey",
+                          "name":  "3) Camunda tariff history",
                           "method":  "GET",
                           "url":  "{{ _.camunda_base }}/history/process-instance?processInstanceBusinessKey=tariff-change-{{ _.tariff_change_request_id }}\u0026sortBy=startTime\u0026sortOrder=desc\u0026maxResults=5",
                           "headers":  []
@@ -1040,7 +995,7 @@
                           "_id":  "req_camunda_submit_feature_via_blps",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "9) BLPS submit feature disable -> starts FeatureDisableProcess",
+                          "name":  "4) Submit feature disable",
                           "method":  "POST",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/features/{{ _.feature_id }}/disable",
                           "headers":  [
@@ -1054,7 +1009,7 @@
                           "_id":  "req_camunda_feature_status_via_blps",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "10) BLPS feature request status (copy requestId first)",
+                          "name":  "5) BLPS feature status",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/feature-disable-requests/{{ _.feature_disable_request_id }}",
                           "headers":  [
@@ -1068,7 +1023,7 @@
                           "_id":  "req_camunda_feature_history_by_business_key",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "11) Camunda feature history by businessKey",
+                          "name":  "6) Camunda feature history",
                           "method":  "GET",
                           "url":  "{{ _.camunda_base }}/history/process-instance?processInstanceBusinessKey=feature-disable-{{ _.feature_disable_request_id }}\u0026sortBy=startTime\u0026sortOrder=desc\u0026maxResults=5",
                           "headers":  []
@@ -1077,23 +1032,9 @@
                           "_id":  "req_camunda_monthly_recent_via_blps",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "12) BLPS monthly fee requests (timer-created)",
+                          "name":  "7) Monthly fee requests",
                           "method":  "GET",
                           "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests",
-                          "headers":  [
-                                          {
-                                              "name":  "Authorization",
-                                              "value":  "Bearer {{ _.active_token }}"
-                                          }
-                                      ]
-                      },
-                      {
-                          "_id":  "req_camunda_monthly_status_via_blps",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "13) BLPS monthly fee status (copy requestId first)",
-                          "method":  "GET",
-                          "url":  "{{ _.base_url }}/api/v1/subscribers/{{ _.subscriber_id }}/monthly-fee-requests/{{ _.monthly_fee_request_id }}",
                           "headers":  [
                                           {
                                               "name":  "Authorization",
@@ -1105,7 +1046,7 @@
                           "_id":  "req_camunda_monthly_history_by_business_key",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "14) Camunda monthly fee history by businessKey",
+                          "name":  "8) Camunda monthly fee history",
                           "method":  "GET",
                           "url":  "{{ _.camunda_base }}/history/process-instance?processInstanceBusinessKey=monthly-fee-{{ _.monthly_fee_request_id }}\u0026sortBy=startTime\u0026sortOrder=desc\u0026maxResults=5",
                           "headers":  []
@@ -1114,72 +1055,18 @@
                           "_id":  "req_camunda_activity_history",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "15) Activity history for selected processInstanceId",
+                          "name":  "9) Activity history",
                           "method":  "GET",
                           "url":  "{{ _.camunda_base }}/history/activity-instance?processInstanceId={{ _.camunda_process_instance_id }}\u0026sortBy=startTime\u0026sortOrder=asc",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_user_tasks",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "16) User tasks / generated forms",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/task?sortBy=created\u0026sortOrder=desc\u0026maxResults=20",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_complete_user_task",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "17) Complete selected user task (optional manual form step)",
-                          "method":  "POST",
-                          "url":  "{{ _.camunda_base }}/task/{{ _.camunda_task_id }}/complete",
-                          "body":  {
-                                       "mimeType":  "application/json",
-                                       "text":  "{\n  \"variables\": {\n    \"subscriberId\": { \"value\": {{ _.subscriber_id }}, \"type\": \"Long\" },\n    \"targetTariffId\": { \"value\": {{ _.tariff_id }}, \"type\": \"Long\" },\n    \"featureId\": { \"value\": {{ _.feature_id }}, \"type\": \"Long\" },\n    \"options\": { \"value\": \"{minutes=+200, internet=+20GB}\", \"type\": \"String\" }\n  }\n}"
-                                   },
-                          "headers":  [
-                                          {
-                                              "name":  "Content-Type",
-                                              "value":  "application/json"
-                                          }
-                                      ]
-                      },
-                      {
-                          "_id":  "req_camunda_external_tasks",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "18) External tasks visible to workers",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/external-task?maxResults=20",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_incidents",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "19) Incidents / exhausted retries",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/incident",
                           "headers":  []
                       },
                       {
                           "_id":  "req_camunda_monthly_job_definitions",
                           "_type":  "request",
                           "parentId":  "fld_camunda_demo",
-                          "name":  "20) MonthlyFeeCycleProcess timer job definition",
+                          "name":  "10) MonthlyFeeCycleProcess timer job definition",
                           "method":  "GET",
                           "url":  "{{ _.camunda_base }}/job-definition?processDefinitionKey=MonthlyFeeCycleProcess",
-                          "headers":  []
-                      },
-                      {
-                          "_id":  "req_camunda_monthly_jobs",
-                          "_type":  "request",
-                          "parentId":  "fld_camunda_demo",
-                          "name":  "21) MonthlyFeeCycleProcess timer jobs",
-                          "method":  "GET",
-                          "url":  "{{ _.camunda_base }}/job?processDefinitionKey=MonthlyFeeCycleProcess",
                           "headers":  []
                       }
                   ]
