@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import ru.urasha.callmeani.blps.config.CamundaProperties;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
