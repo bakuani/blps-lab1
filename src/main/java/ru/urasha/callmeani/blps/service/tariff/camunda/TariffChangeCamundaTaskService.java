@@ -1,7 +1,7 @@
 package ru.urasha.callmeani.blps.service.tariff.camunda;
 
-import ru.urasha.callmeani.blps.service.camunda.CamundaVariable;
-import ru.urasha.callmeani.blps.service.camunda.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
 
 import java.util.Map;
 

@@ -18,8 +18,8 @@ import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.billing.async.MonthlyFeeChargeAsyncOperations;
 import ru.urasha.callmeani.blps.service.billing.camunda.MonthlyFeeCamundaTaskService;
-import ru.urasha.callmeani.blps.service.camunda.CamundaVariable;
-import ru.urasha.callmeani.blps.service.camunda.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
 import ru.urasha.callmeani.blps.service.eis.DolibarrInvoiceService;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
@@ -29,12 +29,12 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.CREATED_MONTHLY_FEE_REQUESTS;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.MONTHLY_FEE_SUCCEEDED;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.MONTHLY_FEE_TERMINAL;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.OPERATION_AMOUNT;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.REQUEST_ID;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.of;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CREATED_MONTHLY_FEE_REQUESTS;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.MONTHLY_FEE_SUCCEEDED;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.MONTHLY_FEE_TERMINAL;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.REQUEST_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
 @Slf4j
 @Service

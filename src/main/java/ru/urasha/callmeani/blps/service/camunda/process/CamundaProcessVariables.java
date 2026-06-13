@@ -1,7 +1,8 @@
-package ru.urasha.callmeani.blps.service.camunda;
+package ru.urasha.callmeani.blps.service.camunda.process;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -11,9 +11,9 @@ import ru.urasha.callmeani.blps.domain.entity.MonthlyFeeChargeRequest;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
-import ru.urasha.callmeani.blps.service.camunda.CamundaProcessConstants;
-import ru.urasha.callmeani.blps.service.camunda.CamundaRestClient;
-import ru.urasha.callmeani.blps.service.camunda.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
+import ru.urasha.callmeani.blps.service.camunda.client.CamundaRestClient;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
 import java.time.OffsetDateTime;

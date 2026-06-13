@@ -15,8 +15,8 @@ import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
-import ru.urasha.callmeani.blps.service.camunda.CamundaVariable;
-import ru.urasha.callmeani.blps.service.camunda.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
@@ -28,12 +28,12 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.CAN_CHANGE_TARIFF;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.HAS_SWITCH_FEE;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.OPERATION_AMOUNT;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.OPERATION_SUCCESS;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.REQUEST_ID;
-import static ru.urasha.callmeani.blps.service.camunda.CamundaProcessVariables.of;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CAN_CHANGE_TARIFF;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.HAS_SWITCH_FEE;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_SUCCESS;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.REQUEST_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
 @Service
 @RequiredArgsConstructor

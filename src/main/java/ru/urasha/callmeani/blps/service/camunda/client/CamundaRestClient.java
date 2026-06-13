@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.service.camunda;
+package ru.urasha.callmeani.blps.service.camunda.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -6,6 +6,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import ru.urasha.callmeani.blps.config.CamundaProperties;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
 
 import java.util.List;
 import java.util.Map;

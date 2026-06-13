@@ -1,7 +1,11 @@
-package ru.urasha.callmeani.blps.service.camunda;
+package ru.urasha.callmeani.blps.service.camunda.external;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
+import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables;
 import ru.urasha.callmeani.blps.service.billing.camunda.MonthlyFeeCamundaTaskService;
 import ru.urasha.callmeani.blps.service.feature.camunda.FeatureDisableCamundaTaskService;
 import ru.urasha.callmeani.blps.service.tariff.camunda.TariffChangeCamundaTaskService;

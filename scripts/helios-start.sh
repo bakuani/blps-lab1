@@ -36,7 +36,7 @@ export RETRY_SCHEDULER_ENABLED="${RETRY_SCHEDULER_ENABLED:-false}"
 export EIS_DOLIBARR_TUNNEL_PORT="${EIS_DOLIBARR_TUNNEL_PORT:-28081}"
 export EIS_DOLIBARR_LOCAL_PORT="${EIS_DOLIBARR_LOCAL_PORT:-8081}"
 export EIS_DOLIBARR_URL="${EIS_DOLIBARR_URL:-http://127.0.0.1:${EIS_DOLIBARR_TUNNEL_PORT}}"
-export EIS_DOLIBARR_API_KEY="${EIS_DOLIBARR_API_KEY:-u2m9jlo8wHJB9j6pR1H8E60GUVqsKjS3}"
+export EIS_DOLIBARR_API_KEY="${EIS_DOLIBARR_API_KEY:-udm50OXE41xVGqq90rHMGIyA5vSgc569}"
 export EIS_DOLIBARR_FAIL_CLOSED="${EIS_DOLIBARR_FAIL_CLOSED:-true}"
 export EIS_DOLIBARR_CONNECT_TIMEOUT_MS="${EIS_DOLIBARR_CONNECT_TIMEOUT_MS:-3000}"
 export EIS_DOLIBARR_READ_TIMEOUT_MS="${EIS_DOLIBARR_READ_TIMEOUT_MS:-5000}"
@@ -45,7 +45,6 @@ export EIS_DOLIBARR_AUDIT_ENABLED="${EIS_DOLIBARR_AUDIT_ENABLED:-true}"
 export EIS_DOLIBARR_AUDIT_INTERACTION="${EIS_DOLIBARR_AUDIT_INTERACTION:-status}"
 
 unset _JAVA_OPTIONS || true
-# Avoid Spring Boot trying to reconfigure JUL/LogManager inside WildFly.
 export JAVA_OPTS="${JAVA_OPTS:--Xms128m -Xmx512m -Xss256k -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -Djava.net.preferIPv4Stack=true -Dorg.springframework.boot.logging.LoggingSystem=none -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dcom.sun.faces.enableThreading=false -Dorg.jboss.weld.bootstrap.concurrentDeployment=false -Dorg.jboss.weld.bootstrap.preloaderThreadPoolSize=0 -Dorg.jboss.weld.executor.threadPoolSize=1}"
 
 echo "[helios-start] WILDFLY_HOME=$WILDFLY_HOME"

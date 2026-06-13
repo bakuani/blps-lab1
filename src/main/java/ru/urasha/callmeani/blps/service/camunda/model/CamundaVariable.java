@@ -1,4 +1,4 @@
-package ru.urasha.callmeani.blps.service.camunda;
+package ru.urasha.callmeani.blps.service.camunda.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
