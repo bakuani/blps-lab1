@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
-  <bpmn:process id="MonthlyFeeChargeProcess" name="Списание абонентской платы" isExecutable="true" camunda:historyTimeToLive="30">
+  <bpmn:process id="MonthlyFeeChargeProcess" name="Списание абонентской платы" isExecutable="true" camunda:historyTimeToLive="30" camunda:candidateStarterGroups="SUBSCRIBER,OPERATOR,ADMIN">
     <bpmn:laneSet id="LaneSet_MonthlyFeeCharge">
       <bpmn:lane id="Lane_MF_Db" name="База данных" />
       <bpmn:lane id="Lane_MF_App" name="Обработка">
+        <bpmn:flowNodeRef>Task_EnsureMonthlyFeeRequest</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CreateDolibarrInvoice</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_ChargeMonthlyFee</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_AuditMonthlyFee</bpmn:flowNodeRef>
@@ -16,10 +17,20 @@
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_MonthlyFeeCharge" name="Начать списание">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="subscriberId" label="ID subscriber" type="long" />
+          <camunda:formField id="billingPeriod" label="Billing period" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:outgoing>Flow_MF_Start_CreateInvoice</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:serviceTask id="Task_CreateDolibarrInvoice" name="Создать счет Dolibarr" camunda:type="external" camunda:topic="create-dolibarr-invoice">
+    <bpmn:serviceTask id="Task_EnsureMonthlyFeeRequest" name="Ensure monthly fee request" camunda:type="external" camunda:topic="ensure-monthly-fee-request">
       <bpmn:incoming>Flow_MF_Start_CreateInvoice</bpmn:incoming>
+      <bpmn:outgoing>Flow_MF_Ensure_CreateInvoice</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_CreateDolibarrInvoice" name="Создать счет Dolibarr" camunda:type="external" camunda:topic="create-dolibarr-invoice">
+      <bpmn:incoming>Flow_MF_Ensure_CreateInvoice</bpmn:incoming>
       <bpmn:outgoing>Flow_MF_CreateInvoice_Charge</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:serviceTask id="Task_ChargeMonthlyFee" name="Списать абонентскую плату" camunda:type="external" camunda:topic="charge-monthly-fee">
@@ -55,7 +66,8 @@
     <bpmn:dataStoreReference id="DS_MF_BillingTransaction" name="billing_transaction" />
     <bpmn:dataStoreReference id="DS_MF_NotificationEvent" name="notification_event" />
     <bpmn:dataStoreReference id="DS_MF_EisAudit" name="eis_audit" />
-    <bpmn:sequenceFlow id="Flow_MF_Start_CreateInvoice" sourceRef="Start_MonthlyFeeCharge" targetRef="Task_CreateDolibarrInvoice" />
+    <bpmn:sequenceFlow id="Flow_MF_Start_CreateInvoice" sourceRef="Start_MonthlyFeeCharge" targetRef="Task_EnsureMonthlyFeeRequest" />
+    <bpmn:sequenceFlow id="Flow_MF_Ensure_CreateInvoice" sourceRef="Task_EnsureMonthlyFeeRequest" targetRef="Task_CreateDolibarrInvoice" />
     <bpmn:sequenceFlow id="Flow_MF_CreateInvoice_Charge" sourceRef="Task_CreateDolibarrInvoice" targetRef="Task_ChargeMonthlyFee" />
     <bpmn:sequenceFlow id="Flow_MF_Charge_Gateway" sourceRef="Task_ChargeMonthlyFee" targetRef="Gateway_MonthlyFeeSucceeded" />
     <bpmn:sequenceFlow id="Flow_MF_Success_SyncInvoice" name="Да" sourceRef="Gateway_MonthlyFeeSucceeded" targetRef="Task_SyncDolibarrInvoice">
@@ -89,6 +101,9 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="185" y="148" width="87" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnsureMonthlyFeeRequest_di" bpmnElement="Task_EnsureMonthlyFeeRequest">
+        <dc:Bounds x="310" y="90" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CreateDolibarrInvoice_di" bpmnElement="Task_CreateDolibarrInvoice">
         <dc:Bounds x="310" y="250" width="140" height="80" />
@@ -170,8 +185,12 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_MF_Start_CreateInvoice_di" bpmnElement="Flow_MF_Start_CreateInvoice">
         <di:waypoint x="246" y="130" />
-        <di:waypoint x="280" y="130" />
-        <di:waypoint x="280" y="290" />
+        <di:waypoint x="310" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MF_Ensure_CreateInvoice_di" bpmnElement="Flow_MF_Ensure_CreateInvoice">
+        <di:waypoint x="450" y="130" />
+        <di:waypoint x="470" y="130" />
+        <di:waypoint x="470" y="290" />
         <di:waypoint x="310" y="290" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_MF_CreateInvoice_Charge_di" bpmnElement="Flow_MF_CreateInvoice_Charge">

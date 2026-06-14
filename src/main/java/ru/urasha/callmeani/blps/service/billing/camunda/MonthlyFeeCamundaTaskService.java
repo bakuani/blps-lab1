@@ -9,6 +9,8 @@ public interface MonthlyFeeCamundaTaskService {
 
     Map<String, CamundaVariable> createMonthlyFeeRequests();
 
+    Map<String, CamundaVariable> ensureMonthlyFeeRequest(LockedExternalTask task);
+
     Map<String, CamundaVariable> createDolibarrInvoice(LockedExternalTask task);
 
     Map<String, CamundaVariable> chargeMonthlyFee(LockedExternalTask task);

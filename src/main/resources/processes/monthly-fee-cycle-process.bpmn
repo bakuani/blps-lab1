@@ -7,7 +7,7 @@
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   targetNamespace="http://callmeani.urasha.ru/blps/camunda">
 
-  <bpmn:process id="MonthlyFeeCycleProcess" name="Цикл абонентской платы" isExecutable="true" camunda:historyTimeToLive="30">
+  <bpmn:process id="MonthlyFeeCycleProcess" name="Цикл абонентской платы" isExecutable="true" camunda:historyTimeToLive="30" camunda:candidateStarterGroups="SUBSCRIBER,OPERATOR,ADMIN">
     <bpmn:laneSet id="LaneSet_MonthlyFeeCycle">
       <bpmn:lane id="Lane_MFC_Timer" name="Планировщик Camunda">
         <bpmn:flowNodeRef>Timer_MonthlyFeeCycle</bpmn:flowNodeRef>
@@ -43,6 +43,34 @@
 
     <bpmn:association id="Assoc_MFC_Create_Subscriber" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="DS_MFC_Subscriber" associationDirection="One" />
     <bpmn:association id="Assoc_MFC_Create_Request" sourceRef="Task_CreateMonthlyFeeRequests" targetRef="DS_MFC_Request" associationDirection="One" />
+  </bpmn:process>
+
+  <bpmn:process id="MonthlyFeeCycleManualProcess" name="Ручной запуск цикла абонентской платы" isExecutable="true" camunda:historyTimeToLive="30" camunda:candidateStarterGroups="SUBSCRIBER,OPERATOR,ADMIN">
+    <bpmn:laneSet id="LaneSet_MonthlyFeeCycleManual">
+      <bpmn:lane id="Lane_MFCM_User" name="Пользователь">
+        <bpmn:flowNodeRef>Start_MonthlyFeeCycleManual</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MFCM_App" name="Приложение">
+        <bpmn:flowNodeRef>Task_CreateMonthlyFeeRequestsManual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_MonthlyFeeCycleManual</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_MonthlyFeeCycleManual" name="Запустить цикл списаний">
+      <bpmn:outgoing>Flow_MFC_Manual_CreateRequests</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_CreateMonthlyFeeRequestsManual" name="Создать заявки на списание" camunda:type="external" camunda:topic="create-monthly-fee-requests">
+      <bpmn:incoming>Flow_MFC_Manual_CreateRequests</bpmn:incoming>
+      <bpmn:outgoing>Flow_MFC_Manual_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="End_MonthlyFeeCycleManual" name="Заявки созданы">
+      <bpmn:incoming>Flow_MFC_Manual_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_MFC_Manual_CreateRequests" sourceRef="Start_MonthlyFeeCycleManual" targetRef="Task_CreateMonthlyFeeRequestsManual" />
+    <bpmn:sequenceFlow id="Flow_MFC_Manual_End" sourceRef="Task_CreateMonthlyFeeRequestsManual" targetRef="End_MonthlyFeeCycleManual" />
   </bpmn:process>
 
   <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeCycleProcess">
@@ -88,6 +116,36 @@
       <bpmndi:BPMNEdge id="Assoc_MFC_Create_Request_di" bpmnElement="Assoc_MFC_Create_Request">
         <di:waypoint x="360" y="330" />
         <di:waypoint x="385" y="450" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MonthlyFeeCycleManualProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_MonthlyFeeCycleManualProcess" bpmnElement="MonthlyFeeCycleManualProcess">
+      <bpmndi:BPMNShape id="Lane_MFCM_User_di" bpmnElement="Lane_MFCM_User" isHorizontal="true">
+        <dc:Bounds x="100" y="620" width="580" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_MFCM_App_di" bpmnElement="Lane_MFCM_App" isHorizontal="true">
+        <dc:Bounds x="100" y="740" width="580" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_MonthlyFeeCycleManual_di" bpmnElement="Start_MonthlyFeeCycleManual">
+        <dc:Bounds x="150" y="662" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateMonthlyFeeRequestsManual_di" bpmnElement="Task_CreateMonthlyFeeRequestsManual">
+        <dc:Bounds x="250" y="770" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_MonthlyFeeCycleManual_di" bpmnElement="End_MonthlyFeeCycleManual">
+        <dc:Bounds x="470" y="792" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_MFC_Manual_CreateRequests_di" bpmnElement="Flow_MFC_Manual_CreateRequests">
+        <di:waypoint x="186" y="680" />
+        <di:waypoint x="220" y="680" />
+        <di:waypoint x="220" y="810" />
+        <di:waypoint x="250" y="810" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MFC_Manual_End_di" bpmnElement="Flow_MFC_Manual_End">
+        <di:waypoint x="410" y="810" />
+        <di:waypoint x="470" y="810" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

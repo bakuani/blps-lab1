@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
-  <bpmn:process id="TariffChangeProcess" name="Смена тарифа" isExecutable="true" camunda:historyTimeToLive="30">
+  <bpmn:process id="TariffChangeProcess" name="Смена тарифа" isExecutable="true" camunda:historyTimeToLive="30" camunda:candidateStarterGroups="SUBSCRIBER,OPERATOR,ADMIN">
     <bpmn:laneSet id="LaneSet_TariffChange">
       <bpmn:lane id="Lane_Tariff_Db" name="База данных" />
       <bpmn:lane id="Lane_Tariff_App" name="Приложение">
@@ -16,24 +16,24 @@
         <bpmn:flowNodeRef>Gateway_CanChangeTariff</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_Tariff_User" name="Пользователь">
-        <bpmn:flowNodeRef>UserTask_TariffChangeForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateTariffChangeRequest</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Start_TariffChange</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_TariffChange" name="Начать смену тарифа">
-      <bpmn:outgoing>Flow_T_Start_Form</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_TariffChangeForm" name="Подтвердить смену тарифа" camunda:candidateGroups="SUBSCRIBER,OPERATOR,ADMIN">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subscriberId" label="ID абонента" type="long" />
-          <camunda:formField id="targetTariffId" label="ID нового тарифа" type="long" />
-          <camunda:formField id="options" label="Опции тарифа" type="string" />
+          <camunda:formField id="subscriberId" label="ID subscriber" type="long" />
+          <camunda:formField id="targetTariffId" label="Target tariff ID" type="long" />
+          <camunda:formField id="options" label="Options JSON" type="string" defaultValue="{}" />
         </camunda:formData>
       </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_T_Start_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_CreateTariffChangeRequest" name="Create tariff change request" camunda:type="external" camunda:topic="create-tariff-change-request">
       <bpmn:incoming>Flow_T_Start_Form</bpmn:incoming>
       <bpmn:outgoing>Flow_T_Form_Validate</bpmn:outgoing>
-    </bpmn:userTask>
+    </bpmn:serviceTask>
     <bpmn:serviceTask id="Task_ValidateTariffChange" name="Проверить смену тарифа" camunda:type="external" camunda:topic="validate-tariff-change">
       <bpmn:incoming>Flow_T_Form_Validate</bpmn:incoming>
       <bpmn:outgoing>Flow_T_Validate_CanChange</bpmn:outgoing>
@@ -89,8 +89,8 @@
     <bpmn:dataStoreReference id="DS_Tariff_BillingTransaction" name="billing_transaction" />
     <bpmn:dataStoreReference id="DS_Tariff_NotificationEvent" name="notification_event" />
     <bpmn:dataStoreReference id="DS_Tariff_EisAudit" name="eis_audit" />
-    <bpmn:sequenceFlow id="Flow_T_Start_Form" sourceRef="Start_TariffChange" targetRef="UserTask_TariffChangeForm" />
-    <bpmn:sequenceFlow id="Flow_T_Form_Validate" sourceRef="UserTask_TariffChangeForm" targetRef="Task_ValidateTariffChange" />
+    <bpmn:sequenceFlow id="Flow_T_Start_Form" sourceRef="Start_TariffChange" targetRef="Task_CreateTariffChangeRequest" />
+    <bpmn:sequenceFlow id="Flow_T_Form_Validate" sourceRef="Task_CreateTariffChangeRequest" targetRef="Task_ValidateTariffChange" />
     <bpmn:sequenceFlow id="Flow_T_Validate_CanChange" sourceRef="Task_ValidateTariffChange" targetRef="Gateway_CanChangeTariff" />
     <bpmn:sequenceFlow id="Flow_T_CanChange_Yes" name="Да" sourceRef="Gateway_CanChangeTariff" targetRef="Gateway_HasSwitchFee">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canChangeTariff}</bpmn:conditionExpression>
@@ -135,7 +135,7 @@
           <dc:Bounds x="193" y="148" width="71" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_TariffChangeForm_di" bpmnElement="UserTask_TariffChangeForm">
+      <bpmndi:BPMNShape id="Task_CreateTariffChangeRequest_di" bpmnElement="Task_CreateTariffChangeRequest">
         <dc:Bounds x="290" y="90" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ValidateTariffChange_di" bpmnElement="Task_ValidateTariffChange">

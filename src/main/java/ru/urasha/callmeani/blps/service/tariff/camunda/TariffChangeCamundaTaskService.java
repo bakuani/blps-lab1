@@ -7,6 +7,8 @@ import java.util.Map;
 
 public interface TariffChangeCamundaTaskService {
 
+    Map<String, CamundaVariable> createTariffChangeRequest(LockedExternalTask task);
+
     Map<String, CamundaVariable> validateTariffChange(LockedExternalTask task);
 
     Map<String, CamundaVariable> chargeSwitchFee(LockedExternalTask task);

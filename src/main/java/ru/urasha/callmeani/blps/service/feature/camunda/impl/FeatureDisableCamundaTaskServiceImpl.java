@@ -18,6 +18,7 @@ import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.feature.camunda.FeatureDisableCamundaTaskService;
@@ -30,9 +31,12 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CAN_DISABLE_FEATURE;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.FEATURE_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_SUCCESS;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_TYPE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.REQUEST_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.SUBSCRIBER_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
 @Service
@@ -46,6 +50,29 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
     private final NotificationService notificationService;
     private final EisValidationService eisValidationService;
     private final EisOperationAuditService eisOperationAuditService;
+
+    @Override
+    @Transactional
+    public Map<String, CamundaVariable> createFeatureDisableRequest(LockedExternalTask task) {
+        Long existingRequestId = task.longVariable(REQUEST_ID);
+        if (existingRequestId != null) {
+            FeatureDisableRequest request = featureRequest(task);
+            attachProcessInstance(request, task);
+            return processVariables(request);
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        FeatureDisableRequest request = new FeatureDisableRequest();
+        request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
+        request.setFeatureId(requiredLongVariable(task, FEATURE_ID));
+        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setAttemptCount(0);
+        request.setProcessInstanceId(task.processInstanceId());
+        request.setCreatedAt(now);
+        request.setUpdatedAt(now);
+
+        return processVariables(featureDisableRequestRepository.save(request));
+    }
 
     @Override
     @Transactional
@@ -179,6 +206,33 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         request.setErrorMessage(exception.getMessage());
         request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
+    }
+
+    private Map<String, CamundaVariable> processVariables(FeatureDisableRequest request) {
+        return of(
+            REQUEST_ID, CamundaVariable.longValue(request.getId()),
+            OPERATION_TYPE, CamundaVariable.string(CamundaProcessConstants.OPERATION_FEATURE_DISABLE),
+            SUBSCRIBER_ID, CamundaVariable.longValue(request.getSubscriberId()),
+            FEATURE_ID, CamundaVariable.longValue(request.getFeatureId()),
+            OPERATION_AMOUNT, CamundaVariable.string(BigDecimal.ZERO.toPlainString())
+        );
+    }
+
+    private Long requiredLongVariable(LockedExternalTask task, String name) {
+        Long value = task.longVariable(name);
+        if (value == null) {
+            throw new IllegalArgumentException("Camunda variable '" + name + "' is required");
+        }
+        return value;
+    }
+
+    private void attachProcessInstance(FeatureDisableRequest request, LockedExternalTask task) {
+        String processInstanceId = task.processInstanceId();
+        if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
+            request.setProcessInstanceId(processInstanceId);
+            request.setUpdatedAt(OffsetDateTime.now());
+            featureDisableRequestRepository.save(request);
+        }
     }
 
     private FeatureDisableRequest featureRequest(LockedExternalTask task) {

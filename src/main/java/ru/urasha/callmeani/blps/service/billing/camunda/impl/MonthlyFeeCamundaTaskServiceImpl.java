@@ -2,6 +2,7 @@ package ru.urasha.callmeani.blps.service.billing.camunda.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
@@ -20,6 +21,7 @@ import ru.urasha.callmeani.blps.service.billing.async.MonthlyFeeChargeAsyncOpera
 import ru.urasha.callmeani.blps.service.billing.camunda.MonthlyFeeCamundaTaskService;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
 import ru.urasha.callmeani.blps.service.eis.DolibarrInvoiceService;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
@@ -27,13 +29,17 @@ import ru.urasha.callmeani.blps.service.subscriber.SubscriberService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.BILLING_PERIOD;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CREATED_MONTHLY_FEE_REQUESTS;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.MONTHLY_FEE_SUCCEEDED;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.MONTHLY_FEE_TERMINAL;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_TYPE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.REQUEST_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.SUBSCRIBER_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
 @Slf4j
@@ -49,11 +55,37 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
     private final EisOperationAuditService eisOperationAuditService;
     private final MonthlyFeeChargeAsyncOperations monthlyFeeChargeAsyncService;
 
+    @Value("${app.scheduler.monthly-fee-cycle-pattern}")
+    private String cyclePattern;
+
     @Override
     @Transactional
     public Map<String, CamundaVariable> createMonthlyFeeRequests() {
         int created = monthlyFeeChargeAsyncService.enqueueCurrentCycleCharges();
         return of(CREATED_MONTHLY_FEE_REQUESTS, CamundaVariable.integer(created));
+    }
+
+    @Override
+    @Transactional
+    public Map<String, CamundaVariable> ensureMonthlyFeeRequest(LockedExternalTask task) {
+        Long existingRequestId = task.longVariable(REQUEST_ID);
+        if (existingRequestId != null) {
+            MonthlyFeeChargeRequest request = monthlyRequest(task);
+            attachProcessInstance(request, task);
+            return processVariables(request);
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        MonthlyFeeChargeRequest request = new MonthlyFeeChargeRequest();
+        request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
+        request.setBillingPeriod(resolveBillingPeriod(task));
+        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setAttemptCount(0);
+        request.setProcessInstanceId(task.processInstanceId());
+        request.setCreatedAt(now);
+        request.setUpdatedAt(now);
+
+        return processVariables(monthlyFeeChargeRequestRepository.save(request));
     }
 
     @Override
@@ -216,6 +248,41 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
         request.setErrorMessage(exception.getMessage());
         request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
+    }
+
+    private Map<String, CamundaVariable> processVariables(MonthlyFeeChargeRequest request) {
+        return of(
+            REQUEST_ID, CamundaVariable.longValue(request.getId()),
+            OPERATION_TYPE, CamundaVariable.string(CamundaProcessConstants.OPERATION_MONTHLY_FEE),
+            SUBSCRIBER_ID, CamundaVariable.longValue(request.getSubscriberId()),
+            BILLING_PERIOD, CamundaVariable.string(request.getBillingPeriod()),
+            OPERATION_AMOUNT, CamundaVariable.string(BigDecimal.ZERO.toPlainString())
+        );
+    }
+
+    private Long requiredLongVariable(LockedExternalTask task, String name) {
+        Long value = task.longVariable(name);
+        if (value == null) {
+            throw new IllegalArgumentException("Camunda variable '" + name + "' is required");
+        }
+        return value;
+    }
+
+    private String resolveBillingPeriod(LockedExternalTask task) {
+        String billingPeriod = task.stringVariable(BILLING_PERIOD);
+        if (billingPeriod == null || billingPeriod.isBlank()) {
+            return DateTimeFormatter.ofPattern(cyclePattern).format(OffsetDateTime.now());
+        }
+        return billingPeriod;
+    }
+
+    private void attachProcessInstance(MonthlyFeeChargeRequest request, LockedExternalTask task) {
+        String processInstanceId = task.processInstanceId();
+        if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
+            request.setProcessInstanceId(processInstanceId);
+            request.setUpdatedAt(OffsetDateTime.now());
+            monthlyFeeChargeRequestRepository.save(request);
+        }
     }
 
     private MonthlyFeeChargeRequest monthlyRequest(LockedExternalTask task) {

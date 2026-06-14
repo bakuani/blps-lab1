@@ -28,14 +28,17 @@ public class CamundaBusinessTaskHandler implements CamundaExternalTaskHandler {
     @Override
     public Set<String> topics() {
         return Set.of(
+            CamundaProcessConstants.CREATE_TARIFF_CHANGE_REQUEST,
             CamundaProcessConstants.VALIDATE_TARIFF_CHANGE,
             CamundaProcessConstants.CHARGE_SWITCH_FEE,
             CamundaProcessConstants.CHARGE_NEW_MONTHLY_FEE,
             CamundaProcessConstants.UPDATE_SUBSCRIBER_TARIFF,
+            CamundaProcessConstants.CREATE_FEATURE_DISABLE_REQUEST,
             CamundaProcessConstants.VALIDATE_FEATURE_DISABLE,
             CamundaProcessConstants.DISABLE_FEATURE_BILLING,
             CamundaProcessConstants.UPDATE_SUBSCRIBER_FEATURE,
             CamundaProcessConstants.CREATE_MONTHLY_FEE_REQUESTS,
+            CamundaProcessConstants.ENSURE_MONTHLY_FEE_REQUEST,
             CamundaProcessConstants.CREATE_DOLIBARR_INVOICE,
             CamundaProcessConstants.CHARGE_MONTHLY_FEE,
             CamundaProcessConstants.SYNC_DOLIBARR_INVOICE,
@@ -47,14 +50,17 @@ public class CamundaBusinessTaskHandler implements CamundaExternalTaskHandler {
     @Override
     public Map<String, CamundaVariable> handle(LockedExternalTask task) {
         return switch (task.topicName()) {
+            case CamundaProcessConstants.CREATE_TARIFF_CHANGE_REQUEST -> tariffChangeTaskService.createTariffChangeRequest(task);
             case CamundaProcessConstants.VALIDATE_TARIFF_CHANGE -> tariffChangeTaskService.validateTariffChange(task);
             case CamundaProcessConstants.CHARGE_SWITCH_FEE -> tariffChangeTaskService.chargeSwitchFee(task);
             case CamundaProcessConstants.CHARGE_NEW_MONTHLY_FEE -> tariffChangeTaskService.chargeNewMonthlyFee(task);
             case CamundaProcessConstants.UPDATE_SUBSCRIBER_TARIFF -> tariffChangeTaskService.updateSubscriberTariff(task);
+            case CamundaProcessConstants.CREATE_FEATURE_DISABLE_REQUEST -> featureDisableTaskService.createFeatureDisableRequest(task);
             case CamundaProcessConstants.VALIDATE_FEATURE_DISABLE -> featureDisableTaskService.validateFeatureDisable(task);
             case CamundaProcessConstants.DISABLE_FEATURE_BILLING -> featureDisableTaskService.disableFeatureBilling(task);
             case CamundaProcessConstants.UPDATE_SUBSCRIBER_FEATURE -> featureDisableTaskService.updateSubscriberFeature(task);
             case CamundaProcessConstants.CREATE_MONTHLY_FEE_REQUESTS -> monthlyFeeTaskService.createMonthlyFeeRequests();
+            case CamundaProcessConstants.ENSURE_MONTHLY_FEE_REQUEST -> monthlyFeeTaskService.ensureMonthlyFeeRequest(task);
             case CamundaProcessConstants.CREATE_DOLIBARR_INVOICE -> monthlyFeeTaskService.createDolibarrInvoice(task);
             case CamundaProcessConstants.CHARGE_MONTHLY_FEE -> monthlyFeeTaskService.chargeMonthlyFee(task);
             case CamundaProcessConstants.SYNC_DOLIBARR_INVOICE -> monthlyFeeTaskService.syncDolibarrInvoice(task);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" targetNamespace="http://callmeani.urasha.ru/blps/camunda" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.16.0">
-  <bpmn:process id="FeatureDisableProcess" name="Отключение услуги" isExecutable="true" camunda:historyTimeToLive="30">
+  <bpmn:process id="FeatureDisableProcess" name="Отключение услуги" isExecutable="true" camunda:historyTimeToLive="30" camunda:candidateStarterGroups="SUBSCRIBER,OPERATOR,ADMIN">
     <bpmn:laneSet id="LaneSet_FeatureDisable">
       <bpmn:lane id="Lane_Feature_Db" name="База данных" />
       <bpmn:lane id="Lane_Feature_App" name="Приложение">
@@ -13,23 +13,23 @@
         <bpmn:flowNodeRef>Gateway_CanDisableFeature</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_Feature_User" name="Пользователь">
-        <bpmn:flowNodeRef>UserTask_FeatureDisableForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateFeatureDisableRequest</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Start_FeatureDisable</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_FeatureDisable" name="Начать отключение услуги">
-      <bpmn:outgoing>Flow_F_Start_Form</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_FeatureDisableForm" name="Подтвердить отключение услуги" camunda:candidateGroups="SUBSCRIBER,OPERATOR,ADMIN">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subscriberId" label="ID абонента" type="long" />
-          <camunda:formField id="featureId" label="ID услуги" type="long" />
+          <camunda:formField id="subscriberId" label="ID subscriber" type="long" />
+          <camunda:formField id="featureId" label="Feature ID" type="long" />
         </camunda:formData>
       </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_F_Start_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_CreateFeatureDisableRequest" name="Create feature disable request" camunda:type="external" camunda:topic="create-feature-disable-request">
       <bpmn:incoming>Flow_F_Start_Form</bpmn:incoming>
       <bpmn:outgoing>Flow_F_Form_Validate</bpmn:outgoing>
-    </bpmn:userTask>
+    </bpmn:serviceTask>
     <bpmn:serviceTask id="Task_ValidateFeatureDisable" name="Проверить отключение услуги" camunda:type="external" camunda:topic="validate-feature-disable">
       <bpmn:incoming>Flow_F_Form_Validate</bpmn:incoming>
       <bpmn:outgoing>Flow_F_Validate_CanDisable</bpmn:outgoing>
@@ -77,8 +77,8 @@
     <bpmn:dataStoreReference id="DS_Feature_BillingTransaction" name="billing_transaction" />
     <bpmn:dataStoreReference id="DS_Feature_NotificationEvent" name="notification_event" />
     <bpmn:dataStoreReference id="DS_Feature_EisAudit" name="eis_audit" />
-    <bpmn:sequenceFlow id="Flow_F_Start_Form" sourceRef="Start_FeatureDisable" targetRef="UserTask_FeatureDisableForm" />
-    <bpmn:sequenceFlow id="Flow_F_Form_Validate" sourceRef="UserTask_FeatureDisableForm" targetRef="Task_ValidateFeatureDisable" />
+    <bpmn:sequenceFlow id="Flow_F_Start_Form" sourceRef="Start_FeatureDisable" targetRef="Task_CreateFeatureDisableRequest" />
+    <bpmn:sequenceFlow id="Flow_F_Form_Validate" sourceRef="Task_CreateFeatureDisableRequest" targetRef="Task_ValidateFeatureDisable" />
     <bpmn:sequenceFlow id="Flow_F_Validate_CanDisable" sourceRef="Task_ValidateFeatureDisable" targetRef="Gateway_CanDisableFeature" />
     <bpmn:sequenceFlow id="Flow_F_CanDisable_Yes" name="Да" sourceRef="Gateway_CanDisableFeature" targetRef="Task_DisableFeatureBilling">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${canDisableFeature}</bpmn:conditionExpression>
@@ -111,7 +111,7 @@
           <dc:Bounds x="198" y="148" width="61" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_FeatureDisableForm_di" bpmnElement="UserTask_FeatureDisableForm">
+      <bpmndi:BPMNShape id="Task_CreateFeatureDisableRequest_di" bpmnElement="Task_CreateFeatureDisableRequest">
         <dc:Bounds x="290" y="90" width="130" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ValidateFeatureDisable_di" bpmnElement="Task_ValidateFeatureDisable">

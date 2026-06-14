@@ -7,6 +7,8 @@ import java.util.Map;
 
 public interface FeatureDisableCamundaTaskService {
 
+    Map<String, CamundaVariable> createFeatureDisableRequest(LockedExternalTask task);
+
     Map<String, CamundaVariable> validateFeatureDisable(LockedExternalTask task);
 
     Map<String, CamundaVariable> disableFeatureBilling(LockedExternalTask task);

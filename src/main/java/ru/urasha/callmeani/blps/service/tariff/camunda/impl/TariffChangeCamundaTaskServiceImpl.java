@@ -1,5 +1,8 @@
 package ru.urasha.callmeani.blps.service.tariff.camunda.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +20,7 @@ import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
+import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
 import ru.urasha.callmeani.blps.service.eis.EisOperationAuditService;
 import ru.urasha.callmeani.blps.service.eis.EisValidationService;
 import ru.urasha.callmeani.blps.service.notification.NotificationService;
@@ -26,13 +30,18 @@ import ru.urasha.callmeani.blps.service.tariff.camunda.TariffChangeCamundaTaskSe
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPTIONS;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CAN_CHANGE_TARIFF;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_TYPE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.HAS_SWITCH_FEE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_SUCCESS;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.REQUEST_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.SUBSCRIBER_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.TARGET_TARIFF_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
 @Service
@@ -46,6 +55,31 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
     private final NotificationService notificationService;
     private final EisValidationService eisValidationService;
     private final EisOperationAuditService eisOperationAuditService;
+    private final ObjectMapper objectMapper;
+
+    @Override
+    @Transactional
+    public Map<String, CamundaVariable> createTariffChangeRequest(LockedExternalTask task) {
+        Long existingRequestId = task.longVariable(REQUEST_ID);
+        if (existingRequestId != null) {
+            TariffChangeRequest request = tariffRequest(task);
+            attachProcessInstance(request, task);
+            return processVariables(request);
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        TariffChangeRequest request = new TariffChangeRequest();
+        request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
+        request.setTargetTariffId(requiredLongVariable(task, TARGET_TARIFF_ID));
+        request.setOptions(parseOptions(task.stringVariable(OPTIONS)));
+        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setAttemptCount(0);
+        request.setProcessInstanceId(task.processInstanceId());
+        request.setCreatedAt(now);
+        request.setUpdatedAt(now);
+
+        return processVariables(tariffChangeRequestRepository.save(request));
+    }
 
     @Override
     @Transactional
@@ -217,6 +251,58 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         request.setErrorMessage(exception.getMessage());
         request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
+    }
+
+    private Map<String, CamundaVariable> processVariables(TariffChangeRequest request) {
+        return of(
+            REQUEST_ID, CamundaVariable.longValue(request.getId()),
+            OPERATION_TYPE, CamundaVariable.string(CamundaProcessConstants.OPERATION_TARIFF_CHANGE),
+            SUBSCRIBER_ID, CamundaVariable.longValue(request.getSubscriberId()),
+            TARGET_TARIFF_ID, CamundaVariable.longValue(request.getTargetTariffId()),
+            OPTIONS, CamundaVariable.string(optionsJson(request.getOptions())),
+            OPERATION_AMOUNT, CamundaVariable.string(BigDecimal.ZERO.toPlainString())
+        );
+    }
+
+    private Long requiredLongVariable(LockedExternalTask task, String name) {
+        Long value = task.longVariable(name);
+        if (value == null) {
+            throw new IllegalArgumentException("Camunda variable '" + name + "' is required");
+        }
+        return value;
+    }
+
+    private Map<String, String> parseOptions(String value) {
+        if (value == null || value.isBlank() || "{}".equals(value.trim())) {
+            return Map.of();
+        }
+        try {
+            Map<String, String> options = objectMapper.readValue(value, new TypeReference<Map<String, String>>() {
+            });
+            return options == null ? Map.of() : new LinkedHashMap<>(options);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException("Invalid tariff options JSON. Use object like {\"roaming\":\"enabled\"}", ex);
+        }
+    }
+
+    private String optionsJson(Map<String, String> options) {
+        if (options == null || options.isEmpty()) {
+            return "{}";
+        }
+        try {
+            return objectMapper.writeValueAsString(options);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Cannot serialize tariff options", ex);
+        }
+    }
+
+    private void attachProcessInstance(TariffChangeRequest request, LockedExternalTask task) {
+        String processInstanceId = task.processInstanceId();
+        if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
+            request.setProcessInstanceId(processInstanceId);
+            request.setUpdatedAt(OffsetDateTime.now());
+            tariffChangeRequestRepository.save(request);
+        }
     }
 
     private TariffChangeRequest tariffRequest(LockedExternalTask task) {
