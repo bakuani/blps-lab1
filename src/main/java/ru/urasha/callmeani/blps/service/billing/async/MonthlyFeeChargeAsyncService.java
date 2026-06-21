@@ -10,6 +10,7 @@ import ru.urasha.callmeani.blps.api.exception.MonthlyFeeChargeRequestNotFoundExc
 import ru.urasha.callmeani.blps.domain.entity.MonthlyFeeChargeRequest;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
 import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
 import ru.urasha.callmeani.blps.service.camunda.client.CamundaRestClient;
@@ -21,6 +22,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static ru.urasha.callmeani.blps.logging.LoggingFields.BUSINESS_OPERATION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.BUSINESS_REQUEST_ID;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_ACTION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_CATEGORY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_OUTCOME;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_INSTANCE_ID;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.SUBSCRIBER_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CORRELATION_ID;
 
 @Slf4j
 @Service
@@ -87,8 +97,16 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
             if (request.getProcessInstanceId() != null) {
                 continue;
             }
-            log.info("Starting Camunda process for stuck MonthlyFeeChargeRequest with id {}", request.getId());
-            startProcess(request);
+            try (LoggingContext ignored = LoggingContext.open(
+                EVENT_CATEGORY, "process",
+                EVENT_ACTION, "business_process_retry",
+                BUSINESS_OPERATION, CamundaProcessConstants.OPERATION_MONTHLY_FEE,
+                BUSINESS_REQUEST_ID, request.getId(),
+                SUBSCRIBER_ID, request.getSubscriberId()
+            )) {
+                log.warn("Restarting Camunda process for stuck monthly fee request");
+                startProcess(request);
+            }
             restarted++;
         }
         return restarted;
@@ -104,10 +122,22 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
         request.setProcessInstanceId(processInstanceId);
         request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
+        try (LoggingContext ignored = LoggingContext.open(
+            EVENT_CATEGORY, "process",
+            EVENT_ACTION, "business_process_started",
+            EVENT_OUTCOME, "success",
+            BUSINESS_OPERATION, CamundaProcessConstants.OPERATION_MONTHLY_FEE,
+            BUSINESS_REQUEST_ID, request.getId(),
+            SUBSCRIBER_ID, request.getSubscriberId(),
+            PROCESS_INSTANCE_ID, processInstanceId
+        )) {
+            log.info("Monthly fee Camunda process started");
+        }
     }
 
     private Map<String, CamundaVariable> processVariables(MonthlyFeeChargeRequest request) {
         Map<String, CamundaVariable> variables = new LinkedHashMap<>();
+        variables.put(CORRELATION_ID, CamundaVariable.string(LoggingContext.getOrCreateCorrelationId()));
         variables.put("operationType", CamundaVariable.string(CamundaProcessConstants.OPERATION_MONTHLY_FEE));
         variables.put("requestId", CamundaVariable.longValue(request.getId()));
         variables.put("subscriberId", CamundaVariable.longValue(request.getSubscriberId()));

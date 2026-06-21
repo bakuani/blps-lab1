@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
@@ -16,6 +17,7 @@ import ru.urasha.callmeani.blps.domain.enums.NotificationType;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
@@ -35,6 +37,7 @@ import java.util.Map;
 
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPTIONS;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CAN_CHANGE_TARIFF;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CORRELATION_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_TYPE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.HAS_SWITCH_FEE;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
@@ -44,6 +47,7 @@ import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVar
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.TARGET_TARIFF_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTaskService {
@@ -64,6 +68,7 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         if (existingRequestId != null) {
             TariffChangeRequest request = tariffRequest(task);
             attachProcessInstance(request, task);
+            log.info("Tariff change request linked to Camunda process: requestId={}", request.getId());
             return processVariables(request);
         }
 
@@ -78,7 +83,9 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         request.setCreatedAt(now);
         request.setUpdatedAt(now);
 
-        return processVariables(tariffChangeRequestRepository.save(request));
+        TariffChangeRequest saved = tariffChangeRequestRepository.save(request);
+        log.info("Tariff change request created from Camunda: requestId={}", saved.getId());
+        return processVariables(saved);
     }
 
     @Override
@@ -86,12 +93,18 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
     public Map<String, CamundaVariable> validateTariffChange(LockedExternalTask task) {
         TariffChangeRequest request = tariffRequest(task);
         if (isTerminal(request.getStatus())) {
+            log.warn(
+                "Tariff change validation skipped for terminal request: requestId={}, status={}",
+                request.getId(),
+                request.getStatus()
+            );
             return of(CAN_CHANGE_TARIFF, CamundaVariable.bool(false));
         }
 
         markProcessing(request);
         if (!eisValidationService.allowTariffChange(request)) {
             rejectTariffChange(request, ApiMessages.TARIFF_CHANGE_REJECTED_BY_EIS);
+            log.warn("Tariff change rejected: requestId={}, reason=eis_validation", request.getId());
             return of(CAN_CHANGE_TARIFF, CamundaVariable.bool(false));
         }
 
@@ -107,6 +120,7 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
                 false
             );
             rejectTariffChange(request, ApiMessages.TARIFF_ALREADY_SELECTED_RESPONSE);
+            log.warn("Tariff change rejected: requestId={}, reason=tariff_already_selected", request.getId());
             return of(CAN_CHANGE_TARIFF, CamundaVariable.bool(false));
         }
 
@@ -121,9 +135,16 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
                 false
             );
             rejectTariffChange(request, ApiMessages.TARIFF_INSUFFICIENT_FUNDS_RESPONSE);
+            log.warn("Tariff change rejected: requestId={}, reason=insufficient_funds", request.getId());
             return of(CAN_CHANGE_TARIFF, CamundaVariable.bool(false));
         }
 
+        log.info(
+            "Tariff change validated: requestId={}, switchFee={}, monthlyFee={}",
+            request.getId(),
+            switchFee,
+            monthlyFee
+        );
         return of(
             CAN_CHANGE_TARIFF, CamundaVariable.bool(true),
             HAS_SWITCH_FEE, CamundaVariable.bool(switchFee.compareTo(BigDecimal.ZERO) > 0),
@@ -156,6 +177,12 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         request.setErrorMessage(null);
         request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
+        log.info(
+            "Subscriber tariff updated: requestId={}, subscriberId={}, tariffId={}",
+            request.getId(),
+            request.getSubscriberId(),
+            request.getTargetTariffId()
+        );
         return of(OPERATION_SUCCESS, CamundaVariable.bool(true));
     }
 
@@ -170,6 +197,7 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
                 ApiMessages.TARIFF_CHANGED_NOTIFICATION,
                 true
             );
+            log.info("Tariff change notification created: requestId={}", request.getId());
         }
         return of();
     }
@@ -189,6 +217,12 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
                 request.getErrorMessage(),
                 OffsetDateTime.now()
             ));
+            log.info(
+                "Tariff change audit published: requestId={}, status={}, amount={}",
+                request.getId(),
+                request.getStatus(),
+                amount
+            );
         }
         return of();
     }
@@ -217,6 +251,11 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
             : targetTariff.getMonthlyFee();
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             String currentAmount = task.stringVariable(OPERATION_AMOUNT);
+            log.info(
+                "Tariff charge skipped because amount is zero: requestId={}, transactionType={}",
+                request.getId(),
+                transactionType
+            );
             return of(OPERATION_AMOUNT, CamundaVariable.string(currentAmount == null ? "0" : currentAmount));
         }
 
@@ -225,6 +264,18 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
             subscriber.setBalance(subscriber.getBalance().subtract(amount));
             subscriberService.save(subscriber);
             billingService.createTransaction(subscriber, transactionType, amount, description);
+            log.info(
+                "Tariff charge created: requestId={}, transactionType={}, amount={}",
+                request.getId(),
+                transactionType,
+                amount
+            );
+        } else {
+            log.info(
+                "Tariff charge already exists: requestId={}, transactionType={}",
+                request.getId(),
+                transactionType
+            );
         }
 
         BigDecimal operationAmount = decimal(task.stringVariable(OPERATION_AMOUNT)).add(amount);
@@ -251,10 +302,21 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         request.setErrorMessage(exception.getMessage());
         request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
+        if (status == TariffChangeRequestStatus.FAILED) {
+            log.error("Tariff change request permanently failed: requestId={}", request.getId(), exception);
+        } else {
+            log.warn(
+                "Tariff change request failure persisted: requestId={}, status={}, exceptionType={}",
+                request.getId(),
+                status,
+                exception.getClass().getSimpleName()
+            );
+        }
     }
 
     private Map<String, CamundaVariable> processVariables(TariffChangeRequest request) {
         return of(
+            CORRELATION_ID, CamundaVariable.string(LoggingContext.getOrCreateCorrelationId()),
             REQUEST_ID, CamundaVariable.longValue(request.getId()),
             OPERATION_TYPE, CamundaVariable.string(CamundaProcessConstants.OPERATION_TARIFF_CHANGE),
             SUBSCRIBER_ID, CamundaVariable.longValue(request.getSubscriberId()),

@@ -16,6 +16,7 @@ public final class CamundaProcessVariables {
     public static final String FEATURE_ID = "featureId";
     public static final String BILLING_PERIOD = "billingPeriod";
     public static final String OPTIONS = "options";
+    public static final String CORRELATION_ID = "correlationId";
     public static final String OPERATION_TYPE = "operationType";
     public static final String OPERATION_AMOUNT = "operationAmount";
     public static final String CAN_CHANGE_TARIFF = "canChangeTariff";

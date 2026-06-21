@@ -1,17 +1,28 @@
 package ru.urasha.callmeani.blps.service.camunda.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import ru.urasha.callmeani.blps.config.CamundaProperties;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
 import ru.urasha.callmeani.blps.service.camunda.model.LockedExternalTask;
 
 import java.util.List;
 import java.util.Map;
 
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_ACTION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_CATEGORY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_DURATION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_OUTCOME;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_BUSINESS_KEY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_INSTANCE_ID;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_KEY;
+
+@Slf4j
 @Component
 public class CamundaRestClient {
 
@@ -27,16 +38,32 @@ public class CamundaRestClient {
     }
 
     public String startProcess(String processDefinitionKey, String businessKey, Map<String, CamundaVariable> variables) {
-        ProcessStartResponse response = camundaRestClient.post()
-            .uri("/process-definition/key/{key}/start", processDefinitionKey)
-            .body(new ProcessStartRequest(businessKey, variables))
-            .retrieve()
-            .body(ProcessStartResponse.class);
+        long startedAt = System.nanoTime();
+        try (LoggingContext ignored = LoggingContext.open(
+            EVENT_CATEGORY, "dependency",
+            EVENT_ACTION, "camunda_start_process",
+            PROCESS_KEY, processDefinitionKey,
+            PROCESS_BUSINESS_KEY, businessKey
+        )) {
+            log.info("Starting Camunda process");
+            ProcessStartResponse response = camundaRestClient.post()
+                .uri("/process-definition/key/{key}/start", processDefinitionKey)
+                .body(new ProcessStartRequest(businessKey, variables))
+                .retrieve()
+                .body(ProcessStartResponse.class);
 
-        if (response == null || response.id() == null) {
-            throw new IllegalStateException("Camunda did not return a process instance id");
+            if (response == null || response.id() == null) {
+                throw new IllegalStateException("Camunda did not return a process instance id");
+            }
+            try (LoggingContext outcome = LoggingContext.open(
+                EVENT_OUTCOME, "success",
+                EVENT_DURATION, System.nanoTime() - startedAt,
+                PROCESS_INSTANCE_ID, response.id()
+            )) {
+                log.info("Camunda process started");
+            }
+            return response.id();
         }
-        return response.id();
     }
 
     public void completeFirstTask(String processInstanceId, Map<String, CamundaVariable> variables) {
@@ -51,6 +78,7 @@ public class CamundaRestClient {
             });
 
         if (tasks == null || tasks.isEmpty()) {
+            log.warn("Camunda process has no user task to complete: processInstanceId={}", processInstanceId);
             return;
         }
 
@@ -78,7 +106,11 @@ public class CamundaRestClient {
             .body(new ParameterizedTypeReference<>() {
             });
 
-        return tasks == null ? List.of() : tasks;
+        List<LockedExternalTask> result = tasks == null ? List.of() : tasks;
+        if (!result.isEmpty()) {
+            log.debug("Fetched {} Camunda external task(s)", result.size());
+        }
+        return result;
     }
 
     public void completeExternalTask(String taskId, Map<String, CamundaVariable> variables) {

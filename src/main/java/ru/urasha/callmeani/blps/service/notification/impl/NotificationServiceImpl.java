@@ -1,6 +1,7 @@
 package ru.urasha.callmeani.blps.service.notification.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
@@ -11,6 +12,7 @@ import ru.urasha.callmeani.blps.service.notification.NotificationService;
 
 import java.time.OffsetDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
@@ -27,7 +29,15 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setSuccess(success);
         notification.setCreatedAt(OffsetDateTime.now());
         
-        return notificationEventRepository.save(notification);
+        NotificationEvent saved = notificationEventRepository.save(notification);
+        log.info(
+            "Notification created: notificationId={}, subscriberId={}, type={}, success={}",
+            saved.getId(),
+            subscriber.getId(),
+            type,
+            success
+        );
+        return saved;
     }
 }
 

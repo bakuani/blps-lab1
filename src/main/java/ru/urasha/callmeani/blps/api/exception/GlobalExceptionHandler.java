@@ -15,9 +15,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.urasha.callmeani.blps.api.dto.common.ApiErrorResponse;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 
 import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
+
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_ACTION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_CATEGORY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_OUTCOME;
 
 @RestControllerAdvice
 @Slf4j
@@ -25,6 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(NotFoundException ex) {
+        logClientError(HttpStatus.NOT_FOUND, ex);
         return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
@@ -33,45 +39,58 @@ public class GlobalExceptionHandler {
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(this::formatFieldError)
-                .collect(Collectors.joining("; "));
+            .map(this::formatFieldError)
+            .collect(Collectors.joining("; "));
+        logClientError(HttpStatus.BAD_REQUEST, ex);
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        logClientError(HttpStatus.BAD_REQUEST, ex);
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        logClientError(HttpStatus.BAD_REQUEST, ex);
         return build(HttpStatus.BAD_REQUEST, ApiMessages.MALFORMED_JSON_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String message = ApiMessages.INVALID_PARAMETER_PREFIX + ex.getName();
+        logClientError(HttpStatus.BAD_REQUEST, ex);
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        logClientError(HttpStatus.CONFLICT, ex);
         return build(HttpStatus.CONFLICT, ApiMessages.DATA_INTEGRITY_VIOLATION);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthentication(AuthenticationException ex) {
+        logClientError(HttpStatus.UNAUTHORIZED, ex);
         return build(HttpStatus.UNAUTHORIZED, ApiMessages.INVALID_CREDENTIALS);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        logClientError(HttpStatus.FORBIDDEN, ex);
         return build(HttpStatus.FORBIDDEN, ApiMessages.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleAny(Exception ex) {
-        log.error("Unhandled exception", ex);
+        try (LoggingContext ignored = LoggingContext.open(
+            EVENT_CATEGORY, "web",
+            EVENT_ACTION, "unhandled_exception",
+            EVENT_OUTCOME, "failure"
+        )) {
+            log.error("Unhandled exception", ex);
+        }
         return build(HttpStatus.INTERNAL_SERVER_ERROR, ApiMessages.INTERNAL_SERVER_ERROR);
     }
 
@@ -82,6 +101,20 @@ public class GlobalExceptionHandler {
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message) {
         ApiErrorResponse response = new ApiErrorResponse(OffsetDateTime.now(), message);
         return ResponseEntity.status(status).body(response);
+    }
+
+    private void logClientError(HttpStatus status, Exception exception) {
+        try (LoggingContext ignored = LoggingContext.open(
+            EVENT_CATEGORY, "web",
+            EVENT_ACTION, "request_rejected",
+            EVENT_OUTCOME, "failure"
+        )) {
+            log.warn(
+                "Request rejected: status={}, exceptionType={}",
+                status.value(),
+                exception.getClass().getSimpleName()
+            );
+        }
     }
 }
 
