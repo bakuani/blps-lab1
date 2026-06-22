@@ -4,10 +4,11 @@
 
 Система собирает два вида логов:
 
-1. Приложение и WildFly пишут структурированные JSON-события в:
+1. Приложение и WildFly на Helios пишут структурированные JSON-события одновременно:
 
    ```text
-   wildfly/standalone/log/blps.json
+   wildfly/standalone/log/blps.json         — резервный файл на Helios
+   127.0.0.1:15044                          — TCP-поток через SSH-туннель
    ```
 
 2. PostgreSQL, Camunda, RabbitMQ, Dolibarr и их базы отправляют stdout/stderr в Logstash через Docker GELF logging driver.
@@ -15,10 +16,12 @@
 Общий поток:
 
 ```text
-Spring Boot / WildFly JSON ─┐
-                            ├─> Logstash ─> Elasticsearch ─> Kibana
-Docker services / GELF ─────┘
+WildFly на Helios ─> TCP :15044 ─> reverse SSH tunnel ─> Logstash :5044 ─┐
+WildFly на Helios ─> blps.json (резервный файл)                           ├─> Elasticsearch ─> Kibana
+Docker services ─> GELF :12201 ──────────────────────────────────────────┘
 ```
+
+При недоступном SSH-туннеле WildFly продолжает работать и писать `blps.json`. События, пропущенные ELK во время разрыва, автоматически не переигрываются.
 
 В приложении логируются:
 
@@ -74,16 +77,17 @@ Docker services / GELF ─────┘
 
 - Docker Desktop или Docker Engine с Compose;
 - минимум 6 ГБ памяти для Docker, рекомендуется 8 ГБ для полного стенда;
-- установленный локальный WildFly в каталоге `wildfly`;
+- WildFly и WAR на Helios;
+- SSH-доступ к Helios;
 - `curl` для smoke-теста;
 - Java 17.
 
 ## Запуск полного стенда
 
-Запустить инфраструктуру и ELK:
+Локально запустить инфраструктуру и ELK:
 
 ```bash
-sh scripts/elk-start.sh
+bash scripts/elk-start.sh
 ```
 
 Эквивалентная команда:
@@ -105,18 +109,42 @@ docker compose ps -a
 - импортирует data view;
 - импортирует готовый Kibana dashboard.
 
-## Настройка JSON-логов WildFly
-
-Запустить WildFly:
+Открыть reverse SSH-туннели и оставить процесс работающим:
 
 ```bash
-sh scripts/helios-start.sh
+bash scripts/open-tunnel.sh
 ```
 
-В другом терминале выполнить:
+В выводе должен присутствовать маршрут:
+
+```text
+ELK logs: helios:15044 -> local:5044
+```
+
+Если стандартный remote-порт занят, обе стороны можно согласованно переопределить:
 
 ```bash
-sh scripts/configure-wildfly-elk-logging.sh
+ELK_TUNNEL_PORT=15045 bash scripts/open-tunnel.sh
+```
+
+Тогда на Helios тот же порт нужно передать конфигурационному скрипту:
+
+```bash
+ELK_TUNNEL_PORT=15045 bash scripts/configure-wildfly-elk-logging.sh
+```
+
+## Настройка JSON- и TCP-логов WildFly
+
+На Helios запустить WildFly:
+
+```bash
+bash scripts/helios-start.sh
+```
+
+В другом терминале Helios один раз выполнить:
+
+```bash
+ELK_TUNNEL_PORT=15044 bash scripts/configure-wildfly-elk-logging.sh
 ```
 
 Скрипт идемпотентный: его можно запускать повторно. Он создаёт:
@@ -124,30 +152,69 @@ sh scripts/configure-wildfly-elk-logging.sh
 - JSON formatter `BLPS_JSON`;
 - daily rotating file handler `BLPS_JSON_FILE`;
 - файл `wildfly/standalone/log/blps.json`;
-- подключение handler к root logger;
+- outbound socket binding `BLPS_LOGSTASH` на `127.0.0.1:15044`;
+- TCP socket handler `BLPS_ELK_SOCKET`;
+- неблокирующий async handler `BLPS_ELK_ASYNC` с очередью `1024` и `DISCARD`;
+- подключение файлового и асинхронного handlers к root logger;
 - уровень `INFO` для пакета `ru.urasha.callmeani.blps`.
 
 После настройки WildFly автоматически перезагружается.
 
-Собрать и развернуть приложение:
+Локально собрать WAR:
 
 ```bash
-GRADLE_USER_HOME=.gradle-local ./gradlew clean war
-sh scripts/deploy-root-war.sh
+./gradlew clean bootWar
+```
+
+Передать WAR на Helios и развернуть существующим способом:
+
+```bash
+scp -P 2222 build/libs/BLPS-0.0.1-SNAPSHOT.war s413022@helios.se.ifmo.ru:~/ROOT.war
+```
+
+На Helios:
+
+```bash
+bash scripts/deploy-root-war.sh ~/ROOT.war
 ```
 
 ## Проверка ELK
 
+Smoke-test выполняется локально после запуска ELK, SSH-туннеля и backend:
+
 ```bash
-sh scripts/elk-smoke-test.sh
+bash scripts/elk-smoke-test.sh
+```
+
+Он проверяет Elasticsearch, Kibana, активный Logstash TCP input, отправляет запрос с уникальным `X-Correlation-Id` и ожидает появления события в Elasticsearch до 30 секунд.
+
+Параметры можно переопределить:
+
+```bash
+BACKEND_URL=http://127.0.0.1:8180 \
+ELK_EVENT_TIMEOUT_SEC=30 \
+bash scripts/elk-smoke-test.sh
 ```
 
 Адреса:
 
 - Elasticsearch: <http://127.0.0.1:9200>
 - Logstash API: <http://127.0.0.1:9600>
+- Logstash TCP input: `127.0.0.1:5044`;
 - Kibana: <http://127.0.0.1:5601>
 - Dashboard: <http://127.0.0.1:5601/app/dashboards#/view/blps-observability-dashboard>
+
+На Helios проверить reverse-порт:
+
+```bash
+ss -ltn | grep ':15044 '
+```
+
+Проверить резервный файл:
+
+```bash
+tail -n 3 ~/wildfly/standalone/log/blps.json
+```
 
 ## Поиск в Kibana
 
@@ -298,6 +365,16 @@ event.category: (authentication or authorization)
 ```
 
 Будут видны 401/403 без записи самого токена.
+
+### 7. Проверить отказоустойчивость транспорта
+
+1. Закрыть локальный процесс `open-tunnel.sh`.
+2. Выполнить запрос к backend напрямую с Helios.
+3. Убедиться, что запрос обработан и событие записано в `wildfly/standalone/log/blps.json`.
+4. Восстановить SSH-туннель.
+5. Выполнить новый запрос и убедиться, что новое событие появляется в Kibana.
+
+WildFly не блокирует HTTP-запросы и Camunda worker при недоступном Logstash. Async handler отбрасывает события при переполнении очереди, а файловый handler продолжает вести полный локальный журнал. Автоматического replay пропущенных ELK-событий нет.
 
 ## Остановка
 

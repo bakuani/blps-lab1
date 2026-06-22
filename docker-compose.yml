@@ -152,11 +152,11 @@ services:
       APP_ENVIRONMENT: ${APP_ENVIRONMENT:-local}
     ports:
       - "127.0.0.1:9600:9600"
+      - "127.0.0.1:5044:5044"
       - "127.0.0.1:12201:12201/udp"
     volumes:
       - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./wildfly/standalone/log:/var/log/wildfly:ro
       - logstash_data:/usr/share/logstash/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:9600/_node/pipelines >/dev/null || exit 1"]
