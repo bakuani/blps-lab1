@@ -11,6 +11,7 @@ import ru.urasha.callmeani.blps.api.exception.TariffChangeRequestNotFoundExcepti
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.TariffChangeRequest;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
 import ru.urasha.callmeani.blps.service.camunda.client.CamundaRestClient;
@@ -20,6 +21,16 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static ru.urasha.callmeani.blps.logging.LoggingFields.BUSINESS_OPERATION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.BUSINESS_REQUEST_ID;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_ACTION;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_CATEGORY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.EVENT_OUTCOME;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_INSTANCE_ID;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.PROCESS_KEY;
+import static ru.urasha.callmeani.blps.logging.LoggingFields.SUBSCRIBER_ID;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CORRELATION_ID;
 
 @Slf4j
 @Service
@@ -32,23 +43,37 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
     @Override
     @Transactional
     public TariffChangeSubmissionResponse submitTariffChange(Long subscriberId, ChangeTariffRequest request) {
-        TariffChangeRequest requestEntity = new TariffChangeRequest();
-        requestEntity.setSubscriberId(subscriberId);
-        requestEntity.setTargetTariffId(request.targetTariffId());
-        requestEntity.setOptions(request.options() == null ? Map.of() : request.options());
-        requestEntity.setStatus(TariffChangeRequestStatus.PENDING);
-        requestEntity.setAttemptCount(0);
-        requestEntity.setCreatedAt(OffsetDateTime.now());
-        requestEntity.setUpdatedAt(OffsetDateTime.now());
+        try (LoggingContext ignored = LoggingContext.open(
+            EVENT_CATEGORY, "process",
+            EVENT_ACTION, "business_process_submitted",
+            BUSINESS_OPERATION, CamundaProcessConstants.OPERATION_TARIFF_CHANGE,
+            PROCESS_KEY, CamundaProcessConstants.TARIFF_CHANGE_PROCESS,
+            SUBSCRIBER_ID, subscriberId
+        )) {
+            TariffChangeRequest requestEntity = new TariffChangeRequest();
+            requestEntity.setSubscriberId(subscriberId);
+            requestEntity.setTargetTariffId(request.targetTariffId());
+            requestEntity.setOptions(request.options() == null ? Map.of() : request.options());
+            requestEntity.setStatus(TariffChangeRequestStatus.PENDING);
+            requestEntity.setAttemptCount(0);
+            requestEntity.setCreatedAt(OffsetDateTime.now());
+            requestEntity.setUpdatedAt(OffsetDateTime.now());
 
-        TariffChangeRequest saved = tariffChangeRequestRepository.save(requestEntity);
-        startProcess(saved);
+            TariffChangeRequest saved = tariffChangeRequestRepository.save(requestEntity);
+            try (LoggingContext requestContext = LoggingContext.open(
+                BUSINESS_REQUEST_ID, saved.getId(),
+                EVENT_OUTCOME, "success"
+            )) {
+                log.info("Tariff change request accepted");
+                startProcess(saved);
+            }
 
-        return new TariffChangeSubmissionResponse(
-            saved.getId(),
-            saved.getStatus(),
-            ApiMessages.TARIFF_CHANGE_REQUEST_ACCEPTED
-        );
+            return new TariffChangeSubmissionResponse(
+                saved.getId(),
+                saved.getStatus(),
+                ApiMessages.TARIFF_CHANGE_REQUEST_ACCEPTED
+            );
+        }
     }
 
     @Override
@@ -78,8 +103,16 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
             if (request.getProcessInstanceId() != null) {
                 continue;
             }
-            log.info("Starting Camunda process for stuck TariffChangeRequest with id {}", request.getId());
-            startProcess(request);
+            try (LoggingContext ignored = LoggingContext.open(
+                EVENT_CATEGORY, "process",
+                EVENT_ACTION, "business_process_retry",
+                BUSINESS_OPERATION, CamundaProcessConstants.OPERATION_TARIFF_CHANGE,
+                BUSINESS_REQUEST_ID, request.getId(),
+                SUBSCRIBER_ID, request.getSubscriberId()
+            )) {
+                log.warn("Restarting Camunda process for stuck tariff change request");
+                startProcess(request);
+            }
             restarted++;
         }
         return restarted;
@@ -96,10 +129,17 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
         request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
         camundaRestClient.completeFirstTask(processInstanceId, variables);
+        try (LoggingContext ignored = LoggingContext.open(
+            PROCESS_INSTANCE_ID, processInstanceId,
+            EVENT_OUTCOME, "success"
+        )) {
+            log.info("Tariff change Camunda process started");
+        }
     }
 
     private Map<String, CamundaVariable> processVariables(TariffChangeRequest request) {
         Map<String, CamundaVariable> variables = new LinkedHashMap<>();
+        variables.put(CORRELATION_ID, CamundaVariable.string(LoggingContext.getOrCreateCorrelationId()));
         variables.put("operationType", CamundaVariable.string(CamundaProcessConstants.OPERATION_TARIFF_CHANGE));
         variables.put("requestId", CamundaVariable.longValue(request.getId()));
         variables.put("subscriberId", CamundaVariable.longValue(request.getSubscriberId()));

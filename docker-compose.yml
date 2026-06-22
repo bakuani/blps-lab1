@@ -1,4 +1,8 @@
-version: "3.9"
+x-elk-logging: &elk-logging
+  driver: gelf
+  options:
+    gelf-address: "udp://127.0.0.1:12201"
+    tag: "{{.Name}}"
 
 services:
   postgres:
@@ -18,6 +22,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    logging: *elk-logging
 
   camunda-db:
     image: postgres:16-alpine
@@ -34,6 +39,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    logging: *elk-logging
 
   camunda:
     image: camunda/camunda-bpm-platform:run-7.24.0
@@ -51,6 +57,7 @@ services:
       TZ: Europe/Moscow
     ports:
       - "127.0.0.1:8082:8080"
+    logging: *elk-logging
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -71,6 +78,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    logging: *elk-logging
 
   dolibarr-db:
     image: mariadb:11
@@ -88,6 +96,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    logging: *elk-logging
 
   dolibarr:
     image: dolibarr/dolibarr:latest
@@ -109,6 +118,94 @@ services:
     volumes:
       - dolibarr_documents:/var/www/documents
       - dolibarr_custom:/var/www/html/custom
+    logging: *elk-logging
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION:-9.4.2}
+    container_name: blps-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.license.self_generated.type: basic
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms512m -Xmx512m}
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION:-9.4.2}
+    container_name: blps-logstash
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      LS_JAVA_OPTS: ${LS_JAVA_OPTS:--Xms256m -Xmx512m}
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-local}
+    ports:
+      - "127.0.0.1:9600:9600"
+      - "127.0.0.1:5044:5044"
+      - "127.0.0.1:12201:12201/udp"
+    volumes:
+      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - logstash_data:/usr/share/logstash/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9600/_node/pipelines >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION:-9.4.2}
+    container_name: blps-kibana
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      SERVER_NAME: blps-kibana
+      SERVER_PUBLICBASEURL: http://127.0.0.1:5601
+      TELEMETRY_ENABLED: "false"
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: blps-local-encryption-key-32chars
+      XPACK_REPORTING_ENCRYPTIONKEY: blps-local-reporting-key-32chars
+      XPACK_SECURITY_ENCRYPTIONKEY: blps-local-security-key-32charsx
+    ports:
+      - "127.0.0.1:5601:5601"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+
+  elk-setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION:-9.4.2}
+    container_name: blps-elk-setup
+    restart: "no"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    user: "0"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      KIBANA_URL: http://kibana:5601
+    entrypoint: ["/bin/sh", "/setup/setup.sh"]
+    volumes:
+      - ./elk/setup:/setup:ro
+      - ./elk/kibana:/kibana:ro
 
 volumes:
   postgres_data:
@@ -116,3 +213,5 @@ volumes:
   dolibarr_db_data:
   dolibarr_documents:
   dolibarr_custom:
+  elasticsearch_data:
+  logstash_data:

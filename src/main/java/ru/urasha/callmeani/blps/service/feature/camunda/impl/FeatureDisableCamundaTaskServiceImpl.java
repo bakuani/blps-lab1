@@ -1,6 +1,7 @@
 package ru.urasha.callmeani.blps.service.feature.camunda.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
@@ -14,6 +15,7 @@ import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
 import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
+import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
 import ru.urasha.callmeani.blps.service.billing.BillingService;
 import ru.urasha.callmeani.blps.service.camunda.model.CamundaVariable;
@@ -31,6 +33,7 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CAN_DISABLE_FEATURE;
+import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.CORRELATION_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.FEATURE_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_AMOUNT;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.OPERATION_SUCCESS;
@@ -39,6 +42,7 @@ import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVar
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.SUBSCRIBER_ID;
 import static ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessVariables.of;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamundaTaskService {
@@ -58,6 +62,7 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         if (existingRequestId != null) {
             FeatureDisableRequest request = featureRequest(task);
             attachProcessInstance(request, task);
+            log.info("Feature disable request linked to Camunda process: requestId={}", request.getId());
             return processVariables(request);
         }
 
@@ -71,7 +76,9 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         request.setCreatedAt(now);
         request.setUpdatedAt(now);
 
-        return processVariables(featureDisableRequestRepository.save(request));
+        FeatureDisableRequest saved = featureDisableRequestRepository.save(request);
+        log.info("Feature disable request created from Camunda: requestId={}", saved.getId());
+        return processVariables(saved);
     }
 
     @Override
@@ -79,12 +86,18 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
     public Map<String, CamundaVariable> validateFeatureDisable(LockedExternalTask task) {
         FeatureDisableRequest request = featureRequest(task);
         if (isTerminal(request.getStatus())) {
+            log.warn(
+                "Feature disable validation skipped for terminal request: requestId={}, status={}",
+                request.getId(),
+                request.getStatus()
+            );
             return of(CAN_DISABLE_FEATURE, CamundaVariable.bool(false));
         }
 
         markProcessing(request);
         if (!eisValidationService.allowFeatureDisable(request)) {
             rejectFeatureDisable(request, ApiMessages.FEATURE_DISABLE_REJECTED_BY_EIS);
+            log.warn("Feature disable rejected: requestId={}, reason=eis_validation", request.getId());
             return of(CAN_DISABLE_FEATURE, CamundaVariable.bool(false));
         }
 
@@ -100,9 +113,11 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
                 false
             );
             rejectFeatureDisable(request, ApiMessages.FEATURE_NOT_ACTIVE_RESPONSE);
+            log.warn("Feature disable rejected: requestId={}, reason=feature_not_active", request.getId());
             return of(CAN_DISABLE_FEATURE, CamundaVariable.bool(false));
         }
 
+        log.info("Feature disable validated: requestId={}", request.getId());
         return of(
             CAN_DISABLE_FEATURE, CamundaVariable.bool(true),
             OPERATION_AMOUNT, CamundaVariable.string(BigDecimal.ZERO.toPlainString())
@@ -119,6 +134,9 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
             subscriber.getId(), BillingTransactionType.SERVICE_DISABLE, description
         )) {
             billingService.createTransaction(subscriber, BillingTransactionType.SERVICE_DISABLE, BigDecimal.ZERO, description);
+            log.info("Feature disable billing transaction created: requestId={}", request.getId());
+        } else {
+            log.info("Feature disable billing transaction already exists: requestId={}", request.getId());
         }
         return of(OPERATION_AMOUNT, CamundaVariable.string(BigDecimal.ZERO.toPlainString()));
     }
@@ -138,6 +156,12 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         request.setErrorMessage(null);
         request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
+        log.info(
+            "Subscriber feature disabled: requestId={}, subscriberId={}, featureId={}",
+            request.getId(),
+            request.getSubscriberId(),
+            request.getFeatureId()
+        );
         return of(OPERATION_SUCCESS, CamundaVariable.bool(true));
     }
 
@@ -152,6 +176,7 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
                 ApiMessages.FEATURE_DISABLED_NOTIFICATION,
                 true
             );
+            log.info("Feature disable notification created: requestId={}", request.getId());
         }
         return of();
     }
@@ -171,6 +196,12 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
                 request.getErrorMessage(),
                 OffsetDateTime.now()
             ));
+            log.info(
+                "Feature disable audit published: requestId={}, status={}, amount={}",
+                request.getId(),
+                request.getStatus(),
+                amount
+            );
         }
         return of();
     }
@@ -206,10 +237,21 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         request.setErrorMessage(exception.getMessage());
         request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
+        if (status == TariffChangeRequestStatus.FAILED) {
+            log.error("Feature disable request permanently failed: requestId={}", request.getId(), exception);
+        } else {
+            log.warn(
+                "Feature disable request failure persisted: requestId={}, status={}, exceptionType={}",
+                request.getId(),
+                status,
+                exception.getClass().getSimpleName()
+            );
+        }
     }
 
     private Map<String, CamundaVariable> processVariables(FeatureDisableRequest request) {
         return of(
+            CORRELATION_ID, CamundaVariable.string(LoggingContext.getOrCreateCorrelationId()),
             REQUEST_ID, CamundaVariable.longValue(request.getId()),
             OPERATION_TYPE, CamundaVariable.string(CamundaProcessConstants.OPERATION_FEATURE_DISABLE),
             SUBSCRIBER_ID, CamundaVariable.longValue(request.getSubscriberId()),

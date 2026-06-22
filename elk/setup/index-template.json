@@ -1,0 +1,83 @@
+{
+  "index_patterns": [
+    "blps-logs-*"
+  ],
+  "priority": 500,
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "blps-logs-policy",
+      "index.number_of_shards": 1,
+      "index.number_of_replicas": 0
+    },
+    "mappings": {
+      "dynamic_templates": [
+        {
+          "strings_as_keywords": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword",
+              "ignore_above": 1024
+            }
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "message": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 1024
+            }
+          }
+        },
+        "event": {
+          "properties": {
+            "duration": {
+              "type": "long"
+            }
+          }
+        },
+        "http": {
+          "properties": {
+            "response": {
+              "properties": {
+                "status_code": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "business": {
+          "properties": {
+            "request": {
+              "properties": {
+                "id": {
+                  "type": "long"
+                }
+              }
+            }
+          }
+        },
+        "subscriber": {
+          "properties": {
+            "id": {
+              "type": "long"
+            }
+          }
+        },
+        "error": {
+          "properties": {
+            "stack_trace": {
+              "type": "wildcard"
+            }
+          }
+        }
+      }
+    }
+  }
+}

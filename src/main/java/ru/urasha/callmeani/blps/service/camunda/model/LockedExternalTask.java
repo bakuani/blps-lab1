@@ -9,6 +9,7 @@ public record LockedExternalTask(
     String id,
     String topicName,
     String processInstanceId,
+    String processDefinitionKey,
     String businessKey,
     Integer retries,
     Map<String, CamundaVariable> variables
