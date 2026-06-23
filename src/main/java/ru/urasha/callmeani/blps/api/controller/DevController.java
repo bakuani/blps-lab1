@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.urasha.callmeani.blps.domain.entity.FeatureDisableRequest;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
 
 import java.time.OffsetDateTime;
@@ -23,7 +23,7 @@ public class DevController {
         request.setSubscriberId(1L);
         request.setFeatureId(1L);
         
-        request.setStatus(TariffChangeRequestStatus.RETRY);
+        request.setStatus(BusinessRequestStatus.RETRY);
         request.setAttemptCount(1);
         request.setCreatedAt(OffsetDateTime.now().minusMinutes(2));
         request.setUpdatedAt(OffsetDateTime.now().minusMinutes(2));

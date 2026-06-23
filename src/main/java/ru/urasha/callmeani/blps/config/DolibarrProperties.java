@@ -21,10 +21,24 @@ public class DolibarrProperties {
 
     private boolean failClosed = true;
 
+    private boolean subscriberSyncEnabled = false;
+
     @Min(1)
     private int connectTimeoutMs = 3000;
 
     @Min(1)
     private int readTimeoutMs = 5000;
+
+    private Audit audit = new Audit();
+
+    @Getter
+    @Setter
+    public static class Audit {
+
+        private boolean enabled = false;
+
+        @NotBlank
+        private String interactionName = "dolibarr.audit.operation";
+    }
 }
 

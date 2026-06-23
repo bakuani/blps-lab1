@@ -2,8 +2,8 @@ package ru.urasha.callmeani.blps.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import ru.urasha.callmeani.blps.api.dto.notification.*;
-import ru.urasha.callmeani.blps.domain.entity.*;
+import ru.urasha.callmeani.blps.api.dto.notification.NotificationDto;
+import ru.urasha.callmeani.blps.domain.entity.NotificationEvent;
 
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {

@@ -16,9 +16,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ import java.util.Map;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TariffChangeRequest {
+public class TariffChangeRequest extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,7 +46,7 @@ public class TariffChangeRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TariffChangeRequestStatus status;
+    private BusinessRequestStatus status;
 
     @Column
     private String errorMessage;
@@ -58,9 +57,4 @@ public class TariffChangeRequest {
     @Column
     private String processInstanceId;
 
-    @Column(nullable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(nullable = false)
-    private OffsetDateTime updatedAt;
 }

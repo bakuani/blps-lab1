@@ -17,7 +17,7 @@ public final class ApiMessages {
     public static final String JWT_INVALID_TOKEN = "Invalid JWT token";
     public static final String JWT_INVALID_CLAIMS = "Invalid JWT claims";
     public static final String JWT_SECRET_NOT_CONFIGURED =
-        "JWT secret is not configured. Set JWT_SECRET in environment or .env.";
+        "JWT secret is not configured. Set jwt.secret property or JWT_SECRET environment variable.";
 
     public static final String TARIFF_ALREADY_SELECTED_NOTIFICATION =
         "Current tariff is already selected. Change request rejected.";

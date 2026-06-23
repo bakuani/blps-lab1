@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.service.billing.async.MonthlyFeeChargeAsyncOperations;
 import ru.urasha.callmeani.blps.service.feature.async.FeatureDisableAsyncOperations;
@@ -41,9 +41,9 @@ public class RetryScheduler {
         )) {
             try {
                 OffsetDateTime threshold = OffsetDateTime.now().minusMinutes(1);
-                List<TariffChangeRequestStatus> targetStatuses = List.of(
-                    TariffChangeRequestStatus.PENDING,
-                    TariffChangeRequestStatus.RETRY
+                List<BusinessRequestStatus> targetStatuses = List.of(
+                    BusinessRequestStatus.PENDING,
+                    BusinessRequestStatus.RETRY
                 );
                 int tariffRetried = tariffChangeAsyncService.retryStuckOperations(threshold, targetStatuses);
                 int featureRetried = featureDisableAsyncService.retryStuckOperations(threshold, targetStatuses);
