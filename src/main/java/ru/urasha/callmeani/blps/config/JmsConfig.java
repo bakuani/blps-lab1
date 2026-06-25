@@ -3,7 +3,6 @@ package ru.urasha.callmeani.blps.config;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import jakarta.jms.ConnectionFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
@@ -17,25 +16,16 @@ import org.springframework.jms.support.converter.MessageType;
 @RequiredArgsConstructor
 public class JmsConfig {
 
-    @Value("${rabbitmq.host}")
-    private String host;
-    @Value("${rabbitmq.port}")
-    private int port;
-    @Value("${rabbitmq.username}")
-    private String username;
-    @Value("${rabbitmq.password}")
-    private String password;
-    @Value("${rabbitmq.vhost}")
-    private String vhost;
+    private final RabbitMqProperties properties;
 
     @Bean
     public ConnectionFactory connectionFactory() {
         RMQConnectionFactory factory = new RMQConnectionFactory();
-        factory.setHost(host);
-        factory.setPort(port);
-        factory.setUsername(username);
-        factory.setPassword(password);
-        factory.setVirtualHost(vhost);
+        factory.setHost(properties.getHost());
+        factory.setPort(properties.getPort());
+        factory.setUsername(properties.getUsername());
+        factory.setPassword(properties.getPassword());
+        factory.setVirtualHost(properties.getVhost());
         return new CachingConnectionFactory(factory);
     }
 

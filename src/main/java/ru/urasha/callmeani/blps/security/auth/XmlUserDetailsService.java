@@ -1,7 +1,6 @@
 package ru.urasha.callmeani.blps.security.auth;
 
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.urasha.callmeani.blps.config.SecurityUsersProperties;
 import ru.urasha.callmeani.blps.security.authorization.RolePrivileges;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,10 +33,10 @@ public class XmlUserDetailsService implements UserDetailsService {
 
     public XmlUserDetailsService(
         ResourceLoader resourceLoader,
-        @Value("${security.users.xml-path}") String xmlPath
+        SecurityUsersProperties properties
     ) {
         this.resourceLoader = resourceLoader;
-        this.xmlPath = xmlPath;
+        this.xmlPath = properties.getXmlPath();
     }
 
     @PostConstruct

@@ -14,7 +14,7 @@ import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.entity.TariffChangeRequest;
 import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
@@ -72,16 +72,13 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
             return processVariables(request);
         }
 
-        OffsetDateTime now = OffsetDateTime.now();
         TariffChangeRequest request = new TariffChangeRequest();
         request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
         request.setTargetTariffId(requiredLongVariable(task, TARGET_TARIFF_ID));
         request.setOptions(parseOptions(task.stringVariable(OPTIONS)));
-        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setStatus(BusinessRequestStatus.PENDING);
         request.setAttemptCount(0);
         request.setProcessInstanceId(task.processInstanceId());
-        request.setCreatedAt(now);
-        request.setUpdatedAt(now);
 
         TariffChangeRequest saved = tariffChangeRequestRepository.save(request);
         log.info("Tariff change request created from Camunda: requestId={}", saved.getId());
@@ -173,9 +170,8 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         subscriber.setCurrentTariff(targetTariff);
         subscriberService.save(subscriber);
 
-        request.setStatus(TariffChangeRequestStatus.SUCCESS);
+        request.setStatus(BusinessRequestStatus.SUCCESS);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
         log.info(
             "Subscriber tariff updated: requestId={}, subscriberId={}, tariffId={}",
@@ -190,7 +186,7 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
     @Transactional
     public Map<String, CamundaVariable> sendNotification(LockedExternalTask task) {
         TariffChangeRequest request = tariffRequest(task);
-        if (request.getStatus() == TariffChangeRequestStatus.SUCCESS) {
+        if (request.getStatus() == BusinessRequestStatus.SUCCESS) {
             notificationService.createNotification(
                 subscriberService.getSubscriberEntity(request.getSubscriberId()),
                 NotificationType.TARIFF_CHANGED,
@@ -283,26 +279,23 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
     }
 
     private void markProcessing(TariffChangeRequest request) {
-        request.setStatus(TariffChangeRequestStatus.PROCESSING);
+        request.setStatus(BusinessRequestStatus.PROCESSING);
         request.setAttemptCount(request.getAttemptCount() + 1);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
     }
 
     private void rejectTariffChange(TariffChangeRequest request, String message) {
-        request.setStatus(TariffChangeRequestStatus.REJECTED);
+        request.setStatus(BusinessRequestStatus.REJECTED);
         request.setErrorMessage(message);
-        request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
     }
 
-    private void markFailed(TariffChangeRequest request, TariffChangeRequestStatus status, RuntimeException exception) {
+    private void markFailed(TariffChangeRequest request, BusinessRequestStatus status, RuntimeException exception) {
         request.setStatus(status);
         request.setErrorMessage(exception.getMessage());
-        request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
-        if (status == TariffChangeRequestStatus.FAILED) {
+        if (status == BusinessRequestStatus.FAILED) {
             log.error("Tariff change request permanently failed: requestId={}", request.getId(), exception);
         } else {
             log.warn(
@@ -362,7 +355,6 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
         String processInstanceId = task.processInstanceId();
         if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
             request.setProcessInstanceId(processInstanceId);
-            request.setUpdatedAt(OffsetDateTime.now());
             tariffChangeRequestRepository.save(request);
         }
     }
@@ -373,16 +365,16 @@ public class TariffChangeCamundaTaskServiceImpl implements TariffChangeCamundaTa
             .orElseThrow(() -> new IllegalStateException("TariffChangeRequest not found: " + id));
     }
 
-    private boolean isTerminal(TariffChangeRequestStatus status) {
-        return status == TariffChangeRequestStatus.SUCCESS
-            || status == TariffChangeRequestStatus.REJECTED
-            || status == TariffChangeRequestStatus.FAILED;
+    private boolean isTerminal(BusinessRequestStatus status) {
+        return status == BusinessRequestStatus.SUCCESS
+            || status == BusinessRequestStatus.REJECTED
+            || status == BusinessRequestStatus.FAILED;
     }
 
-    private TariffChangeRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
+    private BusinessRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
         return exception instanceof NotFoundException
-            ? TariffChangeRequestStatus.REJECTED
-            : retriesLeft <= 0 ? TariffChangeRequestStatus.FAILED : TariffChangeRequestStatus.RETRY;
+            ? BusinessRequestStatus.REJECTED
+            : retriesLeft <= 0 ? BusinessRequestStatus.FAILED : BusinessRequestStatus.RETRY;
     }
 
     private BigDecimal decimal(String value) {

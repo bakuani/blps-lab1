@@ -11,16 +11,14 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
-
-import java.time.OffsetDateTime;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 
 @Entity
 @Table(name = "feature_disable_request")
 @Getter
 @Setter
 @NoArgsConstructor
-public class FeatureDisableRequest {
+public class FeatureDisableRequest extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +32,7 @@ public class FeatureDisableRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TariffChangeRequestStatus status;
+    private BusinessRequestStatus status;
 
     @Column
     private String errorMessage;
@@ -45,9 +43,4 @@ public class FeatureDisableRequest {
     @Column
     private String processInstanceId;
 
-    @Column(nullable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(nullable = false)
-    private OffsetDateTime updatedAt;
 }

@@ -12,7 +12,7 @@ import ru.urasha.callmeani.blps.domain.entity.SubscriberFeature;
 import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
 import ru.urasha.callmeani.blps.domain.enums.SubscriberFeatureStatus;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
@@ -66,15 +66,12 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
             return processVariables(request);
         }
 
-        OffsetDateTime now = OffsetDateTime.now();
         FeatureDisableRequest request = new FeatureDisableRequest();
         request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
         request.setFeatureId(requiredLongVariable(task, FEATURE_ID));
-        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setStatus(BusinessRequestStatus.PENDING);
         request.setAttemptCount(0);
         request.setProcessInstanceId(task.processInstanceId());
-        request.setCreatedAt(now);
-        request.setUpdatedAt(now);
 
         FeatureDisableRequest saved = featureDisableRequestRepository.save(request);
         log.info("Feature disable request created from Camunda: requestId={}", saved.getId());
@@ -152,9 +149,8 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         subscriberFeature.setDisabledAt(OffsetDateTime.now());
         subscriberFeatureService.save(subscriberFeature);
 
-        request.setStatus(TariffChangeRequestStatus.SUCCESS);
+        request.setStatus(BusinessRequestStatus.SUCCESS);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
         log.info(
             "Subscriber feature disabled: requestId={}, subscriberId={}, featureId={}",
@@ -169,7 +165,7 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
     @Transactional
     public Map<String, CamundaVariable> sendNotification(LockedExternalTask task) {
         FeatureDisableRequest request = featureRequest(task);
-        if (request.getStatus() == TariffChangeRequestStatus.SUCCESS) {
+        if (request.getStatus() == BusinessRequestStatus.SUCCESS) {
             notificationService.createNotification(
                 subscriberService.getSubscriberEntity(request.getSubscriberId()),
                 NotificationType.SERVICE_DISABLED,
@@ -218,26 +214,23 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
     }
 
     private void markProcessing(FeatureDisableRequest request) {
-        request.setStatus(TariffChangeRequestStatus.PROCESSING);
+        request.setStatus(BusinessRequestStatus.PROCESSING);
         request.setAttemptCount(request.getAttemptCount() + 1);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
     }
 
     private void rejectFeatureDisable(FeatureDisableRequest request, String message) {
-        request.setStatus(TariffChangeRequestStatus.REJECTED);
+        request.setStatus(BusinessRequestStatus.REJECTED);
         request.setErrorMessage(message);
-        request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
     }
 
-    private void markFailed(FeatureDisableRequest request, TariffChangeRequestStatus status, RuntimeException exception) {
+    private void markFailed(FeatureDisableRequest request, BusinessRequestStatus status, RuntimeException exception) {
         request.setStatus(status);
         request.setErrorMessage(exception.getMessage());
-        request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
-        if (status == TariffChangeRequestStatus.FAILED) {
+        if (status == BusinessRequestStatus.FAILED) {
             log.error("Feature disable request permanently failed: requestId={}", request.getId(), exception);
         } else {
             log.warn(
@@ -272,7 +265,6 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
         String processInstanceId = task.processInstanceId();
         if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
             request.setProcessInstanceId(processInstanceId);
-            request.setUpdatedAt(OffsetDateTime.now());
             featureDisableRequestRepository.save(request);
         }
     }
@@ -283,16 +275,16 @@ public class FeatureDisableCamundaTaskServiceImpl implements FeatureDisableCamun
             .orElseThrow(() -> new IllegalStateException("FeatureDisableRequest not found: " + id));
     }
 
-    private boolean isTerminal(TariffChangeRequestStatus status) {
-        return status == TariffChangeRequestStatus.SUCCESS
-            || status == TariffChangeRequestStatus.REJECTED
-            || status == TariffChangeRequestStatus.FAILED;
+    private boolean isTerminal(BusinessRequestStatus status) {
+        return status == BusinessRequestStatus.SUCCESS
+            || status == BusinessRequestStatus.REJECTED
+            || status == BusinessRequestStatus.FAILED;
     }
 
-    private TariffChangeRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
+    private BusinessRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
         return exception instanceof NotFoundException
-            ? TariffChangeRequestStatus.REJECTED
-            : retriesLeft <= 0 ? TariffChangeRequestStatus.FAILED : TariffChangeRequestStatus.RETRY;
+            ? BusinessRequestStatus.REJECTED
+            : retriesLeft <= 0 ? BusinessRequestStatus.FAILED : BusinessRequestStatus.RETRY;
     }
 
     private BigDecimal decimal(String value) {

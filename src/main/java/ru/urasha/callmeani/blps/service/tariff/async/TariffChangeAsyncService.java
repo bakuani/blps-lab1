@@ -10,7 +10,7 @@ import ru.urasha.callmeani.blps.api.dto.tariff.TariffChangeSubmissionResponse;
 import ru.urasha.callmeani.blps.api.exception.TariffChangeRequestNotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.TariffChangeRequest;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.TariffChangeRequestRepository;
 import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
@@ -54,10 +54,8 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
             requestEntity.setSubscriberId(subscriberId);
             requestEntity.setTargetTariffId(request.targetTariffId());
             requestEntity.setOptions(request.options() == null ? Map.of() : request.options());
-            requestEntity.setStatus(TariffChangeRequestStatus.PENDING);
+            requestEntity.setStatus(BusinessRequestStatus.PENDING);
             requestEntity.setAttemptCount(0);
-            requestEntity.setCreatedAt(OffsetDateTime.now());
-            requestEntity.setUpdatedAt(OffsetDateTime.now());
 
             TariffChangeRequest saved = tariffChangeRequestRepository.save(requestEntity);
             try (LoggingContext requestContext = LoggingContext.open(
@@ -96,7 +94,7 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
 
     @Override
     @Transactional
-    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+    public int retryStuckOperations(OffsetDateTime threshold, List<BusinessRequestStatus> targetStatuses) {
         List<TariffChangeRequest> stuckRequests = tariffChangeRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
         int restarted = 0;
         for (TariffChangeRequest request : stuckRequests) {
@@ -126,7 +124,6 @@ public class TariffChangeAsyncService implements TariffChangeAsyncOperations {
             variables
         );
         request.setProcessInstanceId(processInstanceId);
-        request.setUpdatedAt(OffsetDateTime.now());
         tariffChangeRequestRepository.save(request);
         camundaRestClient.completeFirstTask(processInstanceId, variables);
         try (LoggingContext ignored = LoggingContext.open(

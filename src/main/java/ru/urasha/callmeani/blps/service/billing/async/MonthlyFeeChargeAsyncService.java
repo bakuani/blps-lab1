@@ -2,14 +2,14 @@ package ru.urasha.callmeani.blps.service.billing.async;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.dto.billing.MonthlyFeeChargeRequestStatusResponse;
 import ru.urasha.callmeani.blps.api.exception.MonthlyFeeChargeRequestNotFoundException;
+import ru.urasha.callmeani.blps.config.SchedulerProperties;
 import ru.urasha.callmeani.blps.domain.entity.MonthlyFeeChargeRequest;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.MonthlyFeeChargeRequestRepository;
 import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
@@ -40,14 +40,13 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
     private final SubscriberService subscriberService;
     private final MonthlyFeeChargeRequestRepository monthlyFeeChargeRequestRepository;
     private final CamundaRestClient camundaRestClient;
-
-    @Value("${app.scheduler.monthly-fee-cycle-pattern}")
-    private String cyclePattern;
+    private final SchedulerProperties schedulerProperties;
 
     @Override
     @Transactional
     public int enqueueCurrentCycleCharges() {
-        String billingPeriod = DateTimeFormatter.ofPattern(cyclePattern).format(OffsetDateTime.now());
+        String billingPeriod = DateTimeFormatter.ofPattern(schedulerProperties.getMonthlyFeeCyclePattern())
+            .format(OffsetDateTime.now());
         List<Subscriber> subscribers = subscriberService.findWithCurrentTariff();
         int created = 0;
         for (Subscriber subscriber : subscribers) {
@@ -57,10 +56,8 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
             MonthlyFeeChargeRequest request = new MonthlyFeeChargeRequest();
             request.setSubscriberId(subscriber.getId());
             request.setBillingPeriod(billingPeriod);
-            request.setStatus(TariffChangeRequestStatus.PENDING);
+            request.setStatus(BusinessRequestStatus.PENDING);
             request.setAttemptCount(0);
-            request.setCreatedAt(OffsetDateTime.now());
-            request.setUpdatedAt(OffsetDateTime.now());
             MonthlyFeeChargeRequest saved = monthlyFeeChargeRequestRepository.save(request);
             startProcess(saved);
             created++;
@@ -90,7 +87,7 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
 
     @Override
     @Transactional
-    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+    public int retryStuckOperations(OffsetDateTime threshold, List<BusinessRequestStatus> targetStatuses) {
         List<MonthlyFeeChargeRequest> stuckRequests = monthlyFeeChargeRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
         int restarted = 0;
         for (MonthlyFeeChargeRequest request : stuckRequests) {
@@ -120,7 +117,6 @@ public class MonthlyFeeChargeAsyncService implements MonthlyFeeChargeAsyncOperat
             variables
         );
         request.setProcessInstanceId(processInstanceId);
-        request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
         try (LoggingContext ignored = LoggingContext.open(
             EVENT_CATEGORY, "process",

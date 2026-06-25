@@ -11,16 +11,14 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
-
-import java.time.OffsetDateTime;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 
 @Entity
 @Table(name = "monthly_fee_charge_request")
 @Getter
 @Setter
 @NoArgsConstructor
-public class MonthlyFeeChargeRequest {
+public class MonthlyFeeChargeRequest extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +32,7 @@ public class MonthlyFeeChargeRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TariffChangeRequestStatus status;
+    private BusinessRequestStatus status;
 
     @Column
     private String errorMessage;
@@ -54,9 +52,4 @@ public class MonthlyFeeChargeRequest {
     @Column
     private String dolibarrInvoiceRef;
 
-    @Column(nullable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(nullable = false)
-    private OffsetDateTime updatedAt;
 }

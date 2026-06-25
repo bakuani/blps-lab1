@@ -2,8 +2,8 @@ package ru.urasha.callmeani.blps.service.eis.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.urasha.callmeani.blps.config.DolibarrProperties;
 import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnection;
 import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrConnectionFactory;
 import ru.urasha.callmeani.blps.eis.dolibarr.ra.DolibarrInteraction;
@@ -21,16 +21,11 @@ import java.util.Map;
 public class DolibarrOperationAuditJcaService implements EisOperationAuditService {
 
     private final DolibarrConnectionFactory connectionFactory;
-
-    @Value("${eis.dolibarr.audit.enabled:false}")
-    private boolean auditEnabled;
-
-    @Value("${eis.dolibarr.audit.interaction-name:dolibarr.audit.operation}")
-    private String interactionName;
+    private final DolibarrProperties dolibarrProperties;
 
     @Override
     public void registerOperationResult(EisOperationResult result) {
-        if (!auditEnabled) {
+        if (!dolibarrProperties.getAudit().isEnabled()) {
             return;
         }
 
@@ -52,7 +47,10 @@ public class DolibarrOperationAuditJcaService implements EisOperationAuditServic
             DolibarrInteraction interaction = connection.createInteraction();
             try {
                 Map<String, Object> payload = buildPayload(result);
-                DolibarrInteraction.ExecutionResult executionResult = interaction.execute(interactionName, payload);
+                DolibarrInteraction.ExecutionResult executionResult = interaction.execute(
+                    dolibarrProperties.getAudit().getInteractionName(),
+                    payload
+                );
                 if (!executionResult.accepted()) {
                     log.warn(
                         "Dolibarr audit response is negative for requestId={}, statusCode={}, endpoint={}, reason={}",

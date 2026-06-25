@@ -3,10 +3,13 @@ package ru.urasha.callmeani.blps.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import ru.urasha.callmeani.blps.api.dto.feature.*;
-import ru.urasha.callmeani.blps.api.dto.subscriber.*;
-
-import ru.urasha.callmeani.blps.domain.entity.*;
+import ru.urasha.callmeani.blps.api.dto.feature.FeatureSummaryDto;
+import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberFeatureResponse;
+import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberFeatureUpsertRequest;
+import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberResponse;
+import ru.urasha.callmeani.blps.api.dto.subscriber.SubscriberUpsertRequest;
+import ru.urasha.callmeani.blps.domain.entity.Subscriber;
+import ru.urasha.callmeani.blps.domain.entity.SubscriberFeature;
 
 @Mapper(componentModel = "spring")
 public interface SubscriberMapper {

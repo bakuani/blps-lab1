@@ -9,7 +9,7 @@ import ru.urasha.callmeani.blps.api.dto.feature.FeatureDisableSubmissionResponse
 import ru.urasha.callmeani.blps.api.exception.FeatureDisableRequestNotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
 import ru.urasha.callmeani.blps.domain.entity.FeatureDisableRequest;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
 import ru.urasha.callmeani.blps.repository.FeatureDisableRequestRepository;
 import ru.urasha.callmeani.blps.service.camunda.process.CamundaProcessConstants;
@@ -52,10 +52,8 @@ public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations
             FeatureDisableRequest request = new FeatureDisableRequest();
             request.setSubscriberId(subscriberId);
             request.setFeatureId(featureId);
-            request.setStatus(TariffChangeRequestStatus.PENDING);
+            request.setStatus(BusinessRequestStatus.PENDING);
             request.setAttemptCount(0);
-            request.setCreatedAt(OffsetDateTime.now());
-            request.setUpdatedAt(OffsetDateTime.now());
 
             FeatureDisableRequest saved = featureDisableRequestRepository.save(request);
             try (LoggingContext requestContext = LoggingContext.open(
@@ -94,7 +92,7 @@ public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations
 
     @Override
     @Transactional
-    public int retryStuckOperations(OffsetDateTime threshold, List<TariffChangeRequestStatus> targetStatuses) {
+    public int retryStuckOperations(OffsetDateTime threshold, List<BusinessRequestStatus> targetStatuses) {
         List<FeatureDisableRequest> stuckRequests = featureDisableRequestRepository.findByStatusInAndUpdatedAtBefore(targetStatuses, threshold);
         int restarted = 0;
         for (FeatureDisableRequest request : stuckRequests) {
@@ -124,7 +122,6 @@ public class FeatureDisableAsyncService implements FeatureDisableAsyncOperations
             variables
         );
         request.setProcessInstanceId(processInstanceId);
-        request.setUpdatedAt(OffsetDateTime.now());
         featureDisableRequestRepository.save(request);
         camundaRestClient.completeFirstTask(processInstanceId, variables);
         try (LoggingContext ignored = LoggingContext.open(

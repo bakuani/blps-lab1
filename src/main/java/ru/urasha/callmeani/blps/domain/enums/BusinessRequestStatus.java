@@ -1,6 +1,6 @@
 package ru.urasha.callmeani.blps.domain.enums;
 
-public enum TariffChangeRequestStatus {
+public enum BusinessRequestStatus {
     PENDING,
     PROCESSING,
     SUCCESS,

@@ -1,14 +1,13 @@
 package ru.urasha.callmeani.blps.security.jwt;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
+import ru.urasha.callmeani.blps.config.JwtProperties;
 import ru.urasha.callmeani.blps.security.auth.AuthenticatedUser;
 
 import javax.crypto.SecretKey;
@@ -27,15 +26,11 @@ public class JwtService {
     private final Duration expiration;
     private final String issuer;
 
-    public JwtService(
-        @Value("${jwt.secret:}") String configuredSecret,
-        @Value("${jwt.expiration:PT15M}") Duration expiration,
-        @Value("${jwt.issuer:blps}") String issuer
-    ) {
-        String secret = resolveSecret(configuredSecret);
+    public JwtService(JwtProperties properties) {
+        String secret = resolveSecret(properties.getSecret());
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expiration = expiration;
-        this.issuer = issuer;
+        this.expiration = properties.getExpiration();
+        this.issuer = properties.getIssuer();
     }
 
     public String generateToken(AuthenticatedUser user) {
@@ -111,11 +106,6 @@ public class JwtService {
             return envSecret.trim();
         }
 
-        Dotenv dotenv = Dotenv.configure().ignoreIfMalformed().ignoreIfMissing().load();
-        String dotenvSecret = dotenv.get("JWT_SECRET");
-        if (dotenvSecret != null && !dotenvSecret.isBlank()) {
-            return dotenvSecret.trim();
-        }
         throw new IllegalStateException(ApiMessages.JWT_SECRET_NOT_CONFIGURED);
     }
 }

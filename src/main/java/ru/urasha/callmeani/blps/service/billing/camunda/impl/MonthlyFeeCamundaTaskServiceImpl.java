@@ -2,17 +2,17 @@ package ru.urasha.callmeani.blps.service.billing.camunda.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urasha.callmeani.blps.api.exception.NotFoundException;
 import ru.urasha.callmeani.blps.api.message.ApiMessages;
+import ru.urasha.callmeani.blps.config.SchedulerProperties;
 import ru.urasha.callmeani.blps.domain.entity.MonthlyFeeChargeRequest;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.domain.entity.Tariff;
 import ru.urasha.callmeani.blps.domain.enums.BillingTransactionType;
 import ru.urasha.callmeani.blps.domain.enums.NotificationType;
-import ru.urasha.callmeani.blps.domain.enums.TariffChangeRequestStatus;
+import ru.urasha.callmeani.blps.domain.enums.BusinessRequestStatus;
 import ru.urasha.callmeani.blps.eis.model.EisOperationResult;
 import ru.urasha.callmeani.blps.eis.model.EisOperationType;
 import ru.urasha.callmeani.blps.logging.LoggingContext;
@@ -56,9 +56,7 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
     private final DolibarrInvoiceService dolibarrInvoiceService;
     private final EisOperationAuditService eisOperationAuditService;
     private final MonthlyFeeChargeAsyncOperations monthlyFeeChargeAsyncService;
-
-    @Value("${app.scheduler.monthly-fee-cycle-pattern}")
-    private String cyclePattern;
+    private final SchedulerProperties schedulerProperties;
 
     @Override
     @Transactional
@@ -79,15 +77,12 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
             return processVariables(request);
         }
 
-        OffsetDateTime now = OffsetDateTime.now();
         MonthlyFeeChargeRequest request = new MonthlyFeeChargeRequest();
         request.setSubscriberId(requiredLongVariable(task, SUBSCRIBER_ID));
         request.setBillingPeriod(resolveBillingPeriod(task));
-        request.setStatus(TariffChangeRequestStatus.PENDING);
+        request.setStatus(BusinessRequestStatus.PENDING);
         request.setAttemptCount(0);
         request.setProcessInstanceId(task.processInstanceId());
-        request.setCreatedAt(now);
-        request.setUpdatedAt(now);
 
         MonthlyFeeChargeRequest saved = monthlyFeeChargeRequestRepository.save(request);
         log.info("Monthly fee request created from Camunda: requestId={}", saved.getId());
@@ -120,7 +115,6 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
                 request.setDolibarrThirdPartyId(reference.thirdPartyId());
                 request.setDolibarrInvoiceId(reference.invoiceId());
                 request.setDolibarrInvoiceRef(reference.externalRef());
-                request.setUpdatedAt(OffsetDateTime.now());
                 monthlyFeeChargeRequestRepository.save(request);
                 log.info(
                     "Dolibarr invoice created: requestId={}, thirdPartyId={}, invoiceId={}",
@@ -143,7 +137,7 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
                 request.getId(),
                 request.getStatus()
             );
-            return of(MONTHLY_FEE_SUCCEEDED, CamundaVariable.bool(request.getStatus() == TariffChangeRequestStatus.SUCCESS));
+            return of(MONTHLY_FEE_SUCCEEDED, CamundaVariable.bool(request.getStatus() == BusinessRequestStatus.SUCCESS));
         }
 
         Subscriber subscriber = subscriberService.getSubscriberEntity(request.getSubscriberId());
@@ -163,8 +157,7 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
         if (billingService.existsBySubscriberIdAndTypeAndDescription(
             subscriber.getId(), BillingTransactionType.MONTHLY_TARIFF_FEE, description
         )) {
-            request.setStatus(TariffChangeRequestStatus.SUCCESS);
-            request.setUpdatedAt(OffsetDateTime.now());
+            request.setStatus(BusinessRequestStatus.SUCCESS);
             monthlyFeeChargeRequestRepository.save(request);
             log.info("Monthly fee charge already exists: requestId={}", request.getId());
             return of(
@@ -192,9 +185,8 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
             ApiMessages.MONTHLY_FEE_CHARGED_NOTIFICATION_PREFIX + request.getBillingPeriod(),
             true
         );
-        request.setStatus(TariffChangeRequestStatus.SUCCESS);
+        request.setStatus(BusinessRequestStatus.SUCCESS);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
         log.info(
             "Monthly fee charged: requestId={}, subscriberId={}, amount={}, billingPeriod={}",
@@ -214,7 +206,7 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
     @Transactional
     public Map<String, CamundaVariable> syncDolibarrInvoice(LockedExternalTask task) {
         MonthlyFeeChargeRequest request = monthlyRequest(task);
-        if (request.getStatus() == TariffChangeRequestStatus.SUCCESS && request.getDolibarrInvoiceId() != null) {
+        if (request.getStatus() == BusinessRequestStatus.SUCCESS && request.getDolibarrInvoiceId() != null) {
             boolean changed = dolibarrInvoiceService.markInvoicePaid(request.getDolibarrInvoiceId());
             if (!changed) {
                 log.warn(
@@ -270,18 +262,16 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
     }
 
     private void markProcessing(MonthlyFeeChargeRequest request) {
-        request.setStatus(TariffChangeRequestStatus.PROCESSING);
+        request.setStatus(BusinessRequestStatus.PROCESSING);
         request.setAttemptCount(request.getAttemptCount() + 1);
         request.setErrorMessage(null);
-        request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
     }
 
     private void rejectMonthlyFee(MonthlyFeeChargeRequest request, Subscriber subscriber, String notification, String error) {
         notificationService.createNotification(subscriber, NotificationType.MONTHLY_FEE_ERROR, notification, false);
-        request.setStatus(TariffChangeRequestStatus.REJECTED);
+        request.setStatus(BusinessRequestStatus.REJECTED);
         request.setErrorMessage(error);
-        request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
         log.warn(
             "Monthly fee rejected: requestId={}, subscriberId={}, reason={}",
@@ -291,12 +281,11 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
         );
     }
 
-    private void markFailed(MonthlyFeeChargeRequest request, TariffChangeRequestStatus status, RuntimeException exception) {
+    private void markFailed(MonthlyFeeChargeRequest request, BusinessRequestStatus status, RuntimeException exception) {
         request.setStatus(status);
         request.setErrorMessage(exception.getMessage());
-        request.setUpdatedAt(OffsetDateTime.now());
         monthlyFeeChargeRequestRepository.save(request);
-        if (status == TariffChangeRequestStatus.FAILED) {
+        if (status == BusinessRequestStatus.FAILED) {
             log.error("Monthly fee request permanently failed: requestId={}", request.getId(), exception);
         } else {
             log.warn(
@@ -330,7 +319,8 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
     private String resolveBillingPeriod(LockedExternalTask task) {
         String billingPeriod = task.stringVariable(BILLING_PERIOD);
         if (billingPeriod == null || billingPeriod.isBlank()) {
-            return DateTimeFormatter.ofPattern(cyclePattern).format(OffsetDateTime.now());
+            return DateTimeFormatter.ofPattern(schedulerProperties.getMonthlyFeeCyclePattern())
+                .format(OffsetDateTime.now());
         }
         return billingPeriod;
     }
@@ -339,7 +329,6 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
         String processInstanceId = task.processInstanceId();
         if (processInstanceId != null && !processInstanceId.equals(request.getProcessInstanceId())) {
             request.setProcessInstanceId(processInstanceId);
-            request.setUpdatedAt(OffsetDateTime.now());
             monthlyFeeChargeRequestRepository.save(request);
         }
     }
@@ -350,16 +339,16 @@ public class MonthlyFeeCamundaTaskServiceImpl implements MonthlyFeeCamundaTaskSe
             .orElseThrow(() -> new IllegalStateException("MonthlyFeeChargeRequest not found: " + id));
     }
 
-    private boolean isTerminal(TariffChangeRequestStatus status) {
-        return status == TariffChangeRequestStatus.SUCCESS
-            || status == TariffChangeRequestStatus.REJECTED
-            || status == TariffChangeRequestStatus.FAILED;
+    private boolean isTerminal(BusinessRequestStatus status) {
+        return status == BusinessRequestStatus.SUCCESS
+            || status == BusinessRequestStatus.REJECTED
+            || status == BusinessRequestStatus.FAILED;
     }
 
-    private TariffChangeRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
+    private BusinessRequestStatus failureStatus(RuntimeException exception, int retriesLeft) {
         return exception instanceof NotFoundException
-            ? TariffChangeRequestStatus.REJECTED
-            : retriesLeft <= 0 ? TariffChangeRequestStatus.FAILED : TariffChangeRequestStatus.RETRY;
+            ? BusinessRequestStatus.REJECTED
+            : retriesLeft <= 0 ? BusinessRequestStatus.FAILED : BusinessRequestStatus.RETRY;
     }
 
     private BigDecimal decimal(String value) {

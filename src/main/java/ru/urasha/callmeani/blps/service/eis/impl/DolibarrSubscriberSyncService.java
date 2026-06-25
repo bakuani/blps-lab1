@@ -3,12 +3,12 @@ package ru.urasha.callmeani.blps.service.eis.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import ru.urasha.callmeani.blps.config.DolibarrProperties;
 import ru.urasha.callmeani.blps.domain.entity.Subscriber;
 import ru.urasha.callmeani.blps.service.eis.DolibarrSubscriberService;
 
@@ -24,13 +24,11 @@ public class DolibarrSubscriberSyncService implements DolibarrSubscriberService 
 
     @Qualifier("dolibarrRestClient")
     private final RestClient dolibarrRestClient;
-
-    @Value("${eis.dolibarr.subscriber-sync-enabled:false}")
-    private boolean subscriberSyncEnabled;
+    private final DolibarrProperties dolibarrProperties;
 
     @Override
     public void syncSubscriber(Subscriber subscriber) {
-        if (!subscriberSyncEnabled) {
+        if (!dolibarrProperties.isSubscriberSyncEnabled()) {
             return;
         }
         ensureThirdPartyId(subscriber);
